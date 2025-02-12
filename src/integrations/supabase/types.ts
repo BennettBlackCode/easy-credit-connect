@@ -74,11 +74,47 @@ export type Database = {
           },
         ]
       }
+      stripe_products: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          credits: number
+          description: string | null
+          id: string
+          name: string
+          price_amount: number
+          price_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          credits: number
+          description?: string | null
+          id?: string
+          name: string
+          price_amount: number
+          price_id: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          credits?: number
+          description?: string | null
+          id?: string
+          name?: string
+          price_amount?: number
+          price_id?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
           created_at: string | null
           id: string
+          status: string | null
+          stripe_payment_id: string | null
+          stripe_price_id: string | null
           type: string | null
           user_id: string | null
         }
@@ -86,6 +122,9 @@ export type Database = {
           amount: number
           created_at?: string | null
           id?: string
+          status?: string | null
+          stripe_payment_id?: string | null
+          stripe_price_id?: string | null
           type?: string | null
           user_id?: string | null
         }
@@ -93,6 +132,9 @@ export type Database = {
           amount?: number
           created_at?: string | null
           id?: string
+          status?: string | null
+          stripe_payment_id?: string | null
+          stripe_price_id?: string | null
           type?: string | null
           user_id?: string | null
         }
