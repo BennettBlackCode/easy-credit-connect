@@ -17,6 +17,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import type { Database } from "@/integrations/supabase/types";
+
+type Automation = Database["public"]["Tables"]["automations"]["Insert"];
 
 const formSchema = z.object({
   company_name: z.string().min(1, "Company name is required"),
@@ -94,12 +97,14 @@ const AutomationForm = () => {
       }
 
       // Begin transaction
+      const insertData: Automation = {
+        ...values,
+        user_id: session.user.id,
+      };
+
       const { error: automationError } = await supabase
         .from("automations")
-        .insert({
-          ...values,
-          user_id: session.user.id,
-        });
+        .insert(insertData);
 
       if (automationError) throw automationError;
 
