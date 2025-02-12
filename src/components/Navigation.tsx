@@ -1,19 +1,43 @@
 
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Menu, X, CreditCard, BarChart2, LogIn } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Menu, X, CreditCard, BarChart2, LogIn, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { session } = useAuth();
+  const { toast } = useToast();
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    }
+  };
 
   const navItems = [
     { path: "/", label: "Home" },
     { path: "/pricing", label: "Pricing" },
-    { path: "/dashboard", label: "Dashboard", icon: BarChart2 },
-    { path: "/billing", label: "Billing", icon: CreditCard },
+    ...(session
+      ? [
+          { path: "/dashboard", label: "Dashboard", icon: BarChart2 },
+          { path: "/billing", label: "Billing", icon: CreditCard },
+        ]
+      : []),
   ];
 
   return (
@@ -45,13 +69,23 @@ const Navigation = () => {
                 <span>{item.label}</span>
               </Link>
             ))}
-            <Link
-              to="/login"
-              className="flex items-center space-x-1 px-4 py-2 rounded-md bg-primary text-white hover:bg-primary-hover transition-colors"
-            >
-              <LogIn className="w-4 h-4" />
-              <span>Sign In</span>
-            </Link>
+            {session ? (
+              <button
+                onClick={handleLogout}
+                className="flex items-center space-x-1 px-4 py-2 rounded-md bg-primary text-white hover:bg-primary-hover transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sign Out</span>
+              </button>
+            ) : (
+              <Link
+                to="/auth"
+                className="flex items-center space-x-1 px-4 py-2 rounded-md bg-primary text-white hover:bg-primary-hover transition-colors"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>Sign In</span>
+              </Link>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -88,14 +122,27 @@ const Navigation = () => {
               <span>{item.label}</span>
             </Link>
           ))}
-          <Link
-            to="/login"
-            className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-white bg-primary hover:bg-primary-hover"
-            onClick={() => setIsOpen(false)}
-          >
-            <LogIn className="w-4 h-4" />
-            <span>Sign In</span>
-          </Link>
+          {session ? (
+            <button
+              onClick={() => {
+                handleLogout();
+                setIsOpen(false);
+              }}
+              className="flex w-full items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-white bg-primary hover:bg-primary-hover"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Sign Out</span>
+            </button>
+          ) : (
+            <Link
+              to="/auth"
+              className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-white bg-primary hover:bg-primary-hover"
+              onClick={() => setIsOpen(false)}
+            >
+              <LogIn className="w-4 h-4" />
+              <span>Sign In</span>
+            </Link>
+          )}
         </div>
       </div>
     </nav>
