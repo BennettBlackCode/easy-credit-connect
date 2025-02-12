@@ -1,5 +1,8 @@
 
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { BarChart2, CreditCard, ArrowUp, ArrowDown } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -15,6 +18,8 @@ import {
   ChartLegend,
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const data = [
   { name: "Mon", runs: 4 },
@@ -26,31 +31,64 @@ const data = [
   { name: "Sun", runs: 2 },
 ];
 
-const runs = [
-  {
-    id: 1,
-    date: "2024-02-20",
-    status: "Completed",
-    credits: 1,
-    workflow: "Email Processing",
-  },
-  {
-    id: 2,
-    date: "2024-02-19",
-    status: "Completed",
-    credits: 1,
-    workflow: "Data Import",
-  },
-  {
-    id: 3,
-    date: "2024-02-18",
-    status: "Completed",
-    credits: 1,
-    workflow: "File Conversion",
-  },
-];
-
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const { session, isLoading: authLoading } = useAuth();
+
+  // Redirect to auth page if not logged in
+  useEffect(() => {
+    if (!authLoading && !session) {
+      navigate("/auth");
+    }
+  }, [session, authLoading, navigate]);
+
+  // Fetch user data including credits
+  const { data: userData, isLoading: userLoading } = useQuery({
+    queryKey: ["user", session?.user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", session?.user?.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!session?.user?.id,
+  });
+
+  // Fetch recent transactions
+  const { data: transactions, isLoading: transactionsLoading } = useQuery({
+    queryKey: ["transactions", session?.user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("*")
+        .eq("user_id", session?.user?.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!session?.user?.id,
+  });
+
+  if (authLoading || userLoading || transactionsLoading) {
+    return (
+      <div className="container py-24">
+        <div className="flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null;
+  }
+
   return (
     <div className="container py-24">
       <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
@@ -63,9 +101,9 @@ const Dashboard = () => {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">7</div>
+            <div className="text-2xl font-bold">{userData?.credits || 0}</div>
             <p className="text-xs text-muted-foreground">
-              Next credit renewal in 8 days
+              Use credits to run workflows
             </p>
           </CardContent>
         </Card>
@@ -75,10 +113,12 @@ const Dashboard = () => {
             <BarChart2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">35</div>
+            <div className="text-2xl font-bold">
+              {transactions?.length || 0}
+            </div>
             <div className="flex items-center text-xs text-emerald-500">
               <ArrowUp className="h-3 w-3 mr-1" />
-              12% from last week
+              Track your usage
             </div>
           </CardContent>
         </Card>
@@ -88,10 +128,12 @@ const Dashboard = () => {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">23</div>
-            <div className="flex items-center text-xs text-red-500">
+            <div className="text-2xl font-bold">
+              {transactions?.reduce((acc, t) => acc + (t.amount || 0), 0) || 0}
+            </div>
+            <div className="flex items-center text-xs text-muted-foreground">
               <ArrowDown className="h-3 w-3 mr-1" />
-              4% from last month
+              Total credits consumed
             </div>
           </CardContent>
         </Card>
@@ -112,50 +154,56 @@ const Dashboard = () => {
                 },
               }}
             >
-              <BarChart data={data}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <ChartTooltip />
-                <ChartLegend />
-                <Bar
-                  dataKey="runs"
-                  fill="var(--color-runs)"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
+              <ResponsiveContainer>
+                <BarChart data={data}>
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <ChartTooltip />
+                  <ChartLegend />
+                  <Bar
+                    dataKey="runs"
+                    fill="var(--color-runs)"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
             </ChartContainer>
           </div>
         </CardContent>
       </Card>
 
-      {/* Recent Runs Table */}
+      {/* Recent Transactions Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Runs</CardTitle>
+          <CardTitle>Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Date</TableHead>
-                <TableHead>Workflow</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Credits Used</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Amount</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {runs.map((run) => (
-                <TableRow key={run.id}>
-                  <TableCell>{run.date}</TableCell>
-                  <TableCell>{run.workflow}</TableCell>
-                  <TableCell>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      {run.status}
-                    </span>
+              {transactions && transactions.length > 0 ? (
+                transactions.map((transaction) => (
+                  <TableRow key={transaction.id}>
+                    <TableCell>
+                      {new Date(transaction.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>{transaction.type}</TableCell>
+                    <TableCell>{transaction.amount}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center">
+                    No transactions yet
                   </TableCell>
-                  <TableCell>{run.credits}</TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>
