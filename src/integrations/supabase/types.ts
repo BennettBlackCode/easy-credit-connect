@@ -9,6 +9,71 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      automations: {
+        Row: {
+          agency_email: string
+          city: string
+          company_name: string
+          country: string
+          created_at: string
+          domain: string
+          email: string
+          id: string
+          industry: string
+          last_name: string
+          phone_number: string
+          postal_code: string
+          state: string
+          street_address: string
+          user_id: string | null
+          web_url: string
+        }
+        Insert: {
+          agency_email: string
+          city: string
+          company_name: string
+          country: string
+          created_at?: string
+          domain: string
+          email: string
+          id?: string
+          industry: string
+          last_name: string
+          phone_number: string
+          postal_code: string
+          state: string
+          street_address: string
+          user_id?: string | null
+          web_url: string
+        }
+        Update: {
+          agency_email?: string
+          city?: string
+          company_name?: string
+          country?: string
+          created_at?: string
+          domain?: string
+          email?: string
+          id?: string
+          industry?: string
+          last_name?: string
+          phone_number?: string
+          postal_code?: string
+          state?: string
+          street_address?: string
+          user_id?: string | null
+          web_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount: number

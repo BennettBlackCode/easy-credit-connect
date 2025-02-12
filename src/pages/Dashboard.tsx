@@ -20,6 +20,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import AutomationForm from "@/components/AutomationForm";
 
 const data = [
   { name: "Mon", runs: 4 },
@@ -91,123 +92,104 @@ const Dashboard = () => {
 
   return (
     <div className="container py-24">
-      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Available Credits</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
+        {/* Stats Grid */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Available Credits
+              </CardTitle>
+              <CreditCard className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{userData?.credits || 0}</div>
+              <p className="text-xs text-muted-foreground">
+                Use credits to run workflows
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Runs</CardTitle>
+              <BarChart2 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {transactions?.length || 0}
+              </div>
+              <div className="flex items-center text-xs text-emerald-500">
+                <ArrowUp className="h-3 w-3 mr-1" />
+                Track your usage
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Credits Used</CardTitle>
+              <CreditCard className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {transactions?.reduce((acc, t) => acc + (t.amount || 0), 0) || 0}
+              </div>
+              <div className="flex items-center text-xs text-muted-foreground">
+                <ArrowDown className="h-3 w-3 mr-1" />
+                Total credits consumed
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Automation Form */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Run Automation</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{userData?.credits || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Use credits to run workflows
-            </p>
+            <AutomationForm />
           </CardContent>
         </Card>
+
+        {/* Recent Transactions Table */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Runs</CardTitle>
-            <BarChart2 className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle>Recent Transactions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {transactions?.length || 0}
-            </div>
-            <div className="flex items-center text-xs text-emerald-500">
-              <ArrowUp className="h-3 w-3 mr-1" />
-              Track your usage
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Credits Used</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {transactions?.reduce((acc, t) => acc + (t.amount || 0), 0) || 0}
-            </div>
-            <div className="flex items-center text-xs text-muted-foreground">
-              <ArrowDown className="h-3 w-3 mr-1" />
-              Total credits consumed
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {transactions && transactions.length > 0 ? (
+                  transactions.map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell>
+                        {new Date(transaction.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>{transaction.type}</TableCell>
+                      <TableCell>{transaction.amount}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center">
+                      No transactions yet
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </div>
-
-      {/* Chart */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Weekly Run Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
-            <ChartContainer
-              className="w-full h-full"
-              config={{
-                runs: {
-                  color: "#9b87f5",
-                },
-              }}
-            >
-              <ResponsiveContainer>
-                <BarChart data={data}>
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <ChartTooltip />
-                  <ChartLegend />
-                  <Bar
-                    dataKey="runs"
-                    fill="var(--color-runs)"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Recent Transactions Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {transactions && transactions.length > 0 ? (
-                transactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell>
-                      {new Date(transaction.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>{transaction.type}</TableCell>
-                    <TableCell>{transaction.amount}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-center">
-                    No transactions yet
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
     </div>
   );
 };
