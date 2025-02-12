@@ -61,7 +61,7 @@ const AutomationForm = () => {
     },
   });
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (values: FormValues) => {
     if (!session?.user?.id) {
       toast({
         title: "Error",
@@ -96,10 +96,10 @@ const AutomationForm = () => {
       // Begin transaction
       const { error: automationError } = await supabase
         .from("automations")
-        .insert({
-          ...data,
-          user_id: session.user.id,
-        });
+        .insert([{  // Note: Wrap in array to match Supabase's expected type
+          ...values,  // This contains all the form fields with the correct types
+          user_id: session.user.id
+        }]);
 
       if (automationError) throw automationError;
 
