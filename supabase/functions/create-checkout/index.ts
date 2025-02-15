@@ -19,8 +19,7 @@ serve(async (req) => {
   }
 
   try {
-    const body = await req.text();
-    let { productId, userId } = JSON.parse(body);
+    const { productId, userId } = await req.json();
 
     if (!productId || !userId) {
       throw new Error('Missing productId or userId');

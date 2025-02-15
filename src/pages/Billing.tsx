@@ -103,7 +103,7 @@ const Billing = () => {
   const handlePurchase = async (productId: string) => {
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: JSON.stringify({ productId, userId: session?.user?.id }),
+        body: { productId, userId: session?.user?.id },
       });
 
       if (error) {
