@@ -18,23 +18,23 @@ const Pricing = () => {
         "Access to all workflows",
         "Usage analytics",
       ],
-      href: "/signup?plan=starter",
+      href: "/billing",
       buttonText: "Get Started",
     },
     {
       name: "Growth Pack",
       price: "97",
-      interval: "per month",
+      interval: "one-time",
       description: "Most popular for growing businesses",
       features: [
-        "15 runs per month",
-        "Monthly billing",
+        "15 runs",
+        "No commitment",
         "Priority support",
         "Access to all workflows",
         "Advanced analytics",
         "API access",
       ],
-      href: "/signup?plan=growth",
+      href: "/billing",
       buttonText: "Start Growth",
       featured: true,
     },
@@ -109,7 +109,7 @@ const Pricing = () => {
                 <Button
                   asChild
                   className={`w-full mt-8 ${
-                    plan.featured ? "bg-primary hover:bg-primary-hover" : ""
+                    plan.featured ? "bg-primary hover:bg-primary/90" : ""
                   }`}
                 >
                   {plan.isExternal ? (
