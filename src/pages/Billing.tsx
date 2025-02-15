@@ -107,42 +107,55 @@ const Billing = () => {
         {/* Available Plans */}
         <h2 className="text-xl font-semibold mb-4">Available Plans</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
-          {products?.map((product) => (
-            <Card key={product.id}>
-              <CardHeader>
-                <CardTitle>{product.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {product.description}
-                </p>
-                <div className="text-2xl font-bold mb-4">
-                  ${(product.price_amount / 100).toFixed(2)}
-                </div>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {product.name === "Enterprise" ? "Unlimited runs" : `${product.credits} ${product.credits === 1 ? 'run' : 'runs'}`}
-                </p>
-                {product.name === "Enterprise" ? (
-                  <Button asChild className="w-full">
-                    <a
-                      href="https://boldslate.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center"
-                    >
-                      Contact Us
+          {products?.map((product) => {
+            // Skip annual plans
+            if (product.name.toLowerCase().includes('annual')) {
+              return null;
+            }
+
+            // Adjust display for the unlimited plan
+            const isUnlimited = product.name.toLowerCase().includes('professional');
+            const displayName = isUnlimited ? "Unlimited" : product.name;
+            const displayPrice = isUnlimited ? "Custom" : `$${(product.price_amount / 100).toFixed(2)}`;
+            const displayButton = isUnlimited ? "Contact Us" : "Purchase";
+
+            return (
+              <Card key={product.id}>
+                <CardHeader>
+                  <CardTitle>{displayName}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {product.description}
+                  </p>
+                  <div className="text-2xl font-bold mb-4">
+                    {displayPrice}
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {isUnlimited ? "Unlimited runs" : `${product.credits} ${product.credits === 1 ? 'run' : 'runs'}`}
+                  </p>
+                  {isUnlimited ? (
+                    <Button asChild className="w-full">
+                      <a
+                        href="https://boldslate.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center"
+                      >
+                        {displayButton}
+                        <ArrowUpRight className="ml-2 h-4 w-4" />
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button className="w-full">
+                      {displayButton}
                       <ArrowUpRight className="ml-2 h-4 w-4" />
-                    </a>
-                  </Button>
-                ) : (
-                  <Button className="w-full">
-                    Purchase
-                    <ArrowUpRight className="ml-2 h-4 w-4" />
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          }).filter(Boolean)}
         </div>
 
         {/* Transaction History */}
