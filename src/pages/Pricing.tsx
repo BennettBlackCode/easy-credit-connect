@@ -1,14 +1,10 @@
 
-import { useState } from "react";
-import { Check, CreditCard } from "lucide-react";
+import { Check, CreditCard, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 
 const Pricing = () => {
-  const [isAnnual, setIsAnnual] = useState(false);
-
   const plans = [
     {
       name: "Pay As You Go",
@@ -16,7 +12,7 @@ const Pricing = () => {
       interval: "per run",
       description: "Perfect for occasional automation needs",
       features: [
-        "Single run purchase",
+        "1 run",
         "No commitment",
         "Basic support",
         "Access to all workflows",
@@ -27,29 +23,29 @@ const Pricing = () => {
     },
     {
       name: "Standard",
-      price: isAnnual ? "81" : "97",
+      price: "97",
       interval: "per month",
       description: "Most popular for growing businesses",
       features: [
-        `10 runs per month`,
-        isAnnual ? "Save 16% annually" : "Monthly billing",
+        "15 runs per month",
+        "Monthly billing",
         "Priority support",
         "Access to all workflows",
         "Advanced analytics",
         "API access",
       ],
-      href: `/signup?plan=${isAnnual ? "standard_annual" : "standard"}`,
+      href: "/signup?plan=standard",
       buttonText: "Start Standard",
       featured: true,
     },
     {
-      name: "Professional",
-      price: isAnnual ? "248" : "297",
-      interval: "per month",
+      name: "Enterprise",
+      price: "Custom",
+      interval: "pricing",
       description: "For businesses with high automation needs",
       features: [
-        `55 runs per month`,
-        isAnnual ? "Save 16% annually" : "Monthly billing",
+        "Unlimited runs",
+        "Custom billing options",
         "24/7 Premium support",
         "Access to all workflows",
         "Advanced analytics",
@@ -57,8 +53,9 @@ const Pricing = () => {
         "Custom integrations",
         "Dedicated account manager",
       ],
-      href: `/signup?plan=${isAnnual ? "professional_annual" : "professional"}`,
-      buttonText: "Start Professional",
+      href: "https://boldslate.com",
+      buttonText: "Contact Us",
+      isExternal: true,
     },
   ];
 
@@ -74,19 +71,6 @@ const Pricing = () => {
             Choose the perfect plan for your automation needs. All plans include
             access to our full feature set.
           </p>
-          
-          {/* Billing Toggle */}
-          <div className="flex items-center justify-center gap-3">
-            <span className="text-sm text-gray-600">Monthly</span>
-            <Switch
-              checked={isAnnual}
-              onCheckedChange={setIsAnnual}
-              className="data-[state=checked]:bg-violet-600"
-            />
-            <span className="text-sm font-medium text-violet-600">
-              Annual (Save 16%)
-            </span>
-          </div>
         </div>
 
         {/* Pricing Cards */}
@@ -108,7 +92,7 @@ const Pricing = () => {
               <CardHeader>
                 <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold">${plan.price}</span>
+                  <span className="text-4xl font-bold">{plan.price === "Custom" ? "" : "$"}{plan.price}</span>
                   <span className="text-gray-600 ml-2">{plan.interval}</span>
                 </div>
                 <p className="text-gray-600 mt-2">{plan.description}</p>
@@ -128,10 +112,17 @@ const Pricing = () => {
                     plan.featured ? "bg-primary hover:bg-primary-hover" : ""
                   }`}
                 >
-                  <Link to={plan.href} className="flex items-center justify-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    {plan.buttonText}
-                  </Link>
+                  {plan.isExternal ? (
+                    <a href={plan.href} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                      <Mail className="h-5 w-5" />
+                      {plan.buttonText}
+                    </a>
+                  ) : (
+                    <Link to={plan.href} className="flex items-center justify-center gap-2">
+                      <CreditCard className="h-5 w-5" />
+                      {plan.buttonText}
+                    </Link>
+                  )}
                 </Button>
               </CardContent>
             </Card>
