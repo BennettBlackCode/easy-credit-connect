@@ -98,7 +98,19 @@ const AutomationForm = () => {
 
       // Begin transaction
       const insertData: Automation = {
-        ...values,
+        company_name: values.company_name,
+        phone_number: values.phone_number,
+        last_name: values.last_name,
+        industry: values.industry,
+        domain: values.domain,
+        web_url: values.web_url,
+        agency_email: values.agency_email,
+        email: values.email,
+        street_address: values.street_address,
+        city: values.city,
+        state: values.state,
+        country: values.country,
+        postal_code: values.postal_code,
         user_id: session.user.id,
       };
 
