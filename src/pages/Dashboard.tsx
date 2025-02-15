@@ -12,25 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartLegend,
-} from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import AutomationForm from "@/components/AutomationForm";
-
-const data = [
-  { name: "Mon", runs: 4 },
-  { name: "Tue", runs: 7 },
-  { name: "Wed", runs: 5 },
-  { name: "Thu", runs: 6 },
-  { name: "Fri", runs: 8 },
-  { name: "Sat", runs: 3 },
-  { name: "Sun", runs: 2 },
-];
+import AutomationDialog from "@/components/AutomationDialog";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -143,15 +127,10 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Automation Form */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Run Automation</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AutomationForm />
-          </CardContent>
-        </Card>
+        {/* Automation Dialog */}
+        <div className="mb-8">
+          <AutomationDialog />
+        </div>
 
         {/* Recent Transactions Table */}
         <Card>
