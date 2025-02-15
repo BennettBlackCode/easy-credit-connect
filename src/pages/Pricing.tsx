@@ -1,10 +1,35 @@
 
 import { Check, CreditCard, Mail } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Pricing = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { session } = useAuth();
+
+  const handlePlanClick = (isExternal: boolean, href: string) => {
+    if (isExternal) {
+      window.open(href, '_blank');
+      return;
+    }
+
+    if (!session) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to purchase a plan",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    navigate(href);
+  };
+
   const plans = [
     {
       name: "Starter Pack",
@@ -107,22 +132,19 @@ const Pricing = () => {
                   ))}
                 </ul>
                 <Button
-                  asChild
+                  onClick={() => handlePlanClick(!!plan.isExternal, plan.href)}
                   className={`w-full mt-8 ${
                     plan.featured ? "bg-primary hover:bg-primary/90" : ""
                   }`}
                 >
-                  {plan.isExternal ? (
-                    <a href={plan.href} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-center gap-2">
+                    {plan.isExternal ? (
                       <Mail className="h-5 w-5" />
-                      {plan.buttonText}
-                    </a>
-                  ) : (
-                    <Link to={plan.href} className="flex items-center justify-center gap-2">
+                    ) : (
                       <CreditCard className="h-5 w-5" />
-                      {plan.buttonText}
-                    </Link>
-                  )}
+                    )}
+                    {plan.buttonText}
+                  </div>
                 </Button>
               </CardContent>
             </Card>
