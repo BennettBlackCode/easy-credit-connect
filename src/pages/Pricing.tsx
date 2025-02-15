@@ -1,51 +1,55 @@
 
+import { useState } from "react";
 import { Check, CreditCard } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 
 const Pricing = () => {
+  const [isAnnual, setIsAnnual] = useState(false);
+
   const plans = [
     {
       name: "Pay As You Go",
       price: "20",
-      interval: "per credit",
+      interval: "per run",
       description: "Perfect for occasional automation needs",
       features: [
-        "Single credit purchase",
-        "No expiration",
+        "Single run purchase",
+        "No commitment",
         "Basic support",
         "Access to all workflows",
         "Usage analytics",
       ],
       href: "/signup?plan=payg",
-      buttonText: "Buy Credits",
+      buttonText: "Buy Run",
     },
     {
       name: "Standard",
-      price: "97",
+      price: isAnnual ? "81" : "97",
       interval: "per month",
       description: "Most popular for growing businesses",
       features: [
-        "10 credits per month",
-        "Credits rollover",
+        `10 runs per month`,
+        isAnnual ? "Save 16% annually" : "Monthly billing",
         "Priority support",
         "Access to all workflows",
         "Advanced analytics",
         "API access",
       ],
-      href: "/signup?plan=standard",
+      href: `/signup?plan=${isAnnual ? "standard_annual" : "standard"}`,
       buttonText: "Start Standard",
       featured: true,
     },
     {
       name: "Professional",
-      price: "297",
+      price: isAnnual ? "248" : "297",
       interval: "per month",
       description: "For businesses with high automation needs",
       features: [
-        "30 credits per month",
-        "Credits rollover",
+        `55 runs per month`,
+        isAnnual ? "Save 16% annually" : "Monthly billing",
         "24/7 Premium support",
         "Access to all workflows",
         "Advanced analytics",
@@ -53,7 +57,7 @@ const Pricing = () => {
         "Custom integrations",
         "Dedicated account manager",
       ],
-      href: "/signup?plan=professional",
+      href: `/signup?plan=${isAnnual ? "professional_annual" : "professional"}`,
       buttonText: "Start Professional",
     },
   ];
@@ -62,14 +66,27 @@ const Pricing = () => {
     <div className="min-h-screen bg-gradient-to-b from-white to-secondary py-24">
       <div className="container px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-3xl mx-auto mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Simple, Transparent Pricing
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl text-gray-600 mb-8">
             Choose the perfect plan for your automation needs. All plans include
             access to our full feature set.
           </p>
+          
+          {/* Billing Toggle */}
+          <div className="flex items-center justify-center gap-3">
+            <span className="text-sm text-gray-600">Monthly</span>
+            <Switch
+              checked={isAnnual}
+              onCheckedChange={setIsAnnual}
+              className="data-[state=checked]:bg-violet-600"
+            />
+            <span className="text-sm font-medium text-violet-600">
+              Annual (Save 16%)
+            </span>
+          </div>
         </div>
 
         {/* Pricing Cards */}
