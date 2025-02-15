@@ -159,6 +159,20 @@ const Billing = () => {
               return null;
             }
 
+            // Define the display order
+            const displayOrder = {
+              'starter': 1,
+              'growth': 2,
+              'professional': 3
+            };
+
+            // Sort products based on the display order
+            const sortedProducts = [...(products || [])].sort((a, b) => {
+              const aOrder = displayOrder[a.name.toLowerCase().split(' ')[0]] || 999;
+              const bOrder = displayOrder[b.name.toLowerCase().split(' ')[0]] || 999;
+              return aOrder - bOrder;
+            });
+
             // Adjust display for the unlimited plan
             const isUnlimited = product.name.toLowerCase().includes('professional');
             const displayName = isUnlimited ? "Unlimited" : product.name;
@@ -204,7 +218,7 @@ const Billing = () => {
                 </CardContent>
               </Card>
             );
-          }).filter(Boolean)}
+          })}
         </div>
 
         {/* Transaction History */}
