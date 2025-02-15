@@ -100,7 +100,7 @@ const Billing = () => {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{userData?.credits || 0} credits</div>
+            <div className="text-2xl font-bold">{userData?.credits || 0} runs</div>
           </CardContent>
         </Card>
 
@@ -120,12 +120,26 @@ const Billing = () => {
                   ${(product.price_amount / 100).toFixed(2)}
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">
-                  {product.credits} credits
+                  {product.name === "Enterprise" ? "Unlimited runs" : `${product.credits} ${product.credits === 1 ? 'run' : 'runs'}`}
                 </p>
-                <Button className="w-full">
-                  Purchase
-                  <ArrowUpRight className="ml-2 h-4 w-4" />
-                </Button>
+                {product.name === "Enterprise" ? (
+                  <Button asChild className="w-full">
+                    <a
+                      href="https://boldslate.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center"
+                    >
+                      Contact Us
+                      <ArrowUpRight className="ml-2 h-4 w-4" />
+                    </a>
+                  </Button>
+                ) : (
+                  <Button className="w-full">
+                    Purchase
+                    <ArrowUpRight className="ml-2 h-4 w-4" />
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))}
