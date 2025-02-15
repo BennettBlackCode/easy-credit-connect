@@ -1,6 +1,7 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { BarChart2, CreditCard, ArrowUp, ArrowDown, Plus } from "lucide-react";
+import { CreditCard, ArrowDown, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -44,16 +45,21 @@ const Dashboard = () => {
     enabled: !!session?.user?.id,
   });
 
-  // Fetch recent transactions
+  // Fetch transactions for this month
   const { data: transactions, isLoading: transactionsLoading } = useQuery({
     queryKey: ["transactions", session?.user?.id],
     queryFn: async () => {
+      const now = new Date();
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
+
       const { data, error } = await supabase
         .from("transactions")
         .select("*")
         .eq("user_id", session?.user?.id)
-        .order("created_at", { ascending: false })
-        .limit(5);
+        .gte("created_at", firstDayOfMonth)
+        .lte("created_at", lastDayOfMonth)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       return data;
@@ -75,13 +81,16 @@ const Dashboard = () => {
     return null;
   }
 
+  // Calculate credits used this month
+  const creditsUsedThisMonth = transactions?.reduce((acc, t) => acc + (t.amount || 0), 0) || 0;
+
   return (
     <div className="container py-24">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
 
         {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
+        <div className="grid gap-4 md:grid-cols-2 mb-8">
           <div className="space-y-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -111,31 +120,16 @@ const Dashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Runs</CardTitle>
-              <BarChart2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {transactions?.length || 0}
-              </div>
-              <div className="flex items-center text-xs text-emerald-500">
-                <ArrowUp className="h-3 w-3 mr-1" />
-                Track your usage
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Credits Used</CardTitle>
+              <CardTitle className="text-sm font-medium">Credits Used This Month</CardTitle>
               <CreditCard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {transactions?.reduce((acc, t) => acc + (t.amount || 0), 0) || 0}
+                {creditsUsedThisMonth}
               </div>
               <div className="flex items-center text-xs text-muted-foreground">
                 <ArrowDown className="h-3 w-3 mr-1" />
-                Total credits consumed
+                Total credits consumed this month
               </div>
             </CardContent>
           </Card>
