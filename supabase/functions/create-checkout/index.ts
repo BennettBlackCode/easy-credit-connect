@@ -19,7 +19,8 @@ serve(async (req) => {
   }
 
   try {
-    const { productId, userId } = await req.json();
+    const body = await req.text();
+    let { productId, userId } = JSON.parse(body);
 
     if (!productId || !userId) {
       throw new Error('Missing productId or userId');
@@ -75,6 +76,13 @@ serve(async (req) => {
       }
     }
 
+    console.log('Creating checkout session for:', {
+      customerId,
+      priceId: product.price_id,
+      productId,
+      userId,
+    });
+
     // Create Checkout Session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -93,8 +101,11 @@ serve(async (req) => {
       },
     });
 
+    console.log('Checkout session created:', session.id);
+
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
     });
   } catch (err) {
     console.error('Error creating checkout session:', err);
