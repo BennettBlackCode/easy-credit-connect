@@ -13,11 +13,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 const Billing = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { session, isLoading: authLoading } = useAuth();
 
   // Redirect to auth page if not logged in
@@ -26,6 +28,30 @@ const Billing = () => {
       navigate("/auth");
     }
   }, [session, authLoading, navigate]);
+
+  // Check URL parameters for Stripe status
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const success = query.get('success');
+    const canceled = query.get('canceled');
+
+    if (success) {
+      toast({
+        title: "Payment successful",
+        description: "Your credits have been added to your account.",
+      });
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (canceled) {
+      toast({
+        title: "Payment canceled",
+        description: "Your payment was canceled.",
+        variant: "destructive",
+      });
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [toast]);
 
   // Fetch user data including credits and stripe customer id
   const { data: userData, isLoading: userLoading } = useQuery({
@@ -73,6 +99,26 @@ const Billing = () => {
       return data;
     },
   });
+
+  const handlePurchase = async (productId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { productId, userId: session?.user?.id },
+      });
+
+      if (error) throw error;
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      toast({
+        title: "Error",
+        description: "There was an error processing your payment. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (authLoading || userLoading || transactionsLoading || productsLoading) {
     return (
@@ -147,7 +193,10 @@ const Billing = () => {
                       </a>
                     </Button>
                   ) : (
-                    <Button className="w-full">
+                    <Button 
+                      className="w-full"
+                      onClick={() => handlePurchase(product.id)}
+                    >
                       {displayButton}
                       <ArrowUpRight className="ml-2 h-4 w-4" />
                     </Button>
