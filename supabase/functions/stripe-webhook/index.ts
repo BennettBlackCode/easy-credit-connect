@@ -1,9 +1,9 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import Stripe from 'https://esm.sh/stripe@13.6.0?target=deno'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
-  // This is needed to use the Fetch API in Deno Deploy
   httpClient: Stripe.createFetchHttpClient(),
 });
 
@@ -19,10 +19,6 @@ serve(async (req) => {
   }
 
   try {
-    if (req.method !== 'POST') {
-      throw new Error('Method not allowed');
-    }
-
     // Get the request body
     const body = await req.text();
     const signature = req.headers.get('stripe-signature')!;
@@ -92,7 +88,6 @@ serve(async (req) => {
             amount: product.credits,
             type: 'purchase',
             status: 'completed',
-            stripe_session_id: session.id,
             stripe_payment_id: session.payment_intent,
             metadata: session,
           });
@@ -101,7 +96,7 @@ serve(async (req) => {
           throw transactionError;
         }
 
-        // Update user credits
+        // Update user credits - adding to existing credits for the current month
         const { error: updateError } = await supabaseClient.rpc(
           'increment_user_credits',
           { user_id: userId, amount: product.credits }
@@ -111,6 +106,7 @@ serve(async (req) => {
           throw updateError;
         }
 
+        console.log(`Successfully added ${product.credits} credits to user ${userId}`);
         break;
       }
       // Add other event types as needed
