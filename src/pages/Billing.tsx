@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreditCard, ArrowUpRight } from "lucide-react";
@@ -153,27 +152,19 @@ const Billing = () => {
         {/* Available Plans */}
         <h2 className="text-xl font-semibold mb-4">Available Plans</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
-          {products?.map((product) => {
-            // Skip annual plans
-            if (product.name.toLowerCase().includes('annual')) {
-              return null;
-            }
-
-            // Define the display order
-            const displayOrder = {
-              'starter': 1,
-              'growth': 2,
-              'professional': 3
-            };
-
-            // Sort products based on the display order
-            const sortedProducts = [...(products || [])].sort((a, b) => {
+          {[...(products || [])]
+            .filter(product => !product.name.toLowerCase().includes('annual'))
+            .sort((a, b) => {
+              const displayOrder = {
+                'starter': 1,
+                'growth': 2,
+                'professional': 3
+              };
               const aOrder = displayOrder[a.name.toLowerCase().split(' ')[0]] || 999;
               const bOrder = displayOrder[b.name.toLowerCase().split(' ')[0]] || 999;
               return aOrder - bOrder;
-            });
-
-            // Adjust display for the unlimited plan
+            })
+            .map((product) => {
             const isUnlimited = product.name.toLowerCase().includes('professional');
             const displayName = isUnlimited ? "Unlimited" : product.name;
             const displayPrice = isUnlimited ? "Custom" : `$${(product.price_amount / 100).toFixed(2)}`;
