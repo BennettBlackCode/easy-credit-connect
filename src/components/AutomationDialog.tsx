@@ -9,17 +9,21 @@ const AutomationDialog = () => {
     <Dialog>
       <DialogTrigger asChild>
         <div className="relative overflow-hidden rounded-lg p-1 cursor-pointer transition-transform hover:scale-[1.02]">
-          <div className="absolute inset-0 bg-gradient-to-r from-[#9b87f5] via-[#8B5CF6] to-[#D946EF] animate-gradient" />
-          <div className="relative bg-card p-8 rounded-lg backdrop-blur-sm border border-white/20">
-            <h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#F2FCE2] via-[#E5DEFF] to-[#f0e7ff] animate-gradient" />
+          <div className="relative bg-white/90 p-8 rounded-lg backdrop-blur-sm border border-violet-100 shadow-lg">
+            <h3 className="text-2xl font-bold mb-2 text-gray-800">
               Start Your Automation
             </h3>
-            <p className="text-muted-foreground mb-4">
+            <p className="text-gray-600 text-lg mb-6 leading-relaxed">
               Ready to streamline your workflow? Launch your automation in minutes.
             </p>
-            <Button variant="secondary" className="group">
+            <Button 
+              variant="default" 
+              size="lg"
+              className="bg-[#8B5CF6] hover:bg-[#7C3AED] shadow-lg shadow-violet-200/50 group font-semibold text-base"
+            >
               Start Now
-              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Button>
           </div>
         </div>
