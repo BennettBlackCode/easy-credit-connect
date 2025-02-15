@@ -3,8 +3,28 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import AutomationForm from "./AutomationForm";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AutomationDialog = () => {
+  const { session } = useAuth();
+
+  const { data: userData } = useQuery({
+    queryKey: ["user", session?.user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", session?.user?.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!session?.user?.id,
+  });
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -16,6 +36,9 @@ const AutomationDialog = () => {
             </h3>
             <p className="text-gray-600 text-lg mb-6 leading-relaxed">
               Ready to streamline your workflow? Launch your automation in minutes.
+              <span className="block text-sm mt-2 text-violet-600">
+                {userData?.credits || 0} credits available
+              </span>
             </p>
             <Button 
               variant="default" 
