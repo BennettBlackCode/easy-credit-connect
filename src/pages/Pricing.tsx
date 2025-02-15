@@ -34,7 +34,7 @@ const Pricing = () => {
     {
       name: "Starter Pack",
       price: "30",
-      interval: "one-time",
+      interval: "monthly",
       description: "Perfect for trying out the service",
       features: [
         "3 runs",
