@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreditCard, ArrowUpRight } from "lucide-react";
@@ -101,13 +102,18 @@ const Billing = () => {
 
   const handlePurchase = async (productId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
+      const response = await supabase.functions.invoke('create-checkout', {
         body: { productId, userId: session?.user?.id },
       });
 
-      if (error) throw error;
-      if (data.url) {
-        window.location.href = data.url;
+      if (response.error) {
+        throw response.error;
+      }
+
+      if (response.data?.url) {
+        window.location.href = response.data.url;
+      } else {
+        throw new Error('No checkout URL received');
       }
     } catch (error) {
       console.error('Error creating checkout session:', error);
@@ -152,19 +158,7 @@ const Billing = () => {
         {/* Available Plans */}
         <h2 className="text-xl font-semibold mb-4">Available Plans</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
-          {[...(products || [])]
-            .filter(product => !product.name.toLowerCase().includes('annual'))
-            .sort((a, b) => {
-              const displayOrder = {
-                'starter': 1,
-                'growth': 2,
-                'professional': 3
-              };
-              const aOrder = displayOrder[a.name.toLowerCase().split(' ')[0]] || 999;
-              const bOrder = displayOrder[b.name.toLowerCase().split(' ')[0]] || 999;
-              return aOrder - bOrder;
-            })
-            .map((product) => {
+          {products?.map((product) => {
             const isUnlimited = product.name.toLowerCase().includes('professional');
             const displayName = isUnlimited ? "Unlimited" : product.name;
             const displayPrice = isUnlimited ? "Custom" : `$${(product.price_amount / 100).toFixed(2)}`;
