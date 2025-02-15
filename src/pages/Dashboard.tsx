@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreditCard, ArrowDown, Plus } from "lucide-react";
@@ -81,8 +80,8 @@ const Dashboard = () => {
     return null;
   }
 
-  // Calculate credits used this month
-  const creditsUsedThisMonth = transactions?.reduce((acc, t) => acc + (t.amount || 0), 0) || 0;
+  // Calculate total available credits
+  const totalCredits = (userData?.credits || 0);
 
   return (
     <div className="container py-24">
@@ -100,7 +99,7 @@ const Dashboard = () => {
                 <CreditCard className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{userData?.credits || 0}</div>
+                <div className="text-2xl font-bold">{totalCredits}</div>
                 <p className="text-xs text-muted-foreground">
                   Use credits to run workflows
                 </p>
@@ -125,7 +124,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {creditsUsedThisMonth}
+                {0}
               </div>
               <div className="flex items-center text-xs text-muted-foreground">
                 <ArrowDown className="h-3 w-3 mr-1" />

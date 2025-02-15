@@ -111,6 +111,7 @@ export type Database = {
         Row: {
           amount: number
           created_at: string | null
+          credit_type: string | null
           id: string
           status: string | null
           stripe_payment_id: string | null
@@ -121,6 +122,7 @@ export type Database = {
         Insert: {
           amount: number
           created_at?: string | null
+          credit_type?: string | null
           id?: string
           status?: string | null
           stripe_payment_id?: string | null
@@ -131,6 +133,7 @@ export type Database = {
         Update: {
           amount?: number
           created_at?: string | null
+          credit_type?: string | null
           id?: string
           status?: string | null
           stripe_payment_id?: string | null
@@ -154,21 +157,30 @@ export type Database = {
           credits: number | null
           email: string
           id: string
+          permanent_credits: number | null
           stripe_customer_id: string | null
+          subscription_credits: number | null
+          subscription_renewal_date: string | null
         }
         Insert: {
           created_at?: string | null
           credits?: number | null
           email: string
           id?: string
+          permanent_credits?: number | null
           stripe_customer_id?: string | null
+          subscription_credits?: number | null
+          subscription_renewal_date?: string | null
         }
         Update: {
           created_at?: string | null
           credits?: number | null
           email?: string
           id?: string
+          permanent_credits?: number | null
           stripe_customer_id?: string | null
+          subscription_credits?: number | null
+          subscription_renewal_date?: string | null
         }
         Relationships: []
       }
@@ -177,7 +189,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_user_credits: {
+        Args: {
+          user_id: string
+          amount: number
+          credit_type: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

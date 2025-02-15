@@ -42,20 +42,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    // Store the event in the webhook_events table
-    const { error: webhookError } = await supabaseClient
-      .from('webhook_events')
-      .insert({
-        stripe_event_id: event.id,
-        type: event.type,
-        data: event.data,
-      });
-
-    if (webhookError) {
-      console.error('Error storing webhook event:', webhookError);
-      throw webhookError;
-    }
-
     // Handle the event
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -72,13 +58,17 @@ serve(async (req) => {
         // Get the product details
         const { data: product, error: productError } = await supabaseClient
           .from('stripe_products')
-          .select('credits')
+          .select('*')
           .eq('id', productId)
           .single();
 
         if (productError) {
           throw productError;
         }
+
+        // Determine if this is a subscription or one-time purchase
+        const isSubscription = product.name.toLowerCase().includes('growth');
+        const creditType = isSubscription ? 'subscription' : 'permanent';
 
         // Create a transaction record
         const { error: transactionError } = await supabaseClient
@@ -89,6 +79,7 @@ serve(async (req) => {
             type: 'purchase',
             status: 'completed',
             stripe_payment_id: session.payment_intent,
+            credit_type: creditType,
             metadata: session,
           });
 
@@ -96,20 +87,74 @@ serve(async (req) => {
           throw transactionError;
         }
 
-        // Update user credits - adding to existing credits for the current month
+        // Update user credits based on the type
         const { error: updateError } = await supabaseClient.rpc(
           'increment_user_credits',
-          { user_id: userId, amount: product.credits }
+          { 
+            user_id: userId, 
+            amount: product.credits,
+            credit_type: creditType
+          }
         );
 
         if (updateError) {
           throw updateError;
         }
 
-        console.log(`Successfully added ${product.credits} credits to user ${userId}`);
+        console.log(`Successfully added ${product.credits} ${creditType} credits to user ${userId}`);
         break;
       }
-      // Add other event types as needed
+      case 'invoice.payment_succeeded': {
+        // Handle subscription renewal
+        const invoice = event.data.object;
+        const subscriptionId = invoice.subscription;
+        const customerId = invoice.customer;
+
+        if (subscriptionId) {
+          // Get the user associated with this customer
+          const { data: userData, error: userError } = await supabaseClient
+            .from('users')
+            .select('id')
+            .eq('stripe_customer_id', customerId)
+            .single();
+
+          if (userError) {
+            throw userError;
+          }
+
+          // Get the subscription to know which product it is
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          const priceId = subscription.items.data[0].price.id;
+
+          // Get the product details from our database
+          const { data: product, error: productError } = await supabaseClient
+            .from('stripe_products')
+            .select('*')
+            .eq('price_id', priceId)
+            .single();
+
+          if (productError) {
+            throw productError;
+          }
+
+          // Reset and update subscription credits
+          const { error: updateError } = await supabaseClient.rpc(
+            'increment_user_credits',
+            { 
+              user_id: userData.id, 
+              amount: product.credits,
+              credit_type: 'subscription'
+            }
+          );
+
+          if (updateError) {
+            throw updateError;
+          }
+
+          console.log(`Successfully renewed subscription credits for user ${userData.id}`);
+        }
+        break;
+      }
     }
 
     return new Response(JSON.stringify({ received: true }), {

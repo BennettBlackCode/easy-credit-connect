@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreditCard, ArrowUpRight } from "lucide-react";
@@ -141,6 +140,9 @@ const Billing = () => {
     return null;
   }
 
+  // Calculate total available credits
+  const totalCredits = (userData?.permanent_credits || 0) + (userData?.subscription_credits || 0);
+
   // Sort products in the correct order
   const sortedProducts = [...(products || [])].sort((a, b) => {
     const displayOrder = {
@@ -165,7 +167,14 @@ const Billing = () => {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{userData?.credits || 0} runs</div>
+            <div className="text-2xl font-bold">{totalCredits} runs</div>
+            <div className="text-sm text-muted-foreground space-y-1 mt-2">
+              <p>Permanent Credits: {userData?.permanent_credits || 0}</p>
+              <p>Monthly Subscription Credits: {userData?.subscription_credits || 0}</p>
+              {userData?.subscription_renewal_date && (
+                <p>Subscription Renews: {new Date(userData.subscription_renewal_date).toLocaleDateString()}</p>
+              )}
+            </div>
           </CardContent>
         </Card>
 
