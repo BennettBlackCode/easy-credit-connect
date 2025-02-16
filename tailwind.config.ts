@@ -26,25 +26,25 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#9b87f5",
-          hover: "#8a74f3",
+          DEFAULT: "#2ed573",
+          hover: "#26bb62",
           foreground: "#ffffff",
         },
         secondary: {
-          DEFAULT: "#F1F0FB",
-          foreground: "#1A1F2C",
+          DEFAULT: "#0a0f0c",
+          foreground: "#2ed573",
         },
         accent: {
-          DEFAULT: "#7E69AB",
+          DEFAULT: "#2ed573",
           foreground: "#ffffff",
         },
         muted: {
-          DEFAULT: "#F8F7FE",
-          foreground: "#6B7280",
+          DEFAULT: "#1a1a1a",
+          foreground: "#a3a3a3",
         },
         card: {
-          DEFAULT: "rgba(255, 255, 255, 0.9)",
-          foreground: "#1A1F2C",
+          DEFAULT: "rgba(10, 10, 10, 0.8)",
+          foreground: "#ffffff",
         },
       },
       borderRadius: {
@@ -75,6 +75,9 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         fadeIn: "fadeIn 0.5s ease-out",
         slideIn: "slideIn 0.3s ease-out",
+      },
+      backgroundImage: {
+        'gradient-dark': 'linear-gradient(225deg, rgba(46,213,115,0.1) 0%, rgba(0,0,0,0) 100%)',
       },
     },
   },
