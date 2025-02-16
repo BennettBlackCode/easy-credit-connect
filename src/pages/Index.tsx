@@ -13,31 +13,31 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-secondary">
+    <div className="min-h-screen bg-gradient-to-b from-black to-secondary">
       <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Hero Section */}
           <div className="text-center animate-fadeIn">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-              Automate Your Workflow
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6">
+              Automate Your SEO
               <br />
-              <span className="text-primary">With Ease</span>
+              <span className="text-primary">With One Click</span>
             </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
               Transform your business processes with our powerful automation
               platform. Start with a free credit and experience the difference.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link
                 to="/signup"
-                className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary-hover transition-colors duration-200"
+                className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary-hover transition-colors duration-200 electric-glow"
               >
                 Get Started Free
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
               <Link
                 to="/pricing"
-                className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
+                className="inline-flex items-center justify-center px-6 py-3 border border-primary/20 text-base font-medium rounded-md text-white bg-black/40 hover:bg-black/60 transition-colors duration-200 neo-gradient"
               >
                 View Pricing
               </Link>
@@ -49,7 +49,7 @@ const Index = () => {
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="bg-card backdrop-blur-sm p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow animate-fadeIn"
+                className="glass-card p-6 rounded-lg hover:shadow-md transition-shadow animate-fadeIn"
                 style={{
                   animationDelay: `${index * 100}ms`,
                 }}
@@ -60,7 +60,7 @@ const Index = () => {
                       <Check className="h-5 w-5" />
                     </div>
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900">
+                  <h3 className="text-lg font-medium text-white">
                     {feature}
                   </h3>
                 </div>
@@ -70,15 +70,15 @@ const Index = () => {
 
           {/* CTA Section */}
           <div className="mt-24 text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-white mb-4">
               Ready to Get Started?
             </h2>
-            <p className="text-lg text-gray-600 mb-8">
-              Join thousands of businesses automating their workflows today.
+            <p className="text-lg text-gray-300 mb-8">
+              Join thousands of businesses automating their SEO today.
             </p>
             <Link
               to="/signup"
-              className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary-hover transition-colors duration-200"
+              className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary-hover transition-colors duration-200 electric-glow"
             >
               Start Free Trial
               <ArrowRight className="ml-2 h-5 w-5" />

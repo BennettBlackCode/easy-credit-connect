@@ -49,7 +49,7 @@ const Pricing = () => {
     {
       name: "Growth Pack",
       price: "97",
-      interval: "one-time",
+      interval: "monthly",
       description: "Most popular for growing businesses",
       features: [
         "15 runs",
@@ -78,21 +78,21 @@ const Pricing = () => {
         "Custom integrations",
         "Dedicated account manager",
       ],
-      href: "https://boldslate.com",
+      href: "https://1clickseo.io",
       buttonText: "Contact Us",
       isExternal: true,
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-secondary py-24">
+    <div className="min-h-screen bg-gradient-to-b from-black to-secondary py-24">
       <div className="container px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-white mb-4">
             Simple, Transparent Pricing
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-xl text-gray-300 mb-8">
             Choose the perfect plan for your automation needs. All plans include
             access to our full feature set.
           </p>
@@ -105,8 +105,8 @@ const Pricing = () => {
               key={plan.name}
               className={`relative flex flex-col ${
                 plan.featured
-                  ? "border-primary shadow-lg scale-105 bg-card"
-                  : "bg-card/60"
+                  ? "border-primary shadow-lg scale-105 glass-card"
+                  : "glass-card"
               } transition-all duration-200 hover:shadow-lg`}
             >
               {plan.featured && (
@@ -115,26 +115,26 @@ const Pricing = () => {
                 </div>
               )}
               <CardHeader>
-                <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
+                <CardTitle className="text-2xl font-bold text-white">{plan.name}</CardTitle>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold">{plan.price === "Custom" ? "" : "$"}{plan.price}</span>
-                  <span className="text-gray-600 ml-2">{plan.interval}</span>
+                  <span className="text-4xl font-bold text-white">{plan.price === "Custom" ? "" : "$"}{plan.price}</span>
+                  <span className="text-gray-300 ml-2">{plan.interval}</span>
                 </div>
-                <p className="text-gray-600 mt-2">{plan.description}</p>
+                <p className="text-gray-300 mt-2">{plan.description}</p>
               </CardHeader>
               <CardContent className="flex-grow">
                 <ul className="space-y-3">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-center gap-2">
                       <Check className="h-5 w-5 text-primary flex-shrink-0" />
-                      <span className="text-gray-600">{feature}</span>
+                      <span className="text-gray-300">{feature}</span>
                     </li>
                   ))}
                 </ul>
                 <Button
                   onClick={() => handlePlanClick(!!plan.isExternal, plan.href)}
                   className={`w-full mt-8 ${
-                    plan.featured ? "bg-primary hover:bg-primary/90" : ""
+                    plan.featured ? "bg-primary hover:bg-primary/90 electric-glow" : "neo-gradient"
                   }`}
                 >
                   <div className="flex items-center justify-center gap-2">
@@ -153,13 +153,13 @@ const Pricing = () => {
 
         {/* FAQ Preview */}
         <div className="mt-24 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl font-bold text-white mb-4">
             Have Questions?
           </h2>
-          <p className="text-lg text-gray-600 mb-8">
+          <p className="text-lg text-gray-300 mb-8">
             Contact our support team or check out our FAQ section.
           </p>
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild className="neo-gradient">
             <Link to="/faq">View FAQ</Link>
           </Button>
         </div>
