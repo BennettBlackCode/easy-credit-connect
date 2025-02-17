@@ -30,9 +30,7 @@ const Navigation = () => {
   };
 
   const navItems = [
-    { path: "/features", label: "Features" },
     { path: "/pricing", label: "Pricing" },
-    { path: "/docs", label: "Docs" },
     ...(session
       ? [
           { path: "/dashboard", label: "Dashboard", icon: BarChart2 },
