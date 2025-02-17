@@ -30,9 +30,9 @@ const Navigation = () => {
   };
 
   const navItems = [
-    { path: "/pricing", label: "Pricing" },
     { path: "/features", label: "Features" },
-    { path: "/integrations", label: "Integrations" },
+    { path: "/pricing", label: "Pricing" },
+    { path: "/docs", label: "Docs" },
     ...(session
       ? [
           { path: "/dashboard", label: "Dashboard", icon: BarChart2 },
@@ -42,112 +42,108 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="fixed top-0 w-full z-50">
+    <nav className="fixed top-0 w-full z-50 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-20">
+        <div className="flex items-center justify-between h-20">
           <div className="flex items-center">
             <Link
               to="/"
-              className="text-xl font-bold text-transparent bg-gradient-to-r from-white via-white to-primary/80 bg-clip-text hover:opacity-80 transition-opacity flex items-center gap-2"
+              className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent"
             >
-              <span className="text-2xl">1clickseo.io</span>
+              1clickseo.io
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex md:items-center md:space-x-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center space-x-1 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                  isActive(item.path)
-                    ? "text-primary bg-primary/5"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                {item.icon && <item.icon className="w-4 h-4" />}
-                <span>{item.label}</span>
-              </Link>
-            ))}
+          <div className="hidden md:flex items-center gap-2">
+            <div className="flex items-center gap-1 bg-white/5 rounded-full p-1">
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`px-4 py-2 rounded-full text-sm transition-colors duration-200 ${
+                    isActive(item.path)
+                      ? "text-black bg-primary"
+                      : "text-gray-300 hover:text-white"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
             {session ? (
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-1 px-5 py-2 rounded-full bg-gradient-to-r from-primary/90 to-primary text-white hover:opacity-90 transition-all duration-200 ml-4"
+                className="ml-4 px-5 py-2.5 rounded-full text-black bg-primary hover:bg-primary/90 transition-colors duration-200 text-sm font-medium shadow-[0_0_20px_rgba(46,213,115,0.3)]"
               >
-                <LogOut className="w-4 h-4" />
-                <span>Sign Out</span>
+                Sign Out
               </button>
             ) : (
               <Link
                 to="/auth"
-                className="flex items-center space-x-1 px-5 py-2 rounded-full bg-gradient-to-r from-primary/90 to-primary text-white hover:opacity-90 transition-all duration-200 ml-4"
+                className="ml-4 px-5 py-2.5 rounded-full text-black bg-primary hover:bg-primary/90 transition-colors duration-200 text-sm font-medium shadow-[0_0_20px_rgba(46,213,115,0.3)]"
               >
-                <LogIn className="w-4 h-4" />
-                <span>Sign In</span>
+                Sign In
               </Link>
             )}
           </div>
 
           {/* Mobile menu button */}
-          <div className="flex items-center md:hidden">
+          <div className="flex md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-full text-gray-400 hover:text-white hover:bg-white/5 transition-colors duration-200"
+              className="p-2 rounded-lg text-gray-400 hover:text-white"
             >
               {isOpen ? (
-                <X className="block h-6 w-6" aria-hidden="true" />
+                <X className="h-6 w-6" />
               ) : (
-                <Menu className="block h-6 w-6" aria-hidden="true" />
+                <Menu className="h-6 w-6" />
               )}
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Mobile menu */}
-      <div 
-        className={`md:hidden transform transition-all duration-200 ease-in-out ${
-          isOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
-        }`}
-      >
-        <div className="px-4 pt-4 pb-6 space-y-2 bg-black/95 backdrop-blur-xl border-b border-white/5">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center space-x-2 px-4 py-3 rounded-xl text-base font-medium transition-colors duration-200 ${
-                isActive(item.path)
-                  ? "text-primary bg-primary/5"
-                  : "text-gray-400 hover:text-white hover:bg-white/5"
-              }`}
-              onClick={() => setIsOpen(false)}
-            >
-              {item.icon && <item.icon className="w-5 h-5" />}
-              <span>{item.label}</span>
-            </Link>
-          ))}
-          {session ? (
-            <button
-              onClick={() => {
-                handleLogout();
-                setIsOpen(false);
-              }}
-              className="flex w-full items-center justify-center space-x-2 px-4 py-3 rounded-xl text-base font-medium text-white bg-gradient-to-r from-primary/90 to-primary hover:opacity-90 transition-all duration-200"
-            >
-              <LogOut className="w-5 h-5" />
-              <span>Sign Out</span>
-            </button>
-          ) : (
-            <Link
-              to="/auth"
-              className="flex w-full items-center justify-center space-x-2 px-4 py-3 rounded-xl text-base font-medium text-white bg-gradient-to-r from-primary/90 to-primary hover:opacity-90 transition-all duration-200"
-              onClick={() => setIsOpen(false)}
-            >
-              <LogIn className="w-5 h-5" />
-              <span>Sign In</span>
-            </Link>
-          )}
+        {/* Mobile menu */}
+        <div
+          className={`md:hidden transition-all duration-200 ease-in-out ${
+            isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+        >
+          <div className="px-2 pt-2 pb-3 space-y-1 bg-black/90 backdrop-blur-xl rounded-2xl border border-white/5 mt-2">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`block px-4 py-3 rounded-xl text-base transition-colors duration-200 ${
+                  isActive(item.path)
+                    ? "text-black bg-primary"
+                    : "text-gray-300 hover:text-white hover:bg-white/5"
+                }`}
+                onClick={() => setIsOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+            {session ? (
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setIsOpen(false);
+                }}
+                className="w-full px-4 py-3 rounded-xl text-black bg-primary hover:bg-primary/90 transition-colors duration-200"
+              >
+                Sign Out
+              </button>
+            ) : (
+              <Link
+                to="/auth"
+                className="block w-full px-4 py-3 rounded-xl text-black bg-primary hover:bg-primary/90 transition-colors duration-200"
+                onClick={() => setIsOpen(false)}
+              >
+                Sign In
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </nav>
