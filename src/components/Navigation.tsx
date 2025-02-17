@@ -41,15 +41,15 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-lg border-b border-gray-200 z-50">
+    <nav className="fixed top-0 w-full bg-black/80 backdrop-blur-lg border-b border-white/5 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link
               to="/"
-              className="text-xl font-bold text-primary hover:text-primary-hover transition-colors"
+              className="text-xl font-bold text-transparent bg-gradient-to-r from-white via-white to-primary/80 bg-clip-text hover:opacity-80 transition-opacity"
             >
-              CreditFlow
+              1clickseo.io
             </Link>
           </div>
 
@@ -62,7 +62,7 @@ const Navigation = () => {
                 className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   isActive(item.path)
                     ? "text-primary bg-primary/5"
-                    : "text-gray-600 hover:text-primary hover:bg-primary/5"
+                    : "text-gray-300 hover:text-primary hover:bg-primary/5"
                 }`}
               >
                 {item.icon && <item.icon className="w-4 h-4" />}
@@ -72,7 +72,7 @@ const Navigation = () => {
             {session ? (
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-1 px-4 py-2 rounded-md bg-primary text-white hover:bg-primary-hover transition-colors"
+                className="flex items-center space-x-1 px-4 py-2 rounded-full bg-gradient-to-r from-primary to-primary-hover text-white hover:opacity-90 transition-all duration-200"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Sign Out</span>
@@ -80,7 +80,7 @@ const Navigation = () => {
             ) : (
               <Link
                 to="/auth"
-                className="flex items-center space-x-1 px-4 py-2 rounded-md bg-primary text-white hover:bg-primary-hover transition-colors"
+                className="flex items-center space-x-1 px-4 py-2 rounded-full bg-gradient-to-r from-primary to-primary-hover text-white hover:opacity-90 transition-all duration-200"
               >
                 <LogIn className="w-4 h-4" />
                 <span>Sign In</span>
@@ -92,7 +92,7 @@ const Navigation = () => {
           <div className="flex items-center md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-300 hover:text-white hover:bg-primary/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
             >
               {isOpen ? (
                 <X className="block h-6 w-6" aria-hidden="true" />
@@ -106,7 +106,7 @@ const Navigation = () => {
 
       {/* Mobile menu */}
       <div className={`md:hidden ${isOpen ? "block" : "hidden"}`}>
-        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-black/90 backdrop-blur-lg border-t border-white/5">
           {navItems.map((item) => (
             <Link
               key={item.path}
@@ -114,7 +114,7 @@ const Navigation = () => {
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${
                 isActive(item.path)
                   ? "text-primary bg-primary/5"
-                  : "text-gray-600 hover:text-primary hover:bg-primary/5"
+                  : "text-gray-300 hover:text-primary hover:bg-primary/5"
               }`}
               onClick={() => setIsOpen(false)}
             >
@@ -128,7 +128,7 @@ const Navigation = () => {
                 handleLogout();
                 setIsOpen(false);
               }}
-              className="flex w-full items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-white bg-primary hover:bg-primary-hover"
+              className="flex w-full items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-white bg-gradient-to-r from-primary to-primary-hover hover:opacity-90"
             >
               <LogOut className="w-4 h-4" />
               <span>Sign Out</span>
@@ -136,7 +136,7 @@ const Navigation = () => {
           ) : (
             <Link
               to="/auth"
-              className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-white bg-primary hover:bg-primary-hover"
+              className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-white bg-gradient-to-r from-primary to-primary-hover hover:opacity-90"
               onClick={() => setIsOpen(false)}
             >
               <LogIn className="w-4 h-4" />
