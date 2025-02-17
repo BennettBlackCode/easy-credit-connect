@@ -4,86 +4,130 @@ import { Link } from "react-router-dom";
 
 const Index = () => {
   const features = [
-    "Free credit to get started",
-    "Automated workflow integration",
-    "Real-time run tracking",
-    "Flexible credit packages",
-    "Premium support",
-    "Google account integration",
+    {
+      title: "Free Credit to Get Started",
+      description: "Begin your automation journey with complimentary credits"
+    },
+    {
+      title: "Automated Workflow Integration",
+      description: "Seamlessly connect with your existing tools and processes"
+    },
+    {
+      title: "Real-time Run Tracking",
+      description: "Monitor your SEO automation progress in real-time"
+    },
+    {
+      title: "Flexible Credit Packages",
+      description: "Scale your automation needs with flexible pricing options"
+    },
+    {
+      title: "Premium Support",
+      description: "Get expert help whenever you need it"
+    },
+    {
+      title: "Google Account Integration",
+      description: "Connect directly with your Google tools and services"
+    }
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-secondary/50 to-secondary">
-      <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+      {/* Hero Section */}
+      <div className="relative pt-32 lg:pt-40 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          {/* Hero Section */}
-          <div className="text-center animate-fadeIn">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              Automate Your SEO
-              <br />
-              <span className="text-transparent bg-gradient-to-r from-primary via-primary/90 to-primary/80 bg-clip-text">With One Click</span>
+          <div className="text-center space-y-8 mb-16">
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8">
+              <span className="block bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-4">
+                Automate Your SEO
+              </span>
+              <span className="block text-transparent bg-gradient-to-r from-primary via-primary/90 to-primary/80 bg-clip-text">
+                With One Click
+              </span>
             </h1>
-            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto">
               Transform your business processes with our powerful automation
-              platform. Start with a free credit and experience the difference.
+              platform. Start with free credits and experience the difference.
             </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-center gap-6">
               <Link
                 to="/signup"
-                className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-primary to-primary-hover hover:opacity-90 transition-all duration-200 electric-glow"
+                className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-full text-white bg-gradient-to-r from-primary to-primary-hover hover:opacity-90 transition-all duration-200 electric-glow"
               >
                 Get Started Free
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
               <Link
                 to="/pricing"
-                className="inline-flex items-center justify-center px-6 py-3 border border-primary/20 text-base font-medium rounded-md text-white bg-gradient-to-br from-black/60 to-black/40 hover:from-black/70 hover:to-black/50 transition-all duration-200 neo-gradient"
+                className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-full text-white bg-gradient-to-br from-white/10 to-white/5 hover:from-white/15 hover:to-white/10 backdrop-blur-sm transition-all duration-200 border border-white/10"
               >
                 View Pricing
               </Link>
             </div>
           </div>
 
-          {/* Features Section */}
-          <div className="mt-24 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* Video Section */}
+          <div className="relative max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/10 backdrop-blur-sm bg-black/20">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <p className="text-white/50 text-lg">Product Video Will Go Here</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Features Section */}
+      <div className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-black/50 to-transparent backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-4">
+              Everything You Need for SEO Automation
+            </h2>
+            <p className="text-gray-300 text-xl max-w-2xl mx-auto">
+              Powerful features designed to streamline your SEO workflow
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="glass-card p-6 rounded-lg hover:shadow-md transition-all duration-300 animate-fadeIn bg-gradient-to-br from-black/60 via-black/40 to-transparent backdrop-blur-sm hover:backdrop-blur-lg"
+                className="group p-8 rounded-2xl transition-all duration-300 hover:scale-105 bg-gradient-to-br from-white/5 via-white/[0.02] to-transparent border border-white/10 backdrop-blur-sm"
                 style={{
                   animationDelay: `${index * 100}ms`,
                 }}
               >
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0">
-                    <div className="flex items-center justify-center h-8 w-8 rounded-md bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
-                      <Check className="h-5 w-5" />
-                    </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 text-primary group-hover:scale-110 transition-transform duration-300">
+                    <Check className="h-6 w-6" />
                   </div>
-                  <h3 className="text-lg font-medium text-white">
-                    {feature}
+                  <h3 className="text-xl font-semibold text-white">
+                    {feature.title}
                   </h3>
+                  <p className="text-gray-400">
+                    {feature.description}
+                  </p>
                 </div>
               </div>
             ))}
           </div>
+        </div>
+      </div>
 
-          {/* CTA Section */}
-          <div className="mt-24 text-center">
-            <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              Ready to Get Started?
-            </h2>
-            <p className="text-lg text-gray-300 mb-8">
-              Join thousands of businesses automating their SEO today.
-            </p>
-            <Link
-              to="/signup"
-              className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-primary to-primary-hover hover:opacity-90 transition-all duration-200 electric-glow"
-            >
-              Start Free Trial
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </div>
+      {/* CTA Section */}
+      <div className="py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto text-center space-y-8">
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+            Ready to Transform Your SEO?
+          </h2>
+          <p className="text-xl text-gray-300">
+            Join thousands of businesses automating their SEO workflow today.
+          </p>
+          <Link
+            to="/signup"
+            className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-full text-white bg-gradient-to-r from-primary to-primary-hover hover:opacity-90 transition-all duration-200 electric-glow"
+          >
+            Start Free Trial
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Link>
         </div>
       </div>
     </div>
