@@ -69,8 +69,8 @@ const Dashboard = () => {
 
   if (authLoading || userLoading || transactionsLoading) {
     return (
-      <div className="min-h-screen bg-[#030303] pt-24">
-        <div className="container max-w-6xl mx-auto px-4">
+      <div className="flex-1 bg-[#030303] pt-24">
+        <div className="container max-w-5xl mx-auto px-4">
           <div className="flex items-center justify-center h-[60vh]">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
@@ -86,9 +86,9 @@ const Dashboard = () => {
   const totalCredits = (userData?.credits || 0);
 
   return (
-    <div className="min-h-screen bg-[#030303] pt-28">
+    <div className="flex-1 bg-[#030303] py-16">
       <div className="container max-w-5xl mx-auto px-4">
-        <div className="space-y-12">
+        <div className="space-y-12 pb-8">
           {/* Header */}
           <div className="space-y-2">
             <h1 className="text-4xl font-bold bg-gradient-to-b from-white to-white/70 bg-clip-text text-transparent">
@@ -155,7 +155,7 @@ const Dashboard = () => {
           </div>
 
           {/* Automation Dialog */}
-          <div>
+          <div className="pt-4">
             <AutomationDialog />
           </div>
 
