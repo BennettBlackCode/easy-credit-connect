@@ -1,170 +1,113 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import Stripe from 'https://esm.sh/stripe@13.6.0?target=deno'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
-
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
-  httpClient: Stripe.createFetchHttpClient(),
-});
+import { createClient } from '@supabase/supabase-js'
+import { stripe } from './stripe'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-serve(async (req) => {
-  // Handle CORS preflight requests
+const supabaseAdmin = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+)
+
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    // Get the request body
-    const body = await req.text();
-    const signature = req.headers.get('stripe-signature')!;
-
-    let event;
-    const endpointSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
-
-    try {
-      event = stripe.webhooks.constructEvent(body, signature, endpointSecret!);
-    } catch (err) {
-      console.error(`⚠️  Webhook signature verification failed.`, err.message);
-      return new Response(JSON.stringify({ error: err.message }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    const signature = req.headers.get('stripe-signature')
+    if (!signature) {
+      return new Response('No signature', { status: 400 })
     }
 
-    // Get Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    );
+    const body = await req.text()
+    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')
+    if (!webhookSecret) {
+      return new Response('No webhook secret', { status: 400 })
+    }
 
-    // Handle the event
+    const event = stripe.webhooks.constructEvent(
+      body,
+      signature,
+      webhookSecret
+    )
+
+    console.log('Processing webhook event:', event.type)
+
     switch (event.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object;
-        
-        // Get the product details from metadata
-        const productId = session.metadata?.product_id;
-        const userId = session.metadata?.user_id;
+        const session = event.data.object
+        const userId = session.client_reference_id
+        const priceId = session.line_items?.data[0]?.price.id
 
-        if (!productId || !userId) {
-          throw new Error('Missing product_id or user_id in session metadata');
+        if (!userId || !priceId) {
+          console.error('Missing userId or priceId in session:', session)
+          return new Response('Missing data in session', { status: 400 })
         }
 
-        // Get the product details
-        const { data: product, error: productError } = await supabaseClient
+        // Get product details from stripe_products table
+        const { data: productData, error: productError } = await supabaseAdmin
           .from('stripe_products')
           .select('*')
-          .eq('id', productId)
-          .single();
+          .eq('price_id', priceId)
+          .single()
 
-        if (productError) {
-          throw productError;
+        if (productError || !productData) {
+          console.error('Error fetching product:', productError)
+          return new Response('Product not found', { status: 404 })
         }
 
-        // Determine if this is a subscription or one-time purchase
-        const isSubscription = product.name.toLowerCase().includes('growth');
-        const creditType = isSubscription ? 'subscription' : 'permanent';
-
-        // Create a transaction record
-        const { error: transactionError } = await supabaseClient
+        // Create transaction record
+        const { error: transactionError } = await supabaseAdmin
           .from('transactions')
           .insert({
             user_id: userId,
-            amount: product.credits,
+            amount: productData.credits,
             type: 'purchase',
             status: 'completed',
-            stripe_payment_id: session.payment_intent,
-            credit_type: creditType,
-            metadata: session,
-          });
+            stripe_payment_id: session.id,
+            stripe_price_id: priceId,
+            credit_type: 'permanent'
+          })
 
         if (transactionError) {
-          throw transactionError;
+          console.error('Error creating transaction:', transactionError)
+          return new Response('Error creating transaction', { status: 500 })
         }
 
-        // Update user credits based on the type
-        const { error: updateError } = await supabaseClient.rpc(
+        // Update user credits using the increment_user_credits function
+        const { error: creditError } = await supabaseAdmin.rpc(
           'increment_user_credits',
-          { 
-            user_id: userId, 
-            amount: product.credits,
-            credit_type: creditType
+          {
+            user_id: userId,
+            amount: productData.credits,
+            credit_type: 'permanent'
           }
-        );
+        )
 
-        if (updateError) {
-          throw updateError;
+        if (creditError) {
+          console.error('Error updating credits:', creditError)
+          return new Response('Error updating credits', { status: 500 })
         }
 
-        console.log(`Successfully added ${product.credits} ${creditType} credits to user ${userId}`);
-        break;
+        break
       }
-      case 'invoice.payment_succeeded': {
-        // Handle subscription renewal
-        const invoice = event.data.object;
-        const subscriptionId = invoice.subscription;
-        const customerId = invoice.customer;
 
-        if (subscriptionId) {
-          // Get the user associated with this customer
-          const { data: userData, error: userError } = await supabaseClient
-            .from('users')
-            .select('id')
-            .eq('stripe_customer_id', customerId)
-            .single();
-
-          if (userError) {
-            throw userError;
-          }
-
-          // Get the subscription to know which product it is
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-          const priceId = subscription.items.data[0].price.id;
-
-          // Get the product details from our database
-          const { data: product, error: productError } = await supabaseClient
-            .from('stripe_products')
-            .select('*')
-            .eq('price_id', priceId)
-            .single();
-
-          if (productError) {
-            throw productError;
-          }
-
-          // Reset and update subscription credits
-          const { error: updateError } = await supabaseClient.rpc(
-            'increment_user_credits',
-            { 
-              user_id: userData.id, 
-              amount: product.credits,
-              credit_type: 'subscription'
-            }
-          );
-
-          if (updateError) {
-            throw updateError;
-          }
-
-          console.log(`Successfully renewed subscription credits for user ${userData.id}`);
-        }
-        break;
-      }
+      default:
+        console.log('Unhandled event type:', event.type)
     }
 
     return new Response(JSON.stringify({ received: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    })
   } catch (err) {
-    console.error('Error processing webhook:', err);
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('Error processing webhook:', err)
+    return new Response(
+      JSON.stringify({ error: { message: err.message } }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   }
-});
+})
