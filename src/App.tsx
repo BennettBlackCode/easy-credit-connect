@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Pricing from "./pages/Pricing";
 import Billing from "./pages/Billing";
 import Auth from "./pages/Auth";
+import Automation from "./pages/Automation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/billing" element={<Billing />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/automation" element={<Automation />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
