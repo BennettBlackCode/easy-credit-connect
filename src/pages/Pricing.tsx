@@ -40,7 +40,7 @@ const Pricing = () => {
         "3 runs",
         "No commitment",
         "Basic support",
-        "Usage analytics",
+        "Usage analytics"
       ],
       href: "/billing",
       buttonText: "Get Started",
@@ -53,8 +53,7 @@ const Pricing = () => {
       features: [
         "15 runs",
         "No commitment",
-        "Priority support",
-        "API access",
+        "Priority support"
       ],
       href: "/billing",
       buttonText: "Start Growth",
@@ -73,7 +72,7 @@ const Pricing = () => {
         "Advanced analytics",
         "API access",
         "Custom integrations",
-        "Dedicated account manager",
+        "Dedicated account manager"
       ],
       href: "https://1clickseo.io",
       buttonText: "Contact Us",
