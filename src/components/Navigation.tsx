@@ -61,7 +61,7 @@ const Navigation = () => {
                   to={item.path}
                   className={`px-4 py-2 rounded-full text-sm transition-colors duration-200 ${
                     isActive(item.path)
-                      ? "text-black bg-primary"
+                      ? "text-white bg-white/10"
                       : "text-gray-300 hover:text-white"
                   }`}
                 >
@@ -114,7 +114,7 @@ const Navigation = () => {
                 to={item.path}
                 className={`block px-4 py-3 rounded-xl text-base transition-colors duration-200 ${
                   isActive(item.path)
-                    ? "text-black bg-primary"
+                    ? "text-white bg-white/10"
                     : "text-gray-300 hover:text-white hover:bg-white/5"
                 }`}
                 onClick={() => setIsOpen(false)}
