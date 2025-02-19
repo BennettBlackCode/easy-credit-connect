@@ -154,30 +154,30 @@ export type Database = {
       users: {
         Row: {
           created_at: string | null
-          credits: number | null
           email: string
           id: string
           permanent_credits: number | null
+          "Remaining Runs": number | null
           stripe_customer_id: string | null
           subscription_credits: number | null
           subscription_renewal_date: string | null
         }
         Insert: {
           created_at?: string | null
-          credits?: number | null
           email: string
           id?: string
           permanent_credits?: number | null
+          "Remaining Runs"?: number | null
           stripe_customer_id?: string | null
           subscription_credits?: number | null
           subscription_renewal_date?: string | null
         }
         Update: {
           created_at?: string | null
-          credits?: number | null
           email?: string
           id?: string
           permanent_credits?: number | null
+          "Remaining Runs"?: number | null
           stripe_customer_id?: string | null
           subscription_credits?: number | null
           subscription_renewal_date?: string | null

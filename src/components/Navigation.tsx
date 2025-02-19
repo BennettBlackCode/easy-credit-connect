@@ -15,14 +15,16 @@ const Navigation = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const navItems = session
-    ? [
-        { path: "/dashboard", label: "Dashboard", icon: BarChart2 },
-        { path: "/billing", label: "Billing", icon: CreditCard },
-      ]
-    : [
-        { path: "/pricing", label: "Pricing" }
-      ];
+  const navItems = [
+    ...(session
+      ? [
+          { path: "/dashboard", label: "Dashboard", icon: BarChart2 },
+          { path: "/billing", label: "Billing", icon: CreditCard },
+        ]
+      : [
+          { path: "/pricing", label: "Pricing" }
+        ]),
+  ];
 
   return (
     <nav className="fixed top-0 w-full z-50 backdrop-blur-md">
