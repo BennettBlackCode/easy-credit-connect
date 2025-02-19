@@ -14,10 +14,12 @@ function Calendar({
   ...props
 }: CalendarProps) {
   const [mode, setMode] = React.useState<'date' | 'month' | 'year' | 'decade' | 'century'>('date');
-  const [viewDate, setViewDate] = React.useState<Date>(props.selected || new Date());
+  const [viewDate, setViewDate] = React.useState<Date>(() => {
+    return props.selected instanceof Date ? props.selected : new Date();
+  });
   
   const CustomCaption = (props: CaptionProps) => {
-    const { displayMonth, onMonthChange } = props;
+    const { displayMonth } = props;
     
     const handleViewChange = () => {
       if (mode === 'date') setMode('month');
@@ -65,7 +67,9 @@ function Calendar({
           newDate.setFullYear(newDate.getFullYear() - 100);
           break;
       }
-      onMonthChange?.(newDate);
+      if (props.onMonthSelect) {
+        props.onMonthSelect(newDate);
+      }
       setViewDate(newDate);
     };
 
@@ -88,7 +92,9 @@ function Calendar({
           newDate.setFullYear(newDate.getFullYear() + 100);
           break;
       }
-      onMonthChange?.(newDate);
+      if (props.onMonthSelect) {
+        props.onMonthSelect(newDate);
+      }
       setViewDate(newDate);
     };
 
@@ -105,7 +111,9 @@ function Calendar({
           newDate.setFullYear(newDate.getFullYear() - 100);
           break;
       }
-      onMonthChange?.(newDate);
+      if (props.onMonthSelect) {
+        props.onMonthSelect(newDate);
+      }
       setViewDate(newDate);
     };
 
@@ -122,13 +130,15 @@ function Calendar({
           newDate.setFullYear(newDate.getFullYear() + 100);
           break;
       }
-      onMonthChange?.(newDate);
+      if (props.onMonthSelect) {
+        props.onMonthSelect(newDate);
+      }
       setViewDate(newDate);
     };
 
     return (
-      <div className="flex justify-center pt-1 relative items-center">
-        <div className="flex absolute left-1 space-x-1">
+      <div className="flex justify-between items-center w-full px-2">
+        <div className="flex space-x-1">
           {mode !== 'century' && (
             <button
               onClick={handleFastPrevClick}
@@ -156,7 +166,7 @@ function Calendar({
         >
           {getCaptionText()}
         </button>
-        <div className="flex absolute right-1 space-x-1">
+        <div className="flex space-x-1">
           <button
             onClick={handleNextClick}
             className={cn(
@@ -228,6 +238,7 @@ function Calendar({
         IconRight: () => <ChevronRight className="h-4 w-4" />,
         CaptionLabel: CustomCaption,
       }}
+      month={viewDate}
       {...props}
     />
   );
