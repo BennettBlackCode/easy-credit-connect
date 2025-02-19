@@ -1,13 +1,10 @@
-
 import * as React from "react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
-import { DayPicker, CaptionProps } from "react-day-picker";
+import { DayPicker, CaptionProps, SelectSingleEventHandler } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
-export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
-  onRangeChange?: (range: { start: Date; end: Date }) => void;
-};
+export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
 function Calendar({
   className,
@@ -15,24 +12,12 @@ function Calendar({
   showOutsideDays = true,
   selected,
   defaultMonth,
-  onRangeChange,
   ...props
 }: CalendarProps) {
   const [viewMode, setViewMode] = React.useState<'dates' | 'months' | 'years' | 'decades'>('dates');
   const [viewDate, setViewDate] = React.useState<Date>(() => {
     return defaultMonth || selected instanceof Date ? selected as Date : new Date();
   });
-
-  // Reset to today when changing modes
-  React.useEffect(() => {
-    if (onRangeChange) {
-      const today = new Date();
-      setViewDate(today);
-      if (props.mode === 'single' && props.onSelect) {
-        props.onSelect(today);
-      }
-    }
-  }, [props.mode]);
 
   const getMaxViewMode = () => {
     switch (props.mode) {
@@ -206,7 +191,7 @@ function Calendar({
     newDate.setMonth(month);
     setViewDate(newDate);
     if (props.mode === 'single' && props.onSelect) {
-      props.onSelect(newDate);
+      (props.onSelect as SelectSingleEventHandler)(newDate);
     }
     setViewMode('dates');
   };
@@ -216,7 +201,7 @@ function Calendar({
     newDate.setFullYear(year);
     setViewDate(newDate);
     if (props.mode === 'single' && props.onSelect) {
-      props.onSelect(newDate);
+      (props.onSelect as SelectSingleEventHandler)(newDate);
     }
     setViewMode('months');
   };
@@ -341,7 +326,6 @@ function Calendar({
           }}
           month={viewDate}
           selected={selected instanceof Date ? selected : undefined}
-          onSelect={props.mode === 'single' ? props.onSelect : undefined}
           {...props}
         />
       ) : viewMode === 'months' ? (
