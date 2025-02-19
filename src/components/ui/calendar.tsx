@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CalendarClock } from "lucide-react";
 import { DayPicker, CaptionProps, SelectSingleEventHandler } from "react-day-picker";
@@ -25,6 +24,14 @@ function Calendar({
   });
   const [isCustomDate, setIsCustomDate] = React.useState(false);
 
+  // Check if a date is today
+  const isDateToday = React.useCallback((date: Date) => {
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+           date.getMonth() === today.getMonth() &&
+           date.getFullYear() === today.getFullYear();
+  }, []);
+
   // Handle reset to today's date
   const resetToToday = React.useCallback(() => {
     const today = new Date();
@@ -37,18 +44,37 @@ function Calendar({
 
   const handleDateSelect = (date: Date | undefined, selectedProps?: any) => {
     if (date) {
-      const today = new Date();
-      const isToday = date.getDate() === today.getDate() &&
-                     date.getMonth() === today.getMonth() &&
-                     date.getFullYear() === today.getFullYear();
-      
       setViewDate(date);
-      setIsCustomDate(!isToday);
+      setIsCustomDate(!isDateToday(date));
       
       if (selectedProps?.onSelect) {
         (selectedProps.onSelect as SelectSingleEventHandler)(date, selected as Date, date, { selected: true });
       }
     }
+  };
+
+  const handleMonthSelect = (month: number) => {
+    const newDate = new Date(viewDate);
+    newDate.setMonth(month);
+    setViewDate(newDate);
+    setIsCustomDate(!isDateToday(newDate));
+    setViewMode('dates');
+  };
+
+  const handleYearSelect = (year: number) => {
+    const newDate = new Date(viewDate);
+    newDate.setFullYear(year);
+    setViewDate(newDate);
+    setIsCustomDate(!isDateToday(newDate));
+    setViewMode('months');
+  };
+
+  const handleDecadeSelect = (decade: number) => {
+    const newDate = new Date(viewDate);
+    newDate.setFullYear(decade);
+    setViewDate(newDate);
+    setIsCustomDate(!isDateToday(newDate));
+    setViewMode('years');
   };
 
   const getMaxViewMode = () => {
@@ -72,6 +98,80 @@ function Calendar({
       else if (viewMode === 'years') setViewMode('decades');
     };
 
+    const handlePrevClick = () => {
+      const newDate = new Date(viewDate);
+      switch (viewMode) {
+        case 'dates':
+          newDate.setMonth(newDate.getMonth() - 1);
+          break;
+        case 'months':
+          newDate.setFullYear(newDate.getFullYear() - 1);
+          break;
+        case 'years':
+          newDate.setFullYear(newDate.getFullYear() - 10);
+          break;
+        case 'decades':
+          newDate.setFullYear(newDate.getFullYear() - 100);
+          break;
+      }
+      setViewDate(newDate);
+      setIsCustomDate(!isDateToday(newDate));
+    };
+
+    const handleNextClick = () => {
+      const newDate = new Date(viewDate);
+      switch (viewMode) {
+        case 'dates':
+          newDate.setMonth(newDate.getMonth() + 1);
+          break;
+        case 'months':
+          newDate.setFullYear(newDate.getFullYear() + 1);
+          break;
+        case 'years':
+          newDate.setFullYear(newDate.getFullYear() + 10);
+          break;
+        case 'decades':
+          newDate.setFullYear(newDate.getFullYear() + 100);
+          break;
+      }
+      setViewDate(newDate);
+      setIsCustomDate(!isDateToday(newDate));
+    };
+
+    const handleFastPrevClick = () => {
+      const newDate = new Date(viewDate);
+      switch (viewMode) {
+        case 'dates':
+          newDate.setFullYear(newDate.getFullYear() - 1);
+          break;
+        case 'months':
+          newDate.setFullYear(newDate.getFullYear() - 10);
+          break;
+        case 'years':
+          newDate.setFullYear(newDate.getFullYear() - 100);
+          break;
+      }
+      setViewDate(newDate);
+      setIsCustomDate(!isDateToday(newDate));
+    };
+
+    const handleFastNextClick = () => {
+      const newDate = new Date(viewDate);
+      switch (viewMode) {
+        case 'dates':
+          newDate.setFullYear(newDate.getFullYear() + 1);
+          break;
+        case 'months':
+          newDate.setFullYear(newDate.getFullYear() + 10);
+          break;
+        case 'years':
+          newDate.setFullYear(newDate.getFullYear() + 100);
+          break;
+      }
+      setViewDate(newDate);
+      setIsCustomDate(!isDateToday(newDate));
+    };
+
     const getCaptionText = () => {
       const year = viewDate.getFullYear();
       const month = viewDate.toLocaleString('default', { month: 'long' });
@@ -90,76 +190,6 @@ function Calendar({
         default:
           return '';
       }
-    };
-
-    const handlePrevClick = () => {
-      const newDate = new Date(displayMonth);
-      switch (viewMode) {
-        case 'dates':
-          newDate.setMonth(newDate.getMonth() - 1);
-          break;
-        case 'months':
-          newDate.setFullYear(newDate.getFullYear() - 1);
-          break;
-        case 'years':
-          newDate.setFullYear(newDate.getFullYear() - 10);
-          break;
-        case 'decades':
-          newDate.setFullYear(newDate.getFullYear() - 100);
-          break;
-      }
-      setViewDate(newDate);
-    };
-
-    const handleNextClick = () => {
-      const newDate = new Date(displayMonth);
-      switch (viewMode) {
-        case 'dates':
-          newDate.setMonth(newDate.getMonth() + 1);
-          break;
-        case 'months':
-          newDate.setFullYear(newDate.getFullYear() + 1);
-          break;
-        case 'years':
-          newDate.setFullYear(newDate.getFullYear() + 10);
-          break;
-        case 'decades':
-          newDate.setFullYear(newDate.getFullYear() + 100);
-          break;
-      }
-      setViewDate(newDate);
-    };
-
-    const handleFastPrevClick = () => {
-      const newDate = new Date(displayMonth);
-      switch (viewMode) {
-        case 'dates':
-          newDate.setFullYear(newDate.getFullYear() - 1);
-          break;
-        case 'months':
-          newDate.setFullYear(newDate.getFullYear() - 10);
-          break;
-        case 'years':
-          newDate.setFullYear(newDate.getFullYear() - 100);
-          break;
-      }
-      setViewDate(newDate);
-    };
-
-    const handleFastNextClick = () => {
-      const newDate = new Date(displayMonth);
-      switch (viewMode) {
-        case 'dates':
-          newDate.setFullYear(newDate.getFullYear() + 1);
-          break;
-        case 'months':
-          newDate.setFullYear(newDate.getFullYear() + 10);
-          break;
-        case 'years':
-          newDate.setFullYear(newDate.getFullYear() + 100);
-          break;
-      }
-      setViewDate(newDate);
     };
 
     return (
@@ -230,29 +260,6 @@ function Calendar({
         </div>
       </div>
     );
-  };
-
-  const handleMonthSelect = (month: number) => {
-    const newDate = new Date(viewDate);
-    newDate.setMonth(month);
-    setViewDate(newDate);
-    setIsCustomDate(true);
-    setViewMode('dates');
-  };
-
-  const handleYearSelect = (year: number) => {
-    const newDate = new Date(viewDate);
-    newDate.setFullYear(year);
-    setViewDate(newDate);
-    setIsCustomDate(true);
-    setViewMode('months');
-  };
-
-  const handleDecadeSelect = (decade: number) => {
-    const newDate = new Date(viewDate);
-    newDate.setFullYear(decade);
-    setViewDate(newDate);
-    setViewMode('years');
   };
 
   const renderMonthView = () => {
