@@ -7,11 +7,18 @@ import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import TimeRangeSelector from "@/components/dashboard/TimeRangeSelector";
+import UsageChart from "@/components/dashboard/UsageChart";
+import RunsTable from "@/components/dashboard/RunsTable";
+
+type TimeRange = "day" | "week" | "month" | "year";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState<TimeRange>("week");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: userData } = useQuery({
     queryKey: ["user-dashboard", session?.user?.id],
@@ -29,15 +36,19 @@ const Dashboard = () => {
   });
 
   const { data: recentAutomations } = useQuery({
-    queryKey: ["recent-automations", session?.user?.id],
+    queryKey: ["recent-automations", session?.user?.id, searchQuery],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("automations")
         .select("*")
         .eq("user_id", session?.user?.id)
-        .order("created_at", { ascending: false })
-        .limit(5);
+        .order("created_at", { ascending: false });
 
+      if (searchQuery) {
+        query = query.ilike("company_name", `%${searchQuery}%`);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
@@ -48,12 +59,10 @@ const Dashboard = () => {
     const initializeDashboard = async () => {
       try {
         const redirectSession = await handleAuthRedirect();
-        
         if (!session && !redirectSession) {
           navigate("/auth");
           return;
         }
-        
         setIsLoading(false);
       } catch (error) {
         console.error("Dashboard initialization error:", error);
@@ -79,47 +88,63 @@ const Dashboard = () => {
     return type.toLowerCase().endsWith('plan') ? type : `${type} Plan`;
   };
 
+  // Mock data for the chart - replace with real data
+  const mockChartData = Array.from({ length: 7 }, (_, i) => ({
+    date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
+    usage: Math.floor(Math.random() * 10),
+  })).reverse();
+
   return (
-    <div className="min-h-screen bg-[#030303] text-white pt-24">
+    <div className="min-h-screen bg-[#030303] text-white pt-8">
       <div className="max-w-7xl mx-auto px-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Dashboard</h1>
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <div className="flex items-center gap-4 mb-2">
+              <h1 className="text-3xl font-bold">Dashboard</h1>
+              <div className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-full">
+                <span className="text-gray-400">Status:</span>
+                <span className="text-primary font-medium">
+                  {formatSubscriptionType(userData?.subscription_type)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-full">
+                <span className="text-gray-400">Credits:</span>
+                <span className="text-primary font-medium">{totalCredits}</span>
+              </div>
+            </div>
+          </div>
           <Button asChild className="bg-primary hover:bg-primary/90">
             <Link to="/automation" className="flex items-center gap-2">
               Start Now <ArrowUpRight className="h-4 w-4" />
             </Link>
           </Button>
         </div>
-        
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+
+        <div className="space-y-8">
           <div className="p-6 rounded-xl bg-white/5 border border-white/10">
-            <h3 className="text-lg font-semibold mb-2">Recent Automations</h3>
-            {recentAutomations && recentAutomations.length > 0 ? (
-              <div className="space-y-3">
-                {recentAutomations.map((automation) => (
-                  <div key={automation.id} className="text-sm text-gray-400">
-                    <p className="text-white">{automation.company_name}</p>
-                    <p className="text-xs">{new Date(automation.created_at).toLocaleDateString()}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-400">No automations run yet</p>
-            )}
+            <TimeRangeSelector
+              selectedRange={timeRange}
+              onRangeChange={setTimeRange}
+              onNavigate={(direction) => {
+                console.log("Navigate:", direction);
+                // Implement date navigation
+              }}
+            />
+            <UsageChart data={mockChartData} />
           </div>
-          
+
           <div className="p-6 rounded-xl bg-white/5 border border-white/10">
-            <h3 className="text-lg font-semibold mb-2">Credits Available</h3>
-            <p className="text-2xl font-bold text-primary">{totalCredits}</p>
-            <div className="mt-2 space-y-1 text-sm text-gray-400">
-              <p>Permanent: {userData?.permanent_credits || 0}</p>
-              <p>Subscription: {userData?.subscription_credits || 0}</p>
-            </div>
-          </div>
-          
-          <div className="p-6 rounded-xl bg-white/5 border border-white/10">
-            <h3 className="text-lg font-semibold mb-2">Account Status</h3>
-            <p className="text-gray-400">{formatSubscriptionType(userData?.subscription_type)}</p>
+            <h3 className="text-lg font-semibold mb-4">Recent Runs</h3>
+            <RunsTable
+              runs={recentAutomations?.map(run => ({
+                id: run.id,
+                created_at: run.created_at,
+                company_name: run.company_name,
+                credits_used: 1, // Replace with actual credits used
+              })) || []}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
           </div>
         </div>
       </div>
