@@ -1,7 +1,7 @@
 
 import * as React from "react";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
-import { DayPicker, CaptionProps } from "react-day-picker";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CalendarClock } from "lucide-react";
+import { DayPicker, CaptionProps, SelectSingleEventHandler } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -35,12 +35,12 @@ function Calendar({
     }
   }, [onReset]);
 
-  const handleDateSelect = (date: Date | undefined) => {
+  const handleDateSelect = (date: Date | undefined, selectedProps?: any) => {
     if (date) {
       setViewDate(date);
       setIsCustomDate(true);
-      if (props.onSelect) {
-        props.onSelect(date);
+      if (selectedProps?.onSelect) {
+        (selectedProps.onSelect as SelectSingleEventHandler)(date);
       }
     }
   };
@@ -180,12 +180,26 @@ function Calendar({
             <ChevronLeft className="h-4 w-4" />
           </button>
         </div>
-        <button
-          onClick={handleViewChange}
-          className="text-sm font-medium hover:bg-accent hover:text-accent-foreground rounded-md px-2 py-1"
-        >
-          {getCaptionText()}
-        </button>
+        <div className="flex items-center space-x-2">
+          {isCustomDate && (
+            <button
+              onClick={resetToToday}
+              className={cn(
+                buttonVariants({ variant: "ghost" }),
+                "h-7 w-7 p-0 opacity-50 hover:opacity-100"
+              )}
+              title="Back to today"
+            >
+              <CalendarClock className="h-4 w-4" />
+            </button>
+          )}
+          <button
+            onClick={handleViewChange}
+            className="text-sm font-medium hover:bg-accent hover:text-accent-foreground rounded-md px-2 py-1"
+          >
+            {getCaptionText()}
+          </button>
+        </div>
         <div className="flex space-x-1">
           <button
             onClick={handleNextClick}
@@ -304,7 +318,7 @@ function Calendar({
     <div className={cn("p-3 bg-card border border-border", className)}>
       {viewMode === 'dates' ? (
         <DayPicker
-          mode={mode}
+          mode="single"
           showOutsideDays={showOutsideDays}
           className="w-full"
           classNames={{
@@ -348,7 +362,7 @@ function Calendar({
           }}
           month={viewDate}
           selected={selected}
-          onSelect={handleDateSelect}
+          onSelect={(date) => handleDateSelect(date, props)}
           {...props}
         />
       ) : viewMode === 'months' ? (
