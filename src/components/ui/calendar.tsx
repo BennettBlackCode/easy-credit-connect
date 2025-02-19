@@ -11,21 +11,24 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
-  mode: calendarMode,
   selected,
   defaultMonth,
-  onSelect,
   ...props
 }: CalendarProps) {
-  const [viewMode, setViewMode] = React.useState<'date' | 'month' | 'year' | 'decade' | 'century'>('date');
+  const [viewMode, setViewMode] = React.useState<'dates' | 'months' | 'years' | 'decades'>('dates');
   const [viewDate, setViewDate] = React.useState<Date>(() => {
     return defaultMonth || selected instanceof Date ? selected as Date : new Date();
   });
 
   const getMaxViewMode = () => {
-    if (calendarMode === 'year') return 'decade';
-    if (calendarMode === 'month') return 'year';
-    return 'month';
+    switch (props.mode) {
+      case "range":
+      case "single":
+      case "multiple":
+        return 'months';
+      default:
+        return 'dates';
+    }
   };
 
   const CustomCaption = (props: CaptionProps) => {
@@ -33,10 +36,9 @@ function Calendar({
     
     const handleViewChange = () => {
       const maxMode = getMaxViewMode();
-      if (viewMode === 'date' && maxMode !== 'date') setViewMode('month');
-      else if (viewMode === 'month' && maxMode !== 'month') setViewMode('year');
-      else if (viewMode === 'year' && maxMode !== 'year') setViewMode('decade');
-      else if (viewMode === 'decade' && maxMode !== 'decade') setViewMode('century');
+      if (viewMode === 'dates' && maxMode !== 'dates') setViewMode('months');
+      else if (viewMode === 'months') setViewMode('years');
+      else if (viewMode === 'years') setViewMode('decades');
     };
 
     const getCaptionText = () => {
@@ -44,14 +46,14 @@ function Calendar({
       const month = displayMonth.toLocaleString('default', { month: 'long' });
       
       switch (viewMode) {
-        case 'date':
+        case 'dates':
           return `${month} ${year}`;
-        case 'month':
+        case 'months':
           return year.toString();
-        case 'year':
+        case 'years':
           const startDecade = Math.floor(year / 10) * 10;
           return `${startDecade}-${startDecade + 9}`;
-        case 'decade':
+        case 'decades':
           const startCentury = Math.floor(year / 100) * 100;
           return `${startCentury}-${startCentury + 99}`;
         default:
@@ -62,19 +64,16 @@ function Calendar({
     const handlePrevClick = () => {
       const newDate = new Date(displayMonth);
       switch (viewMode) {
-        case 'date':
+        case 'dates':
           newDate.setMonth(newDate.getMonth() - 1);
           break;
-        case 'month':
+        case 'months':
           newDate.setFullYear(newDate.getFullYear() - 1);
           break;
-        case 'year':
+        case 'years':
           newDate.setFullYear(newDate.getFullYear() - 10);
           break;
-        case 'decade':
-          newDate.setFullYear(newDate.getFullYear() - 100);
-          break;
-        case 'century':
+        case 'decades':
           newDate.setFullYear(newDate.getFullYear() - 100);
           break;
       }
@@ -84,19 +83,16 @@ function Calendar({
     const handleNextClick = () => {
       const newDate = new Date(displayMonth);
       switch (viewMode) {
-        case 'date':
+        case 'dates':
           newDate.setMonth(newDate.getMonth() + 1);
           break;
-        case 'month':
+        case 'months':
           newDate.setFullYear(newDate.getFullYear() + 1);
           break;
-        case 'year':
+        case 'years':
           newDate.setFullYear(newDate.getFullYear() + 10);
           break;
-        case 'decade':
-          newDate.setFullYear(newDate.getFullYear() + 100);
-          break;
-        case 'century':
+        case 'decades':
           newDate.setFullYear(newDate.getFullYear() + 100);
           break;
       }
@@ -106,13 +102,13 @@ function Calendar({
     const handleFastPrevClick = () => {
       const newDate = new Date(displayMonth);
       switch (viewMode) {
-        case 'date':
+        case 'dates':
           newDate.setFullYear(newDate.getFullYear() - 1);
           break;
-        case 'month':
+        case 'months':
           newDate.setFullYear(newDate.getFullYear() - 10);
           break;
-        case 'year':
+        case 'years':
           newDate.setFullYear(newDate.getFullYear() - 100);
           break;
       }
@@ -122,13 +118,13 @@ function Calendar({
     const handleFastNextClick = () => {
       const newDate = new Date(displayMonth);
       switch (viewMode) {
-        case 'date':
+        case 'dates':
           newDate.setFullYear(newDate.getFullYear() + 1);
           break;
-        case 'month':
+        case 'months':
           newDate.setFullYear(newDate.getFullYear() + 10);
           break;
-        case 'year':
+        case 'years':
           newDate.setFullYear(newDate.getFullYear() + 100);
           break;
       }
@@ -138,7 +134,7 @@ function Calendar({
     return (
       <div className="flex justify-between items-center w-full px-2">
         <div className="flex space-x-1">
-          {viewMode !== 'century' && (
+          {viewMode !== 'decades' && (
             <button
               onClick={handleFastPrevClick}
               className={cn(
@@ -175,7 +171,7 @@ function Calendar({
           >
             <ChevronRight className="h-4 w-4" />
           </button>
-          {viewMode !== 'century' && (
+          {viewMode !== 'decades' && (
             <button
               onClick={handleFastNextClick}
               className={cn(
@@ -195,33 +191,21 @@ function Calendar({
     const newDate = new Date(viewDate);
     newDate.setMonth(month);
     setViewDate(newDate);
-    if (calendarMode === 'month') {
-      if (onSelect) {
-        onSelect(newDate);
-      }
-    } else {
-      setViewMode('date');
-    }
+    setViewMode('dates');
   };
 
   const handleYearSelect = (year: number) => {
     const newDate = new Date(viewDate);
     newDate.setFullYear(year);
     setViewDate(newDate);
-    if (calendarMode === 'year') {
-      if (onSelect) {
-        onSelect(newDate);
-      }
-    } else {
-      setViewMode('month');
-    }
+    setViewMode('months');
   };
 
   const handleDecadeSelect = (decade: number) => {
     const newDate = new Date(viewDate);
     newDate.setFullYear(decade);
     setViewDate(newDate);
-    setViewMode('year');
+    setViewMode('years');
   };
 
   const renderMonthView = () => {
@@ -291,7 +275,7 @@ function Calendar({
 
   return (
     <div className={cn("p-3 bg-card border border-border", className)}>
-      {viewMode === 'date' ? (
+      {viewMode === 'dates' ? (
         <DayPicker
           mode="single"
           showOutsideDays={showOutsideDays}
@@ -337,15 +321,14 @@ function Calendar({
           }}
           month={viewDate}
           selected={selected as Date}
-          onSelect={onSelect}
           {...props}
         />
-      ) : viewMode === 'month' ? (
+      ) : viewMode === 'months' ? (
         <div>
           <CustomCaption displayMonth={viewDate} />
           {renderMonthView()}
         </div>
-      ) : viewMode === 'year' ? (
+      ) : viewMode === 'years' ? (
         <div>
           <CustomCaption displayMonth={viewDate} />
           {renderYearView()}
