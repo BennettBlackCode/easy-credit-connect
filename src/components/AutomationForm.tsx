@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -75,27 +74,31 @@ const AutomationForm = () => {
       return;
     }
 
+    // Check available credits
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("remaining_runs, permanent_credits, subscription_credits")
+      .eq("id", session.user.id)
+      .single();
+
+    if (userError) throw userError;
+
+    const totalCredits = (userData?.remaining_runs || 0) + 
+                        (userData?.permanent_credits || 0) + 
+                        (userData?.subscription_credits || 0);
+
+    if (totalCredits < 1) {
+      toast({
+        title: "Insufficient Credits",
+        description: "You need at least 1 credit to run this automation",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // Check available credits
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("credits")
-        .eq("id", session.user.id)
-        .single();
-
-      if (userError) throw userError;
-
-      if (!userData || userData.credits < 1) {
-        toast({
-          title: "Insufficient Credits",
-          description: "You need at least 1 credit to run this automation",
-          variant: "destructive",
-        });
-        return;
-      }
-
       // Begin transaction
       const insertData: Automation = {
         company_name: values.company_name,
@@ -120,24 +123,19 @@ const AutomationForm = () => {
 
       if (automationError) throw automationError;
 
-      // Deduct credit
-      const { error: creditError } = await supabase
-        .from("users")
-        .update({ credits: userData.credits - 1 })
-        .eq("id", session.user.id);
+      // Call webhook
+      const webhookUrl = "https://boldslate.app.n8n.cloud/webhook/685d206b-107d-4b95-a7b4-9d07133417e7";
+      const response = await fetch(webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(insertData),
+      });
 
-      if (creditError) throw creditError;
-
-      // Record transaction
-      const { error: transactionError } = await supabase
-        .from("transactions")
-        .insert({
-          user_id: session.user.id,
-          amount: -1,
-          type: "automation",
-        });
-
-      if (transactionError) throw transactionError;
+      if (!response.ok) {
+        throw new Error("Failed to trigger automation webhook");
+      }
 
       toast({
         title: "Success",
@@ -146,7 +144,7 @@ const AutomationForm = () => {
 
       // Reset form
       form.reset();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error:", error);
       toast({
         title: "Error",

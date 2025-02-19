@@ -15,7 +15,7 @@ const AutomationDialog = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("users")
-        .select("*")
+        .select("remaining_runs, permanent_credits, subscription_credits")
         .eq("id", session?.user?.id)
         .single();
 
@@ -24,6 +24,10 @@ const AutomationDialog = () => {
     },
     enabled: !!session?.user?.id,
   });
+
+  const totalCredits = (userData?.remaining_runs || 0) + 
+                      (userData?.permanent_credits || 0) + 
+                      (userData?.subscription_credits || 0);
 
   return (
     <Dialog>
@@ -37,7 +41,7 @@ const AutomationDialog = () => {
             <p className="text-gray-400 text-lg mb-6 leading-relaxed">
               Ready to streamline your workflow? Launch your automation in minutes.
               <span className="block text-sm mt-2 text-primary">
-                {userData?.credits || 0} credits available
+                {totalCredits} credits available
               </span>
             </p>
             <Button 
