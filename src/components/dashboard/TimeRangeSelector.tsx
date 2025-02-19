@@ -104,13 +104,13 @@ const TimeRangeSelector = ({
               <CalendarIcon className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 bg-card border border-border">
+          <PopoverContent className="w-auto p-0" align="end">
             <Calendar
               mode="single"
               selected={selectedDate}
               onSelect={handleCalendarSelect}
               initialFocus
-              className="bg-card rounded-md"
+              className="rounded-md border"
             />
           </PopoverContent>
         </Popover>

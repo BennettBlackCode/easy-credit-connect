@@ -117,7 +117,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#030303] text-white">
-      <div className="max-w-7xl mx-auto px-8 pt-8">
+      <div className="max-w-7xl mx-auto px-8 pt-16">
         <div className="space-y-8">
           <div className="p-6 rounded-xl bg-white/5 border border-white/10">
             <div className="flex justify-between items-center mb-6">
