@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -95,7 +94,7 @@ const Automation = () => {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from("automations").insert({
+      const automationData = {
         user_id: session.user.id,
         company_name: values.company_name,
         domain: values.domain,
@@ -104,7 +103,15 @@ const Automation = () => {
         city: values.city,
         state: values.state,
         postal_code: values.zip_code,
-      });
+        agency_email: session.user.email || "",
+        email: session.user.email || "",
+        country: "United States",
+        industry: "Unknown",
+        last_name: "Unknown",
+        web_url: `https://${values.domain}`,
+      };
+
+      const { error } = await supabase.from("automations").insert(automationData);
 
       if (error) throw error;
 
