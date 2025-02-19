@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, CreditCard, BarChart2, LogIn, LogOut } from "lucide-react";
+import { Menu, X, CreditCard, BarChart2, ArrowUpRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -15,29 +15,14 @@ const Navigation = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      navigate("/");
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message,
-      });
-    }
-  };
-
-  const navItems = [
-    { path: "/pricing", label: "Pricing" },
-    ...(session
-      ? [
-          { path: "/dashboard", label: "Dashboard", icon: BarChart2 },
-          { path: "/billing", label: "Billing", icon: CreditCard },
-        ]
-      : []),
-  ];
+  const navItems = session
+    ? [
+        { path: "/dashboard", label: "Dashboard", icon: BarChart2 },
+        { path: "/billing", label: "Billing", icon: CreditCard },
+      ]
+    : [
+        { path: "/pricing", label: "Pricing" }
+      ];
 
   return (
     <nav className="fixed top-0 w-full z-50 backdrop-blur-md">
@@ -70,12 +55,12 @@ const Navigation = () => {
               ))}
             </div>
             {session ? (
-              <button
-                onClick={handleLogout}
-                className="ml-4 px-5 py-2.5 rounded-full text-black bg-primary hover:bg-primary/90 transition-colors duration-200 text-sm font-medium shadow-[0_0_20px_rgba(46,213,115,0.3)]"
+              <Link
+                to="/automation"
+                className="ml-4 px-5 py-2.5 rounded-full text-black bg-primary hover:bg-primary/90 transition-colors duration-200 text-sm font-medium shadow-[0_0_20px_rgba(46,213,115,0.3)] flex items-center gap-2"
               >
-                Sign Out
-              </button>
+                Run Automation <ArrowUpRight className="h-4 w-4" />
+              </Link>
             ) : (
               <Link
                 to="/auth"
@@ -123,15 +108,13 @@ const Navigation = () => {
               </Link>
             ))}
             {session ? (
-              <button
-                onClick={() => {
-                  handleLogout();
-                  setIsOpen(false);
-                }}
-                className="w-full px-4 py-3 rounded-xl text-black bg-primary hover:bg-primary/90 transition-colors duration-200"
+              <Link
+                to="/automation"
+                className="block w-full px-4 py-3 rounded-xl text-black bg-primary hover:bg-primary/90 transition-colors duration-200 flex items-center justify-center gap-2"
+                onClick={() => setIsOpen(false)}
               >
-                Sign Out
-              </button>
+                Run Automation <ArrowUpRight className="h-4 w-4" />
+              </Link>
             ) : (
               <Link
                 to="/auth"
