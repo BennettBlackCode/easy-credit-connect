@@ -14,9 +14,10 @@ function Calendar({
   ...props
 }: CalendarProps) {
   const [mode, setMode] = React.useState<'date' | 'month' | 'year' | 'decade' | 'century'>('date');
+  const [viewDate, setViewDate] = React.useState<Date>(props.selected || new Date());
   
   const CustomCaption = (props: CaptionProps) => {
-    const { displayMonth } = props;
+    const { displayMonth, onMonthChange } = props;
     
     const handleViewChange = () => {
       if (mode === 'date') setMode('month');
@@ -45,14 +46,138 @@ function Calendar({
       }
     };
 
+    const handlePrevClick = () => {
+      const newDate = new Date(displayMonth);
+      switch (mode) {
+        case 'date':
+          newDate.setMonth(newDate.getMonth() - 1);
+          break;
+        case 'month':
+          newDate.setFullYear(newDate.getFullYear() - 1);
+          break;
+        case 'year':
+          newDate.setFullYear(newDate.getFullYear() - 10);
+          break;
+        case 'decade':
+          newDate.setFullYear(newDate.getFullYear() - 100);
+          break;
+        case 'century':
+          newDate.setFullYear(newDate.getFullYear() - 100);
+          break;
+      }
+      onMonthChange?.(newDate);
+      setViewDate(newDate);
+    };
+
+    const handleNextClick = () => {
+      const newDate = new Date(displayMonth);
+      switch (mode) {
+        case 'date':
+          newDate.setMonth(newDate.getMonth() + 1);
+          break;
+        case 'month':
+          newDate.setFullYear(newDate.getFullYear() + 1);
+          break;
+        case 'year':
+          newDate.setFullYear(newDate.getFullYear() + 10);
+          break;
+        case 'decade':
+          newDate.setFullYear(newDate.getFullYear() + 100);
+          break;
+        case 'century':
+          newDate.setFullYear(newDate.getFullYear() + 100);
+          break;
+      }
+      onMonthChange?.(newDate);
+      setViewDate(newDate);
+    };
+
+    const handleFastPrevClick = () => {
+      const newDate = new Date(displayMonth);
+      switch (mode) {
+        case 'date':
+          newDate.setFullYear(newDate.getFullYear() - 1);
+          break;
+        case 'month':
+          newDate.setFullYear(newDate.getFullYear() - 10);
+          break;
+        case 'year':
+          newDate.setFullYear(newDate.getFullYear() - 100);
+          break;
+      }
+      onMonthChange?.(newDate);
+      setViewDate(newDate);
+    };
+
+    const handleFastNextClick = () => {
+      const newDate = new Date(displayMonth);
+      switch (mode) {
+        case 'date':
+          newDate.setFullYear(newDate.getFullYear() + 1);
+          break;
+        case 'month':
+          newDate.setFullYear(newDate.getFullYear() + 10);
+          break;
+        case 'year':
+          newDate.setFullYear(newDate.getFullYear() + 100);
+          break;
+      }
+      onMonthChange?.(newDate);
+      setViewDate(newDate);
+    };
+
     return (
       <div className="flex justify-center pt-1 relative items-center">
+        <div className="flex absolute left-1 space-x-1">
+          {mode !== 'century' && (
+            <button
+              onClick={handleFastPrevClick}
+              className={cn(
+                buttonVariants({ variant: "outline" }),
+                "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+              )}
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </button>
+          )}
+          <button
+            onClick={handlePrevClick}
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+            )}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+        </div>
         <button
           onClick={handleViewChange}
           className="text-sm font-medium hover:bg-accent hover:text-accent-foreground rounded-md px-2 py-1"
         >
           {getCaptionText()}
         </button>
+        <div className="flex absolute right-1 space-x-1">
+          <button
+            onClick={handleNextClick}
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+            )}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+          {mode !== 'century' && (
+            <button
+              onClick={handleFastNextClick}
+              className={cn(
+                buttonVariants({ variant: "outline" }),
+                "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+              )}
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
     );
   };
@@ -60,7 +185,7 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      className={cn("p-3 bg-card border border-border", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
