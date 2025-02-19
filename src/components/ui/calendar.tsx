@@ -5,7 +5,9 @@ import { DayPicker, CaptionProps } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
-export type CalendarProps = React.ComponentProps<typeof DayPicker>;
+export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
+  onRangeChange?: (range: { start: Date; end: Date }) => void;
+};
 
 function Calendar({
   className,
@@ -13,12 +15,24 @@ function Calendar({
   showOutsideDays = true,
   selected,
   defaultMonth,
+  onRangeChange,
   ...props
 }: CalendarProps) {
   const [viewMode, setViewMode] = React.useState<'dates' | 'months' | 'years' | 'decades'>('dates');
   const [viewDate, setViewDate] = React.useState<Date>(() => {
     return defaultMonth || selected instanceof Date ? selected as Date : new Date();
   });
+
+  // Reset to today when changing modes
+  React.useEffect(() => {
+    if (onRangeChange) {
+      const today = new Date();
+      setViewDate(today);
+      if (props.mode === 'single' && props.onSelect) {
+        props.onSelect(today);
+      }
+    }
+  }, [props.mode]);
 
   const getMaxViewMode = () => {
     switch (props.mode) {
@@ -191,6 +205,9 @@ function Calendar({
     const newDate = new Date(viewDate);
     newDate.setMonth(month);
     setViewDate(newDate);
+    if (props.mode === 'single' && props.onSelect) {
+      props.onSelect(newDate);
+    }
     setViewMode('dates');
   };
 
@@ -198,6 +215,9 @@ function Calendar({
     const newDate = new Date(viewDate);
     newDate.setFullYear(year);
     setViewDate(newDate);
+    if (props.mode === 'single' && props.onSelect) {
+      props.onSelect(newDate);
+    }
     setViewMode('months');
   };
 
@@ -320,7 +340,8 @@ function Calendar({
             Caption: CustomCaption,
           }}
           month={viewDate}
-          selected={selected as Date}
+          selected={selected instanceof Date ? selected : undefined}
+          onSelect={props.mode === 'single' ? props.onSelect : undefined}
           {...props}
         />
       ) : viewMode === 'months' ? (
