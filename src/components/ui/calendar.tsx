@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CalendarClock } from "lucide-react";
 import { DayPicker, CaptionProps, SelectSingleEventHandler } from "react-day-picker";
@@ -24,6 +25,14 @@ function Calendar({
   });
   const [isCustomDate, setIsCustomDate] = React.useState(false);
 
+  // Check if a date is in today's decade
+  const isInTodayDecade = React.useCallback((date: Date) => {
+    const today = new Date();
+    const todayDecade = Math.floor(today.getFullYear() / 10) * 10;
+    const dateDecade = Math.floor(date.getFullYear() / 10) * 10;
+    return todayDecade === dateDecade;
+  }, []);
+
   // Check if a date is today
   const isDateToday = React.useCallback((date: Date) => {
     const today = new Date();
@@ -42,13 +51,13 @@ function Calendar({
     }
   }, [onReset]);
 
-  const handleDateSelect = (date: Date | undefined, selectedProps?: any) => {
+  const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       setViewDate(date);
       setIsCustomDate(!isDateToday(date));
       
-      if (selectedProps?.onSelect) {
-        (selectedProps.onSelect as SelectSingleEventHandler)(date, selected as Date, date, { selected: true });
+      if (props.onSelect) {
+        props.onSelect(date);
       }
     }
   };
@@ -73,7 +82,7 @@ function Calendar({
     const newDate = new Date(viewDate);
     newDate.setFullYear(decade);
     setViewDate(newDate);
-    setIsCustomDate(!isDateToday(newDate));
+    setIsCustomDate(!isDateToday(newDate) && isInTodayDecade(newDate));
     setViewMode('years');
   };
 
@@ -217,7 +226,7 @@ function Calendar({
           </button>
         </div>
         <div className="flex items-center space-x-2">
-          {isCustomDate && (
+          {isCustomDate && (viewMode !== 'decades' || isInTodayDecade(viewDate)) && (
             <button
               onClick={resetToToday}
               className={cn(
@@ -375,7 +384,7 @@ function Calendar({
           }}
           month={viewDate}
           selected={selected}
-          onSelect={(date) => handleDateSelect(date, props)}
+          onSelect={handleDateSelect}
           {...props}
         />
       ) : viewMode === 'months' ? (
