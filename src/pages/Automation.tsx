@@ -81,7 +81,12 @@ const Automation = () => {
       return;
     }
 
-    if (!userData?.credits || userData.credits < 1) {
+    const remainingRuns = userData?.["Remaining Runs"] || 0;
+    const permanentCredits = userData?.permanent_credits || 0;
+    const subscriptionCredits = userData?.subscription_credits || 0;
+    const totalCredits = remainingRuns + permanentCredits + subscriptionCredits;
+
+    if (totalCredits < 1) {
       toast({
         title: "Insufficient Credits",
         description: "You need at least 1 credit to run this automation",
@@ -114,6 +119,20 @@ const Automation = () => {
       const { error } = await supabase.from("automations").insert(automationData);
 
       if (error) throw error;
+
+      const webhookUrl = "https://boldslate.app.n8n.cloud/webhook/685d206b-107d-4b95-a7b4-9d07133417e7";
+      
+      const response = await fetch(webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(automationData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to trigger automation webhook");
+      }
 
       toast({
         title: "Success",

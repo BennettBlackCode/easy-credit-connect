@@ -157,7 +157,7 @@ export type Database = {
           email: string
           id: string
           permanent_credits: number | null
-          "Remaining Runs": number | null
+          remaining_runs: number | null
           stripe_customer_id: string | null
           subscription_credits: number | null
           subscription_renewal_date: string | null
@@ -167,7 +167,7 @@ export type Database = {
           email: string
           id?: string
           permanent_credits?: number | null
-          "Remaining Runs"?: number | null
+          remaining_runs?: number | null
           stripe_customer_id?: string | null
           subscription_credits?: number | null
           subscription_renewal_date?: string | null
@@ -177,7 +177,7 @@ export type Database = {
           email?: string
           id?: string
           permanent_credits?: number | null
-          "Remaining Runs"?: number | null
+          remaining_runs?: number | null
           stripe_customer_id?: string | null
           subscription_credits?: number | null
           subscription_renewal_date?: string | null
