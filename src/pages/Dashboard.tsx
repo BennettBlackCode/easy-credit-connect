@@ -74,6 +74,11 @@ const Dashboard = () => {
 
   const totalCredits = (userData?.permanent_credits || 0) + (userData?.subscription_credits || 0);
 
+  const formatSubscriptionType = (type: string | null | undefined) => {
+    if (!type) return "Free Plan";
+    return type.toLowerCase().endsWith('plan') ? type : `${type} Plan`;
+  };
+
   return (
     <div className="min-h-screen bg-[#030303] text-white pt-24">
       <div className="max-w-7xl mx-auto px-8">
@@ -114,7 +119,7 @@ const Dashboard = () => {
           
           <div className="p-6 rounded-xl bg-white/5 border border-white/10">
             <h3 className="text-lg font-semibold mb-2">Account Status</h3>
-            <p className="text-gray-400">{userData?.subscription_type || "Free Plan"}</p>
+            <p className="text-gray-400">{formatSubscriptionType(userData?.subscription_type)}</p>
           </div>
         </div>
       </div>

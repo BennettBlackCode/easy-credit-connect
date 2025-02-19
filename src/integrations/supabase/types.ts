@@ -161,6 +161,7 @@ export type Database = {
           stripe_customer_id: string | null
           subscription_credits: number | null
           subscription_renewal_date: string | null
+          subscription_type: string | null
           total_credits: number | null
         }
         Insert: {
@@ -172,6 +173,7 @@ export type Database = {
           stripe_customer_id?: string | null
           subscription_credits?: number | null
           subscription_renewal_date?: string | null
+          subscription_type?: string | null
           total_credits?: number | null
         }
         Update: {
@@ -183,6 +185,7 @@ export type Database = {
           stripe_customer_id?: string | null
           subscription_credits?: number | null
           subscription_renewal_date?: string | null
+          subscription_type?: string | null
           total_credits?: number | null
         }
         Relationships: []
