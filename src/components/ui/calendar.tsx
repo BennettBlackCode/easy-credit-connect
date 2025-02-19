@@ -40,7 +40,7 @@ function Calendar({
       setViewDate(date);
       setIsCustomDate(true);
       if (selectedProps?.onSelect) {
-        (selectedProps.onSelect as SelectSingleEventHandler)(date);
+        (selectedProps.onSelect as SelectSingleEventHandler)(date, selected as Date, date, {});
       }
     }
   };
