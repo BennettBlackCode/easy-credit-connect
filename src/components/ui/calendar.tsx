@@ -11,30 +11,39 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  mode: calendarMode,
   selected,
+  defaultMonth,
   onSelect,
   ...props
 }: CalendarProps) {
-  const [mode, setMode] = React.useState<'date' | 'month' | 'year' | 'decade' | 'century'>('date');
+  const [viewMode, setViewMode] = React.useState<'date' | 'month' | 'year' | 'decade' | 'century'>('date');
   const [viewDate, setViewDate] = React.useState<Date>(() => {
-    return selected instanceof Date ? selected : new Date();
+    return defaultMonth || selected instanceof Date ? selected as Date : new Date();
   });
+
+  const getMaxViewMode = () => {
+    if (calendarMode === 'year') return 'decade';
+    if (calendarMode === 'month') return 'year';
+    return 'month';
+  };
 
   const CustomCaption = (props: CaptionProps) => {
     const { displayMonth } = props;
     
     const handleViewChange = () => {
-      if (mode === 'date') setMode('month');
-      else if (mode === 'month') setMode('year');
-      else if (mode === 'year') setMode('decade');
-      else if (mode === 'decade') setMode('century');
+      const maxMode = getMaxViewMode();
+      if (viewMode === 'date' && maxMode !== 'date') setViewMode('month');
+      else if (viewMode === 'month' && maxMode !== 'month') setViewMode('year');
+      else if (viewMode === 'year' && maxMode !== 'year') setViewMode('decade');
+      else if (viewMode === 'decade' && maxMode !== 'decade') setViewMode('century');
     };
 
     const getCaptionText = () => {
       const year = displayMonth.getFullYear();
       const month = displayMonth.toLocaleString('default', { month: 'long' });
       
-      switch (mode) {
+      switch (viewMode) {
         case 'date':
           return `${month} ${year}`;
         case 'month':
@@ -52,7 +61,7 @@ function Calendar({
 
     const handlePrevClick = () => {
       const newDate = new Date(displayMonth);
-      switch (mode) {
+      switch (viewMode) {
         case 'date':
           newDate.setMonth(newDate.getMonth() - 1);
           break;
@@ -74,7 +83,7 @@ function Calendar({
 
     const handleNextClick = () => {
       const newDate = new Date(displayMonth);
-      switch (mode) {
+      switch (viewMode) {
         case 'date':
           newDate.setMonth(newDate.getMonth() + 1);
           break;
@@ -96,7 +105,7 @@ function Calendar({
 
     const handleFastPrevClick = () => {
       const newDate = new Date(displayMonth);
-      switch (mode) {
+      switch (viewMode) {
         case 'date':
           newDate.setFullYear(newDate.getFullYear() - 1);
           break;
@@ -112,7 +121,7 @@ function Calendar({
 
     const handleFastNextClick = () => {
       const newDate = new Date(displayMonth);
-      switch (mode) {
+      switch (viewMode) {
         case 'date':
           newDate.setFullYear(newDate.getFullYear() + 1);
           break;
@@ -129,7 +138,7 @@ function Calendar({
     return (
       <div className="flex justify-between items-center w-full px-2">
         <div className="flex space-x-1">
-          {mode !== 'century' && (
+          {viewMode !== 'century' && (
             <button
               onClick={handleFastPrevClick}
               className={cn(
@@ -166,7 +175,7 @@ function Calendar({
           >
             <ChevronRight className="h-4 w-4" />
           </button>
-          {mode !== 'century' && (
+          {viewMode !== 'century' && (
             <button
               onClick={handleFastNextClick}
               className={cn(
@@ -186,9 +195,12 @@ function Calendar({
     const newDate = new Date(viewDate);
     newDate.setMonth(month);
     setViewDate(newDate);
-    setMode('date');
-    if (onSelect) {
-      onSelect(newDate);
+    if (calendarMode === 'month') {
+      if (onSelect) {
+        onSelect(newDate);
+      }
+    } else {
+      setViewMode('date');
     }
   };
 
@@ -196,21 +208,20 @@ function Calendar({
     const newDate = new Date(viewDate);
     newDate.setFullYear(year);
     setViewDate(newDate);
-    setMode('month');
+    if (calendarMode === 'year') {
+      if (onSelect) {
+        onSelect(newDate);
+      }
+    } else {
+      setViewMode('month');
+    }
   };
 
   const handleDecadeSelect = (decade: number) => {
     const newDate = new Date(viewDate);
     newDate.setFullYear(decade);
     setViewDate(newDate);
-    setMode('year');
-  };
-
-  const handleCenturySelect = (century: number) => {
-    const newDate = new Date(viewDate);
-    newDate.setFullYear(century);
-    setViewDate(newDate);
-    setMode('decade');
+    setViewMode('year');
   };
 
   const renderMonthView = () => {
@@ -278,33 +289,11 @@ function Calendar({
     );
   };
 
-  const renderCenturyView = () => {
-    const currentYear = viewDate.getFullYear();
-    const startCentury = Math.floor(currentYear / 1000) * 1000;
-    const centuries = Array.from({ length: 10 }, (_, i) => ({
-      start: startCentury + (i * 100),
-      end: startCentury + (i * 100) + 99
-    }));
-
-    return (
-      <div className="grid grid-cols-3 gap-2 p-2">
-        {centuries.map((century) => (
-          <button
-            key={century.start}
-            onClick={() => handleCenturySelect(century.start)}
-            className="p-2 text-sm rounded hover:bg-accent"
-          >
-            {`${century.start}-${century.end}`}
-          </button>
-        ))}
-      </div>
-    );
-  };
-
   return (
     <div className={cn("p-3 bg-card border border-border", className)}>
-      {mode === 'date' ? (
+      {viewMode === 'date' ? (
         <DayPicker
+          mode="single"
           showOutsideDays={showOutsideDays}
           className="w-full"
           classNames={{
@@ -346,30 +335,25 @@ function Calendar({
           components={{
             Caption: CustomCaption,
           }}
-          selected={selected}
-          onSelect={onSelect}
           month={viewDate}
+          selected={selected as Date}
+          onSelect={onSelect}
           {...props}
         />
-      ) : mode === 'month' ? (
+      ) : viewMode === 'month' ? (
         <div>
           <CustomCaption displayMonth={viewDate} />
           {renderMonthView()}
         </div>
-      ) : mode === 'year' ? (
+      ) : viewMode === 'year' ? (
         <div>
           <CustomCaption displayMonth={viewDate} />
           {renderYearView()}
         </div>
-      ) : mode === 'decade' ? (
-        <div>
-          <CustomCaption displayMonth={viewDate} />
-          {renderDecadeView()}
-        </div>
       ) : (
         <div>
           <CustomCaption displayMonth={viewDate} />
-          {renderCenturyView()}
+          {renderDecadeView()}
         </div>
       )}
     </div>
