@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -46,7 +47,7 @@ const Automation = () => {
       if (!session?.user?.id) return null;
       const { data, error } = await supabase
         .from("users")
-        .select("credits")
+        .select("remaining_runs, permanent_credits, subscription_credits")
         .eq("id", session.user.id)
         .single();
       
@@ -81,7 +82,7 @@ const Automation = () => {
       return;
     }
 
-    const remainingRuns = userData?.["Remaining Runs"] || 0;
+    const remainingRuns = userData?.remaining_runs || 0;
     const permanentCredits = userData?.permanent_credits || 0;
     const subscriptionCredits = userData?.subscription_credits || 0;
     const totalCredits = remainingRuns + permanentCredits + subscriptionCredits;
@@ -158,7 +159,7 @@ const Automation = () => {
           <h1 className="text-3xl font-bold">Run Automation</h1>
           <div className="bg-white/5 px-4 py-2 rounded-lg">
             <span className="text-sm text-gray-400">Remaining Runs: </span>
-            <span className="text-primary font-semibold">{userData?.credits || 0}</span>
+            <span className="text-primary font-semibold">{(userData?.remaining_runs || 0) + (userData?.permanent_credits || 0) + (userData?.subscription_credits || 0)}</span>
           </div>
         </div>
 
