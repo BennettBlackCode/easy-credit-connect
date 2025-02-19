@@ -37,10 +37,16 @@ function Calendar({
 
   const handleDateSelect = (date: Date | undefined, selectedProps?: any) => {
     if (date) {
+      const today = new Date();
+      const isToday = date.getDate() === today.getDate() &&
+                     date.getMonth() === today.getMonth() &&
+                     date.getFullYear() === today.getFullYear();
+      
       setViewDate(date);
-      setIsCustomDate(true);
+      setIsCustomDate(!isToday);
+      
       if (selectedProps?.onSelect) {
-        (selectedProps.onSelect as SelectSingleEventHandler)(date, selected as Date, date, {});
+        (selectedProps.onSelect as SelectSingleEventHandler)(date, selected as Date, date, { selected: true });
       }
     }
   };
@@ -67,8 +73,8 @@ function Calendar({
     };
 
     const getCaptionText = () => {
-      const year = displayMonth.getFullYear();
-      const month = displayMonth.toLocaleString('default', { month: 'long' });
+      const year = viewDate.getFullYear();
+      const month = viewDate.toLocaleString('default', { month: 'long' });
       
       switch (viewMode) {
         case 'dates':
