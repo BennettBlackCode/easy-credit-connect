@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,7 +16,11 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState<TimeRange>("week");
+  const [timeRange, setTimeRange] = useState<TimeRange>("day");
+  const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>({
+    start: startOfToday(),
+    end: endOfToday(),
+  });
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: userData } = useQuery({
@@ -88,11 +91,46 @@ const Dashboard = () => {
     return type.toLowerCase().endsWith('plan') ? type : `${type} Plan`;
   };
 
-  // Mock data for the chart - replace with real data
-  const mockChartData = Array.from({ length: 7 }, (_, i) => ({
-    date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
-    usage: Math.floor(Math.random() * 10),
-  })).reverse();
+  const generateChartData = () => {
+    switch (timeRange) {
+      case "day":
+        return Array.from({ length: 24 }, (_, i) => {
+          const date = new Date(dateRange.start);
+          date.setHours(i);
+          return {
+            date: date.toISOString(),
+            runs: Math.floor(Math.random() * 5),
+          };
+        });
+      case "week":
+        return Array.from({ length: 7 }, (_, i) => {
+          const date = new Date(dateRange.start);
+          date.setDate(date.getDate() + i);
+          return {
+            date: date.toISOString(),
+            runs: Math.floor(Math.random() * 10),
+          };
+        });
+      case "month":
+        return Array.from({ length: 30 }, (_, i) => {
+          const date = new Date(dateRange.start);
+          date.setDate(date.getDate() + i);
+          return {
+            date: date.toISOString(),
+            runs: Math.floor(Math.random() * 15),
+          };
+        });
+      case "year":
+        return Array.from({ length: 12 }, (_, i) => {
+          const date = new Date(dateRange.start);
+          date.setMonth(i);
+          return {
+            date: date.toISOString(),
+            runs: Math.floor(Math.random() * 50),
+          };
+        });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#030303] text-white pt-8">
@@ -125,12 +163,12 @@ const Dashboard = () => {
             <TimeRangeSelector
               selectedRange={timeRange}
               onRangeChange={setTimeRange}
-              onNavigate={(direction) => {
-                console.log("Navigate:", direction);
-                // Implement date navigation
-              }}
+              onDateChange={(start, end) => setDateRange({ start, end })}
             />
-            <UsageChart data={mockChartData} />
+            <UsageChart 
+              data={generateChartData()} 
+              timeRange={timeRange}
+            />
           </div>
 
           <div className="p-6 rounded-xl bg-white/5 border border-white/10">
