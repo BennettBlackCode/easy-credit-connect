@@ -1,10 +1,13 @@
+
 import * as React from "react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
-import { DayPicker, CaptionProps, SelectSingleEventHandler } from "react-day-picker";
+import { DayPicker, CaptionProps } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
-export type CalendarProps = React.ComponentProps<typeof DayPicker>;
+export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
+  onReset?: () => void;
+};
 
 function Calendar({
   className,
@@ -12,15 +15,38 @@ function Calendar({
   showOutsideDays = true,
   selected,
   defaultMonth,
+  onReset,
+  mode = "single",
   ...props
 }: CalendarProps) {
   const [viewMode, setViewMode] = React.useState<'dates' | 'months' | 'years' | 'decades'>('dates');
   const [viewDate, setViewDate] = React.useState<Date>(() => {
     return defaultMonth || selected instanceof Date ? selected as Date : new Date();
   });
+  const [isCustomDate, setIsCustomDate] = React.useState(false);
+
+  // Handle reset to today's date
+  const resetToToday = React.useCallback(() => {
+    const today = new Date();
+    setViewDate(today);
+    setIsCustomDate(false);
+    if (onReset) {
+      onReset();
+    }
+  }, [onReset]);
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setViewDate(date);
+      setIsCustomDate(true);
+      if (props.onSelect) {
+        props.onSelect(date);
+      }
+    }
+  };
 
   const getMaxViewMode = () => {
-    switch (props.mode) {
+    switch (mode) {
       case "range":
       case "single":
       case "multiple":
@@ -190,9 +216,7 @@ function Calendar({
     const newDate = new Date(viewDate);
     newDate.setMonth(month);
     setViewDate(newDate);
-    if (props.mode === 'single' && props.onSelect) {
-      (props.onSelect as SelectSingleEventHandler)(newDate);
-    }
+    setIsCustomDate(true);
     setViewMode('dates');
   };
 
@@ -200,9 +224,7 @@ function Calendar({
     const newDate = new Date(viewDate);
     newDate.setFullYear(year);
     setViewDate(newDate);
-    if (props.mode === 'single' && props.onSelect) {
-      (props.onSelect as SelectSingleEventHandler)(newDate);
-    }
+    setIsCustomDate(true);
     setViewMode('months');
   };
 
@@ -282,7 +304,7 @@ function Calendar({
     <div className={cn("p-3 bg-card border border-border", className)}>
       {viewMode === 'dates' ? (
         <DayPicker
-          mode="single"
+          mode={mode}
           showOutsideDays={showOutsideDays}
           className="w-full"
           classNames={{
@@ -325,7 +347,8 @@ function Calendar({
             Caption: CustomCaption,
           }}
           month={viewDate}
-          selected={selected instanceof Date ? selected : undefined}
+          selected={selected}
+          onSelect={handleDateSelect}
           {...props}
         />
       ) : viewMode === 'months' ? (
