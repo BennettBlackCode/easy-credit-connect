@@ -1,8 +1,6 @@
-
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { handleAuthRedirect } from "@/lib/auth-helpers";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,14 +8,12 @@ import { useQuery } from "@tanstack/react-query";
 import TimeRangeSelector from "@/components/dashboard/TimeRangeSelector";
 import UsageChart from "@/components/dashboard/UsageChart";
 import RunsTable from "@/components/dashboard/RunsTable";
-import { startOfToday, endOfToday } from "date-fns";
+import { startOfToday, endOfToday, format, getWeek } from "date-fns";
 
 type TimeRange = "day" | "week" | "month" | "year";
 
 const Dashboard = () => {
-  const navigate = useNavigate();
   const { session } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<TimeRange>("day");
   const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>({
     start: startOfToday(),
@@ -60,38 +56,23 @@ const Dashboard = () => {
     enabled: !!session?.user?.id,
   });
 
-  useEffect(() => {
-    const initializeDashboard = async () => {
-      try {
-        const redirectSession = await handleAuthRedirect();
-        if (!session && !redirectSession) {
-          navigate("/auth");
-          return;
-        }
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Dashboard initialization error:", error);
-        navigate("/auth");
-      }
-    };
-
-    initializeDashboard();
-  }, [session, navigate]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#030303]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  const formatDateDisplay = () => {
+    const date = dateRange.start;
+    switch (timeRange) {
+      case "day":
+        return format(date, "EEEE, MMMM d, yyyy");
+      case "week":
+        return `Week ${getWeek(date)} - ${format(date, "MMMM d, yyyy")}`;
+      case "month":
+        return format(date, "MMMM yyyy");
+      case "year":
+        return format(date, "yyyy");
+      default:
+        return "";
+    }
+  };
 
   const totalCredits = (userData?.permanent_credits || 0) + (userData?.subscription_credits || 0);
-
-  const formatSubscriptionType = (type: string | null | undefined) => {
-    if (!type) return "Free Plan";
-    return type.toLowerCase().endsWith('plan') ? type : `${type} Plan`;
-  };
 
   const generateChartData = () => {
     switch (timeRange) {
@@ -135,38 +116,20 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#030303] text-white pt-8">
-      <div className="max-w-7xl mx-auto px-8">
-        <div className="flex justify-between items-start mb-8">
-          <div>
-            <div className="flex items-center gap-4 mb-2">
-              <h1 className="text-3xl font-bold">Dashboard</h1>
-              <div className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-full">
-                <span className="text-gray-400">Status:</span>
-                <span className="text-primary font-medium">
-                  {formatSubscriptionType(userData?.subscription_type)}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-full">
-                <span className="text-gray-400">Credits:</span>
-                <span className="text-primary font-medium">{totalCredits}</span>
-              </div>
-            </div>
-          </div>
-          <Button asChild className="bg-primary hover:bg-primary/90">
-            <Link to="/automation" className="flex items-center gap-2">
-              Start Now <ArrowUpRight className="h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-
+    <div className="min-h-screen bg-[#030303] text-white">
+      <div className="max-w-7xl mx-auto px-8 pt-8">
         <div className="space-y-8">
           <div className="p-6 rounded-xl bg-white/5 border border-white/10">
-            <TimeRangeSelector
-              selectedRange={timeRange}
-              onRangeChange={setTimeRange}
-              onDateChange={(start, end) => setDateRange({ start, end })}
-            />
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-medium text-white/90">
+                {formatDateDisplay()}
+              </h2>
+              <TimeRangeSelector
+                selectedRange={timeRange}
+                onRangeChange={setTimeRange}
+                onDateChange={(start, end) => setDateRange({ start, end })}
+              />
+            </div>
             <UsageChart 
               data={generateChartData()} 
               timeRange={timeRange}
