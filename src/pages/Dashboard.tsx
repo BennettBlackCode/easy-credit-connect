@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import TimeRangeSelector from "@/components/dashboard/TimeRangeSelector";
 import UsageChart from "@/components/dashboard/UsageChart";
 import RunsTable from "@/components/dashboard/RunsTable";
+import { startOfToday, endOfToday } from "date-fns";
 
 type TimeRange = "day" | "week" | "month" | "year";
 
