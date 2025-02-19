@@ -85,7 +85,6 @@ const Auth = () => {
       
       if (error) throw error;
       
-      // Show loading state while redirecting
       setIsLoading(true);
       toast({
         title: "Redirecting to Google...",
