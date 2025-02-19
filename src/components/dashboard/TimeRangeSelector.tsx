@@ -73,7 +73,7 @@ const TimeRangeSelector = ({
   };
 
   return (
-    <div className="flex items-center space-x-4">
+    <div className="flex justify-end items-center space-x-4">
       <div className="flex bg-white/5 rounded-lg p-1">
         {ranges.map((range) => (
           <Button
@@ -104,12 +104,13 @@ const TimeRangeSelector = ({
               <CalendarIcon className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0">
+          <PopoverContent className="w-auto p-0 bg-card border border-border">
             <Calendar
               mode="single"
               selected={selectedDate}
               onSelect={handleCalendarSelect}
               initialFocus
+              className="bg-card rounded-md"
             />
           </PopoverContent>
         </Popover>
