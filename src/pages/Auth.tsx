@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { config } from "@/lib/config";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -75,7 +75,7 @@ const Auth = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://1clickseo.io/dashboard',
+          redirectTo: `${config.baseUrl}/dashboard`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
