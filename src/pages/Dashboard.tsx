@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import TimeRangeSelector from "@/components/dashboard/TimeRangeSelector";
 import UsageChart from "@/components/dashboard/UsageChart";
 import RunsTable from "@/components/dashboard/RunsTable";
-import { startOfToday, endOfToday, format, getWeek } from "date-fns";
+import { startOfDay, endOfDay, format, getWeek } from "date-fns";
 
 type TimeRange = "day" | "week" | "month" | "year";
 
@@ -16,8 +17,8 @@ const Dashboard = () => {
   const { session } = useAuth();
   const [timeRange, setTimeRange] = useState<TimeRange>("day");
   const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>({
-    start: startOfToday(),
-    end: endOfToday(),
+    start: startOfDay(new Date()),
+    end: endOfDay(new Date()),
   });
   const [searchQuery, setSearchQuery] = useState("");
 
