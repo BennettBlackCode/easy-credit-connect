@@ -14,10 +14,12 @@ const Pricing = () => {
   const { data: products } = useQuery({
     queryKey: ['stripe_products'],
     queryFn: async () => {
+      if (!session) return null;
       const { data, error } = await supabase.from('stripe_products').select('*');
       if (error) throw error;
       return data;
-    }
+    },
+    enabled: !!session // Only run query if user is logged in
   });
 
   const handleGetStarted = () => {
@@ -74,8 +76,8 @@ const Pricing = () => {
 
         <div className="grid md:grid-cols-3 gap-8">
           {plans.map(plan => <div key={plan.id} className={`pricing-card relative rounded-3xl p-8 bg-[#0A0A0A] border border-transparent transition-all duration-500 ${plan.featured ? "md:-mt-4 md:mb-4" : ""}`}>
-              {plan.featured && <div className="absolute -top-3 right-6">
-                  <span className="px-3 py-1 text-sm font-medium rounded-full bg-primary text-black">
+              {plan.featured && <div className="absolute -top-5 left-1/2 -translate-x-1/2">
+                  <span className="px-6 py-2 text-sm font-medium rounded-full bg-primary text-black">
                     Most Popular
                   </span>
                 </div>}
