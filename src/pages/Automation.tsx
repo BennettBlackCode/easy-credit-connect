@@ -20,7 +20,6 @@ import {
 import { Input } from "@/components/ui/input";
 
 const formSchema = z.object({
-  agency_email: z.string().email("Please enter a valid agency email"),
   company_name: z.string().min(1, "Company name is required"),
   domain: z
     .string()
@@ -61,7 +60,6 @@ const Automation = () => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      agency_email: "",
       company_name: "",
       domain: "",
       phone_number: "",
@@ -111,7 +109,7 @@ const Automation = () => {
         city: values.city,
         state: values.state,
         postal_code: values.zip_code,
-        agency_email: values.agency_email,
+        agency_email: session.user.email || "",
         email: session.user.email || "",
         country: "United States",
         industry: "Unknown",
@@ -168,20 +166,6 @@ const Automation = () => {
         <div className="bg-white/5 border border-white/10 rounded-xl p-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="agency_email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Agency Email</FormLabel>
-                    <FormControl>
-                      <Input {...field} className="bg-white/5 border-white/10" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <FormField
                 control={form.control}
                 name="company_name"

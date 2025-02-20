@@ -22,7 +22,6 @@ import { config } from "@/lib/config";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  agencyEmail: z.string().email("Please enter a valid agency email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -36,7 +35,6 @@ const Auth = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
-      agencyEmail: "",
       password: "",
     },
   });
@@ -69,9 +67,6 @@ const Auth = () => {
           password: values.password,
           options: {
             emailRedirectTo: `${config.baseUrl}`, // Changed to redirect to home page
-            data: {
-              agency_email: values.agencyEmail,
-            },
           },
         });
         
@@ -211,27 +206,6 @@ const Auth = () => {
                 </FormItem>
               )}
             />
-
-            {!isLogin && (
-              <FormField
-                control={form.control}
-                name="agencyEmail"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-300">Agency Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="Enter your agency email"
-                        className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
 
             <FormField
               control={form.control}
