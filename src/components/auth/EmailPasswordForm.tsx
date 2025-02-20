@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 
 const formSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+  email: z.string().email("Please enter a valid email format"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 

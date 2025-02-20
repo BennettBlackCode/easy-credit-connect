@@ -21,13 +21,7 @@ export const signUpWithEmail = async ({ email, password }: AuthCredentials) => {
     password,
   });
   
-  if (error) {
-    // Check for disposable email error message
-    if (error.message.includes("Disposable email")) {
-      throw new Error("Please use a permanent email address (Gmail, Yahoo, Outlook, etc.)");
-    }
-    throw error;
-  }
+  if (error) throw error;
 };
 
 export const signInWithGoogle = async () => {
