@@ -5,8 +5,9 @@ import { DayPicker, CaptionProps, DayClickEventHandler } from "react-day-picker"
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
-export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
+export type CalendarProps = Omit<React.ComponentProps<typeof DayPicker>, "onSelect"> & {
   onReset?: () => void;
+  onSelect?: (date: Date) => void;
 };
 
 function Calendar({
