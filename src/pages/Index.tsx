@@ -1,3 +1,4 @@
+
 import { ArrowRight, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
@@ -68,19 +69,26 @@ const Index = () => {
             </div>
 
             {/* Video Section with Scroll Animation */}
-            <div id="demo" className="relative">
+            <div className="flex flex-col overflow-hidden">
               <ContainerScroll
                 titleComponent={
-                  <h2 className="text-3xl font-bold text-white/90 mb-8">
-                    Experience the Future of SEO
+                  <h2 className="text-4xl font-semibold text-white mb-4">
+                    Experience the Future of <br />
+                    <span className="text-5xl md:text-7xl font-bold mt-1 leading-none bg-gradient-to-r from-primary via-primary to-[#95F9C3] bg-clip-text text-transparent">
+                      SEO Automation
+                    </span>
                   </h2>
                 }
               >
-                <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-black">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <p className="text-white/50 text-lg">Product Demo Video</p>
+                <div className="relative w-full h-full rounded-2xl overflow-hidden">
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                    <div className="text-center">
+                      <p className="text-white/90 text-xl font-medium mb-4">Demo Video Coming Soon</p>
+                      <span className="px-4 py-2 rounded-full bg-white/10 text-white/70 text-sm">
+                        Sign up for early access
+                      </span>
+                    </div>
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
                 </div>
               </ContainerScroll>
             </div>
