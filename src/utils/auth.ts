@@ -12,7 +12,10 @@ export const signInWithEmail = async ({ email, password }: AuthCredentials) => {
     email,
     password,
   });
-  if (error) throw error;
+  if (error) {
+    console.error('Sign in error:', error);
+    throw error;
+  }
 };
 
 export const signUpWithEmail = async ({ email, password }: AuthCredentials) => {
@@ -21,7 +24,10 @@ export const signUpWithEmail = async ({ email, password }: AuthCredentials) => {
     password,
   });
   
-  if (error) throw error;
+  if (error) {
+    console.error('Sign up error:', error);
+    throw error;
+  }
 };
 
 export const signInWithGoogle = async () => {
@@ -36,6 +42,9 @@ export const signInWithGoogle = async () => {
     },
   });
   
-  if (error) throw error;
+  if (error) {
+    console.error('Google sign in error:', error);
+    throw error;
+  }
   return data;
 };
