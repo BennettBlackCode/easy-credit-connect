@@ -59,7 +59,7 @@ const Navigation = () => {
                   <Link to="/billing" className="text-gray-300 hover:text-white transition-colors">
                     Billing
                   </Link>
-                  <Link to="/automation" className="px-6 py-2.5 rounded-full text-black bg-primary hover:bg-primary/90 transition-colors duration-200 font-bold">
+                  <Link to="/automation" className="px-6 py-2.5 rounded-full text-white bg-primary hover:bg-primary/90 transition-colors duration-200 font-bold">
                     Run Automation
                   </Link>
                 </> : <>
