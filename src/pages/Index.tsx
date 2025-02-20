@@ -1,6 +1,8 @@
+
 import { ArrowRight, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
+import { AnimatedTitle } from "@/components/ui/animated-hero";
 
 const Index = () => {
   const features = [
@@ -39,7 +41,7 @@ const Index = () => {
               </div>
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8 leading-[1.1]">
                 <span className="block bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent">
-                  Automate your SEO with
+                  Automate Your <AnimatedTitle /> with
                 </span>
                 <span className="block mt-2 bg-gradient-to-r from-primary via-primary to-[#95F9C3] bg-clip-text text-transparent">
                   Artificial Intelligence
