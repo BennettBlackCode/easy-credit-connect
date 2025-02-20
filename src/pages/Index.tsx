@@ -1,4 +1,3 @@
-
 import { ArrowRight, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
@@ -69,15 +68,10 @@ const Index = () => {
             </div>
 
             {/* Video Section with Scroll Animation */}
-            <div className="flex flex-col overflow-hidden">
+            <div className="flex flex-col overflow-hidden -mt-20">
               <ContainerScroll
                 titleComponent={
-                  <h2 className="text-4xl font-semibold text-white mb-4">
-                    Experience the Future of <br />
-                    <span className="text-5xl md:text-7xl font-bold mt-1 leading-none bg-gradient-to-r from-primary via-primary to-[#95F9C3] bg-clip-text text-transparent">
-                      SEO Automation
-                    </span>
-                  </h2>
+                  <div className="h-4" />
                 }
               >
                 <div className="relative w-full h-full rounded-2xl overflow-hidden">
