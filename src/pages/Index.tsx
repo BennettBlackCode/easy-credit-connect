@@ -1,4 +1,3 @@
-
 import { ArrowRight, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
@@ -43,13 +42,10 @@ const Index = () => {
                 <span className="block bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent mb-2">
                   Automate Your
                 </span>
-                <span className="block bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent">
+                <span className="block">
                   <AnimatedTitle />
                 </span>
-                <span className="block bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent">
-                  With
-                </span>
-                <span className="block mt-2 bg-gradient-to-r from-primary via-primary to-[#95F9C3] bg-clip-text text-transparent">
+                <span className="block mt-2 bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent">
                   Artificial Intelligence
                 </span>
               </h1>
@@ -86,7 +82,6 @@ const Index = () => {
                   <div className="absolute inset-0 flex items-center justify-center">
                     <p className="text-white/50 text-lg">Product Demo Video</p>
                   </div>
-                  {/* Glow Effect */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
                 </div>
               </ContainerScroll>

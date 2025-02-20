@@ -7,11 +7,11 @@ export function AnimatedTitle() {
   const titles = useMemo(
     () => [
       "SEO",
-      "blog posts",
-      "GBP posts",
-      "backlink research",
-      "keyword research",
-      "competitor research"
+      "Blog Posts",
+      "GBP Posts",
+      "Backlink Research",
+      "Keyword Research",
+      "Competitor Research"
     ],
     []
   );
