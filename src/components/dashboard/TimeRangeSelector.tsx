@@ -120,13 +120,13 @@ const TimeRangeSelector = ({
           variant="ghost"
           size="icon"
           onClick={() => handleNavigate("prev")}
-          className="h-9 w-9"
+          className="h-9 w-9 text-primary hover:text-primary/80"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-9 w-9">
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-primary hover:text-primary/80">
               <CalendarIcon className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
@@ -145,7 +145,7 @@ const TimeRangeSelector = ({
             variant="ghost"
             size="icon"
             onClick={handleReset}
-            className="h-9 w-9"
+            className="h-9 w-9 text-primary hover:text-primary/80"
             title="Reset to today"
           >
             <CalendarClock className="h-4 w-4" />
@@ -155,7 +155,7 @@ const TimeRangeSelector = ({
           variant="ghost"
           size="icon"
           onClick={() => handleNavigate("next")}
-          className="h-9 w-9"
+          className="h-9 w-9 text-primary hover:text-primary/80"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
