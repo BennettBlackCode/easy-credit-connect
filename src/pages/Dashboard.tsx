@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import TimeRangeSelector from "@/components/dashboard/TimeRangeSelector";
 import UsageChart from "@/components/dashboard/UsageChart";
 import RunsTable from "@/components/dashboard/RunsTable";
-import { startOfDay, endOfDay, format, getWeek } from "date-fns";
+import { startOfDay, endOfDay, format, getWeek, addDays, addMonths, setHours, startOfMonth, addHours } from "date-fns";
 
 type TimeRange = "day" | "week" | "month" | "year";
 
@@ -73,43 +74,35 @@ const Dashboard = () => {
   };
 
   const generateChartData = () => {
+    const baseDate = startOfDay(dateRange.start);
+
     switch (timeRange) {
       case "day":
-        return Array.from({ length: 24 }, (_, i) => {
-          const date = new Date(dateRange.start);
-          date.setHours(i);
-          return {
-            date: date.toISOString(),
-            runs: Math.floor(Math.random() * 5),
-          };
-        });
+        return Array.from({ length: 24 }, (_, i) => ({
+          date: addHours(baseDate, i).toISOString(),
+          runs: Math.floor(Math.random() * 5),
+        }));
       case "week":
-        return Array.from({ length: 7 }, (_, i) => {
-          const date = new Date(dateRange.start);
-          date.setDate(date.getDate() + i);
-          return {
-            date: date.toISOString(),
-            runs: Math.floor(Math.random() * 10),
-          };
-        });
-      case "month":
-        return Array.from({ length: 30 }, (_, i) => {
-          const date = new Date(dateRange.start);
-          date.setDate(date.getDate() + i);
-          return {
-            date: date.toISOString(),
-            runs: Math.floor(Math.random() * 15),
-          };
-        });
+        return Array.from({ length: 7 }, (_, i) => ({
+          date: addDays(baseDate, i).toISOString(),
+          runs: Math.floor(Math.random() * 10),
+        }));
+      case "month": {
+        const daysInMonth = new Date(
+          baseDate.getFullYear(),
+          baseDate.getMonth() + 1,
+          0
+        ).getDate();
+        return Array.from({ length: daysInMonth }, (_, i) => ({
+          date: addDays(startOfMonth(baseDate), i).toISOString(),
+          runs: Math.floor(Math.random() * 15),
+        }));
+      }
       case "year":
-        return Array.from({ length: 12 }, (_, i) => {
-          const date = new Date(dateRange.start);
-          date.setMonth(i);
-          return {
-            date: date.toISOString(),
-            runs: Math.floor(Math.random() * 50),
-          };
-        });
+        return Array.from({ length: 12 }, (_, i) => ({
+          date: addMonths(baseDate, i).toISOString(),
+          runs: Math.floor(Math.random() * 50),
+        }));
     }
   };
 
