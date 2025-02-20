@@ -40,76 +40,33 @@ const UsageChart = ({ data, timeRange }: UsageChartProps) => {
     }
   };
 
-  const getNumberOfTicks = () => {
-    if (window.innerWidth < 640) {
-      switch (timeRange) {
-        case "day":
-          return 6;
-        case "week":
-          return 3;
-        case "month":
-          return 4;
-        case "year":
-          return 4;
-        default:
-          return 4;
-      }
-    }
-    return undefined;
-  };
-
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <BarChart 
-        data={data} 
-        margin={{ 
-          top: 20,
-          right: 20,
-          left: 0,
-          bottom: 20 
-        }}
-      >
-        <XAxis 
-          dataKey="date" 
-          stroke="#888888"
-          fontSize={12}
-          tickLine={false}
-          axisLine={false}
-          tickFormatter={getXAxisFormatter()}
-          interval="preserveStartEnd"
-          minTickGap={15}
-          tickCount={getNumberOfTicks()}
-          style={{ fill: 'rgba(255, 255, 255, 0.65)' }}
-        />
-        <YAxis
-          stroke="#888888"
-          fontSize={12}
-          tickLine={false}
-          axisLine={false}
-          tickFormatter={(value) => `${value}`}
-          width={35}
-          style={{ fill: 'rgba(255, 255, 255, 0.65)' }}
-          allowDecimals={false}
-        />
-        <Tooltip
-          contentStyle={{
-            backgroundColor: "#1a1a1a",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: "6px",
-            padding: "8px 12px",
-          }}
-          labelFormatter={getTooltipFormatter()}
-          formatter={(value: number) => [`${value} runs`, "Runs"]}
-        />
-        <Bar
-          dataKey="runs"
-          fill="#2ed573"
-          opacity={1}
-          radius={[4, 4, 0, 0]}
-          maxBarSize={40}
-        />
-      </BarChart>
-    </ResponsiveContainer>
+    <div className="w-full h-[300px] mt-4">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <XAxis 
+            dataKey="date" 
+            stroke="#888888"
+            tickFormatter={getXAxisFormatter()}
+          />
+          <YAxis stroke="#888888" />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "#1a1a1a",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "6px",
+            }}
+            labelFormatter={getTooltipFormatter()}
+            formatter={(value: number) => [`${value} runs`, "Runs"]}
+          />
+          <Bar
+            dataKey="runs"
+            fill="#2ed573"
+            radius={[4, 4, 0, 0]}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 };
 
