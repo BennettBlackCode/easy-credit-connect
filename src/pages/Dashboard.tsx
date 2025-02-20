@@ -72,6 +72,10 @@ const Dashboard = () => {
     }
   };
 
+  const handleDateRangeChange = (start: Date, end: Date) => {
+    setDateRange({ start, end });
+  };
+
   const generateChartData = () => {
     switch (timeRange) {
       case "day":
@@ -130,7 +134,7 @@ const Dashboard = () => {
               <TimeRangeSelector
                 selectedRange={timeRange}
                 onRangeChange={setTimeRange}
-                onDateChange={setDateRange}
+                onDateChange={handleDateRangeChange}
               />
             </div>
             <UsageChart 
