@@ -112,43 +112,58 @@ const Pricing = () => {
       </div>
 
       <style>{`
-        @property --gradient-angle {
-          syntax: "<angle>";
-          initial-value: 0deg;
-          inherits: false;
+        .pricing-card {
+          position: relative;
+          background: rgba(17, 17, 17, 0.9);
+          border-radius: 24px;
+          overflow: hidden;
         }
 
-        .pricing-card::before,
-        .pricing-card::after {
-          content: "";
+        .pricing-card::before {
+          content: '';
           position: absolute;
-          inset: -1px;
-          z-index: -1;
+          inset: 0;
+          padding: 1px;
+          border-radius: 24px;
           background: linear-gradient(
-            var(--gradient-angle),
-            #2ed573,
-            transparent 40%,
-            transparent 60%,
+            45deg,
+            transparent,
+            transparent,
             #2ed573
           );
-          border-radius: inherit;
-          animation: rotation 7s linear infinite;
+          -webkit-mask: 
+            linear-gradient(#fff 0 0) content-box, 
+            linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
           opacity: 0;
-          transition: opacity 0.5s;
+          transition: opacity 0.4s ease;
         }
 
-        .pricing-card::after {
-          filter: blur(15px);
-        }
-
-        .pricing-card:hover::before,
-        .pricing-card:hover::after {
+        .pricing-card:hover::before {
           opacity: 1;
         }
 
-        @keyframes rotation {
-          0% { --gradient-angle: 0deg; }
-          100% { --gradient-angle: 360deg; }
+        .pricing-card::after {
+          content: '';
+          position: absolute;
+          inset: -1px;
+          padding: 1px;
+          border-radius: 24px;
+          background: linear-gradient(
+            45deg,
+            transparent,
+            transparent,
+            #2ed573
+          );
+          filter: blur(10px);
+          opacity: 0;
+          transition: opacity 0.4s ease;
+          z-index: -1;
+        }
+
+        .pricing-card:hover::after {
+          opacity: 0.4;
         }
       `}</style>
     </div>;
