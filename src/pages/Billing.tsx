@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreditCard, ArrowUpRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -21,14 +20,15 @@ const Billing = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { session, isLoading: authLoading } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Redirect to auth page if not logged in
   useEffect(() => {
     if (!authLoading && !session) {
       navigate("/auth");
     }
   }, [session, authLoading, navigate]);
 
+  // Check URL parameters for Stripe status
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     const success = query.get('success');
@@ -39,6 +39,7 @@ const Billing = () => {
         title: "Payment successful",
         description: "Your credits have been added to your account.",
       });
+      // Clean up URL
       window.history.replaceState({}, '', window.location.pathname);
     } else if (canceled) {
       toast({
@@ -46,10 +47,12 @@ const Billing = () => {
         description: "Your payment was canceled.",
         variant: "destructive",
       });
+      // Clean up URL
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [toast]);
 
+  // Fetch user data including credits and stripe customer id
   const { data: userData, isLoading: userLoading } = useQuery({
     queryKey: ["user", session?.user?.id],
     queryFn: async () => {
@@ -65,6 +68,7 @@ const Billing = () => {
     enabled: !!session?.user?.id,
   });
 
+  // Fetch recent transactions
   const { data: transactions, isLoading: transactionsLoading } = useQuery({
     queryKey: ["transactions", session?.user?.id],
     queryFn: async () => {
@@ -80,6 +84,7 @@ const Billing = () => {
     enabled: !!session?.user?.id,
   });
 
+  // Fetch available products/plans
   const { data: products, isLoading: productsLoading } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
@@ -95,13 +100,9 @@ const Billing = () => {
   });
 
   const handlePurchase = async (productId: string) => {
-    setIsSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { 
-          productId: productId, 
-          userId: session?.user?.id,
-        },
+        body: { productId, userId: session?.user?.id },
       });
 
       if (error) {
@@ -122,8 +123,6 @@ const Billing = () => {
         description: "There was an error processing your payment. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -141,8 +140,10 @@ const Billing = () => {
     return null;
   }
 
+  // Calculate total available credits
   const totalCredits = (userData?.permanent_credits || 0) + (userData?.subscription_credits || 0);
 
+  // Sort products in the correct order
   const sortedProducts = [...(products || [])].sort((a, b) => {
     const displayOrder = {
       'starter': 1,
@@ -159,6 +160,7 @@ const Billing = () => {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Billing & Credits</h1>
 
+        {/* Current Balance */}
         <Card className="mb-8">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
@@ -176,6 +178,7 @@ const Billing = () => {
           </CardContent>
         </Card>
 
+        {/* Available Plans */}
         <h2 className="text-xl font-semibold mb-4">Available Plans</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
           {sortedProducts.map((product) => {
@@ -215,9 +218,8 @@ const Billing = () => {
                     <Button 
                       className="w-full"
                       onClick={() => handlePurchase(product.id)}
-                      disabled={isSubmitting}
                     >
-                      {isSubmitting ? "Processing..." : displayButton}
+                      {displayButton}
                       <ArrowUpRight className="ml-2 h-4 w-4" />
                     </Button>
                   )}
@@ -227,6 +229,7 @@ const Billing = () => {
           })}
         </div>
 
+        {/* Transaction History */}
         <h2 className="text-xl font-semibold mb-4">Transaction History</h2>
         <Card>
           <CardContent className="p-0">
