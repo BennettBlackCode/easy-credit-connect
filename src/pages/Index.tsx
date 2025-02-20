@@ -2,6 +2,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { AnimatedTitle } from "@/components/ui/animated-hero";
+import { Pricing } from "@/pages/Pricing";
 
 const Index = () => {
   const features = [
@@ -142,6 +143,9 @@ const Index = () => {
           </div>
         </div>
       </div>
+
+      {/* Pricing Section */}
+      <Pricing />
 
       {/* CTA Section */}
       <div className="py-24 px-4 sm:px-6 lg:px-8 relative">

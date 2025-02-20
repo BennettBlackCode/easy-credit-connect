@@ -3,11 +3,26 @@ import { ArrowRight, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Pricing = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { session } = useAuth();
+
+  const { data: products } = useQuery({
+    queryKey: ['stripe_products'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('stripe_products')
+        .select('*')
+        .order('price_amount', { ascending: true });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
 
   const handleGetStarted = () => {
     if (!session) {
@@ -33,7 +48,7 @@ const Pricing = () => {
         "Workflow & Review Management",
         "Email/Chat Support & Resources"
       ],
-      price: "197",
+      price: products?.[0]?.price_amount || 197,
       buttonText: "Get Started",
     },
     {
@@ -46,7 +61,7 @@ const Pricing = () => {
         "Custom Integration Options",
         "Monthly Strategy Calls"
       ],
-      price: "297",
+      price: products?.[1]?.price_amount || 297,
       buttonText: "Get Started",
       featured: true,
     },
@@ -60,8 +75,8 @@ const Pricing = () => {
         "24/7 Priority Support",
         "Personalized Onboarding & Training"
       ],
-      price: "497",
-      buttonText: "Get Started",
+      price: null,
+      buttonText: "Contact Sales",
     }
   ];
 
@@ -75,35 +90,38 @@ const Pricing = () => {
             inherits: false;
           }
 
-          .glow-gradient-child::before,
-          .glow-gradient-child::after {
-            opacity: 0;
+          .pricing-card {
+            position: relative;
+          }
+
+          .pricing-card::before,
+          .pricing-card::after {
             content: "";
             position: absolute;
-            inset: -5px;
+            inset: -2px;
             z-index: -1;
-            background: conic-gradient(
-              from var(--gradient-angle),
-              rgba(46, 213, 115, 0.5),
-              #fff,
-              rgba(46, 213, 115, 0.5),
-              #fff
+            background: linear-gradient(
+              var(--gradient-angle),
+              rgba(91, 108, 255, 0.5),
+              rgba(91, 108, 255, 0),
+              rgba(91, 108, 255, 0.5)
             );
             border-radius: inherit;
-            animation: rotation-glow 10s linear infinite;
-            transition: opacity 1s;
+            animation: rotation 5s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s ease;
           }
 
-          .glow-gradient-child::after {
-            filter: blur(2rem);
+          .pricing-card::after {
+            filter: blur(1rem);
           }
 
-          .glow-gradient-child:hover::before,
-          .glow-gradient-child:hover::after {
+          .pricing-card:hover::before,
+          .pricing-card:hover::after {
             opacity: 1;
           }
 
-          @keyframes rotation-glow {
+          @keyframes rotation {
             0% { --gradient-angle: 0deg; }
             100% { --gradient-angle: 360deg; }
           }
@@ -114,10 +132,8 @@ const Pricing = () => {
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`relative rounded-[32px] p-8 overflow-hidden glow-gradient-child ${
-                plan.featured
-                  ? "bg-[#1A1A1A] scale-105 md:-mt-4"
-                  : "bg-[#1A1A1A]"
+              className={`pricing-card relative rounded-[32px] p-8 overflow-hidden bg-[#1A1A1A] ${
+                plan.featured ? "md:scale-105 md:-mt-4" : ""
               }`}
             >
               <div className="relative z-10">
@@ -133,7 +149,7 @@ const Pricing = () => {
                   <ul className="space-y-4">
                     {plan.features.map((feature) => (
                       <li key={feature} className="flex items-start gap-3">
-                        <Check className="h-6 w-6 text-primary flex-shrink-0 mt-0.5" />
+                        <Check className="h-6 w-6 text-[#5B6CFF] flex-shrink-0 mt-0.5" />
                         <span className="text-gray-300">{feature}</span>
                       </li>
                     ))}
@@ -142,8 +158,14 @@ const Pricing = () => {
 
                 <div className="mt-8">
                   <div className="flex items-center gap-2 mb-8">
-                    <span className="text-4xl font-bold text-white">${plan.price}</span>
-                    <span className="text-gray-400">/mo</span>
+                    {plan.price !== null ? (
+                      <>
+                        <span className="text-4xl font-bold text-white">${plan.price}</span>
+                        <span className="text-gray-400">/mo</span>
+                      </>
+                    ) : (
+                      <span className="text-4xl font-bold text-white">Contact Sales</span>
+                    )}
                   </div>
                   <button
                     onClick={handleGetStarted}
@@ -154,9 +176,6 @@ const Pricing = () => {
                   </button>
                 </div>
               </div>
-              
-              {/* Gradient background effect */}
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/20" />
             </div>
           ))}
         </div>
