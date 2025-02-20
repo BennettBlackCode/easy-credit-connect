@@ -157,12 +157,15 @@ export type Database = {
           email: string
           id: string
           permanent_credits: number | null
+          remaining_credits: number | null
           remaining_runs: number | null
+          status: string | null
           stripe_customer_id: string | null
           subscription_credits: number | null
           subscription_renewal_date: string | null
           subscription_type: string | null
           total_credits: number | null
+          updated_at: string | null
           user_name: string | null
         }
         Insert: {
@@ -170,12 +173,15 @@ export type Database = {
           email: string
           id?: string
           permanent_credits?: number | null
+          remaining_credits?: number | null
           remaining_runs?: number | null
+          status?: string | null
           stripe_customer_id?: string | null
           subscription_credits?: number | null
           subscription_renewal_date?: string | null
           subscription_type?: string | null
           total_credits?: number | null
+          updated_at?: string | null
           user_name?: string | null
         }
         Update: {
@@ -183,12 +189,15 @@ export type Database = {
           email?: string
           id?: string
           permanent_credits?: number | null
+          remaining_credits?: number | null
           remaining_runs?: number | null
+          status?: string | null
           stripe_customer_id?: string | null
           subscription_credits?: number | null
           subscription_renewal_date?: string | null
           subscription_type?: string | null
           total_credits?: number | null
+          updated_at?: string | null
           user_name?: string | null
         }
         Relationships: []
@@ -205,6 +214,12 @@ export type Database = {
           credit_type: string
         }
         Returns: undefined
+      }
+      is_disposable_email: {
+        Args: {
+          email: string
+        }
+        Returns: boolean
       }
     }
     Enums: {

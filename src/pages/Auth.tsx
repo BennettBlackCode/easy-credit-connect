@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -55,8 +56,8 @@ const Auth = () => {
         });
         if (error) throw error;
         toast({
-          title: "Success!",
-          description: "Please check your email to verify your account.",
+          title: "Account created!",
+          description: "Please check your email for the confirmation link. Check your spam folder if you don't see it.",
         });
       }
     } catch (error: any) {
