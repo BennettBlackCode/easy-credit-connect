@@ -1,142 +1,180 @@
-
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import RunsTable from "@/components/dashboard/RunsTable";
-import UsageChart from "@/components/dashboard/UsageChart";
-import TimeRangeSelector from "@/components/dashboard/TimeRangeSelector";
-import { useQuery } from "@tanstack/react-query";
+import { ArrowUpRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
+import TimeRangeSelector from "@/components/dashboard/TimeRangeSelector";
+import UsageChart from "@/components/dashboard/UsageChart";
+import RunsTable from "@/components/dashboard/RunsTable";
+import { 
+  startOfDay, 
+  endOfDay, 
+  format, 
+  getWeek, 
+  startOfMonth,
+  endOfMonth,
+  getDaysInMonth,
+  addDays 
+} from "date-fns";
 
 type TimeRange = "day" | "week" | "month" | "year";
 
-interface Automation {
-  id: string;
-  created_at: string;
-  company_name: string;
-}
-
 const Dashboard = () => {
-  const navigate = useNavigate();
-  const { session, isLoading: authLoading } = useAuth();
-  const [timeRange, setTimeRange] = useState<TimeRange>("week");
-  const [startDate, setStartDate] = useState<Date>(startOfWeek(new Date()));
-  const [endDate, setEndDate] = useState<Date>(endOfWeek(new Date()));
+  const { session } = useAuth();
+  const [timeRange, setTimeRange] = useState<TimeRange>("day");
+  const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>({
+    start: startOfDay(new Date()),
+    end: endOfDay(new Date()),
+  });
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!authLoading && !session) {
-      navigate("/auth");
-    }
-  }, [session, authLoading, navigate]);
+  const handleDateChange = (start: Date, end: Date) => {
+    setDateRange({ start, end });
+  };
 
-  // Fetch automation data
-  const { data: automations = [], isLoading: runsLoading } = useQuery({
-    queryKey: ['automations', startDate, endDate],
+  const { data: userData } = useQuery({
+    queryKey: ["user-dashboard", session?.user?.id],
     queryFn: async () => {
-      if (!session) return [];
       const { data, error } = await supabase
-        .from('automations')
-        .select('id, created_at, company_name')
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString())
-        .order('created_at', { ascending: false });
+        .from("users")
+        .select("permanent_credits, subscription_credits, subscription_type, user_name")
+        .eq("id", session?.user?.id)
+        .single();
 
       if (error) throw error;
-      return (data || []) as Automation[];
+      return data;
     },
-    enabled: !!session
+    enabled: !!session?.user?.id,
   });
 
-  // Handle time range changes
-  const handleRangeChange = (range: TimeRange) => {
-    setTimeRange(range);
-    const now = new Date();
-    
-    switch (range) {
+  const { data: recentAutomations } = useQuery({
+    queryKey: ["recent-automations", session?.user?.id, searchQuery],
+    queryFn: async () => {
+      let query = supabase
+        .from("automations")
+        .select("*")
+        .eq("user_id", session?.user?.id)
+        .order("created_at", { ascending: false });
+
+      if (searchQuery) {
+        query = query.ilike("company_name", `%${searchQuery}%`);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!session?.user?.id,
+  });
+
+  const formatDateDisplay = () => {
+    const date = dateRange.start;
+    switch (timeRange) {
       case "day":
-        setStartDate(startOfDay(now));
-        setEndDate(endOfDay(now));
-        break;
+        return format(date, "EEEE, MMMM d, yyyy");
       case "week":
-        setStartDate(startOfWeek(now));
-        setEndDate(endOfWeek(now));
-        break;
+        return `Week ${getWeek(date)} - ${format(date, "MMMM d, yyyy")}`;
       case "month":
-        setStartDate(startOfMonth(now));
-        setEndDate(endOfMonth(now));
-        break;
+        return format(date, "MMMM yyyy");
       case "year":
-        setStartDate(startOfYear(now));
-        setEndDate(endOfYear(now));
-        break;
+        return format(date, "yyyy");
+      default:
+        return "";
     }
   };
 
-  const handleDateChange = (start: Date, end: Date) => {
-    setStartDate(start);
-    setEndDate(end);
+  const totalCredits = (userData?.permanent_credits || 0) + (userData?.subscription_credits || 0);
+
+  const generateChartData = () => {
+    switch (timeRange) {
+      case "day":
+        return Array.from({ length: 24 }, (_, i) => {
+          const date = new Date(dateRange.start);
+          date.setHours(i);
+          return {
+            date: date.toISOString(),
+            runs: Math.floor(Math.random() * 5),
+          };
+        });
+      case "week":
+        return Array.from({ length: 7 }, (_, i) => {
+          const date = new Date(dateRange.start);
+          date.setDate(date.getDate() + i);
+          return {
+            date: date.toISOString(),
+            runs: Math.floor(Math.random() * 10),
+          };
+        });
+      case "month": {
+        const monthStart = startOfMonth(dateRange.start);
+        const daysInMonth = getDaysInMonth(monthStart);
+        
+        return Array.from({ length: daysInMonth }, (_, i) => {
+          const date = addDays(monthStart, i);
+          return {
+            date: date.toISOString(),
+            runs: Math.floor(Math.random() * 15),
+          };
+        });
+      }
+      case "year":
+        return Array.from({ length: 12 }, (_, i) => {
+          const date = new Date(dateRange.start);
+          date.setMonth(i);
+          return {
+            date: date.toISOString(),
+            runs: Math.floor(Math.random() * 50),
+          };
+        });
+    }
   };
 
-  // Prepare data for usage chart
-  const chartData = automations.map(run => ({
-    date: run.created_at,
-    runs: 1,
-  }));
-
-  // Transform automations into runs format
-  const runs = automations.map(automation => ({
-    id: automation.id,
-    created_at: automation.created_at,
-    company_name: automation.company_name,
-    credits_used: 1 // Default value since we don't have this in automations
-  }));
-
-  // Filter runs based on search query
-  const filteredRuns = runs.filter(run => 
-    run.company_name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  if (authLoading || runsLoading) {
-    return (
-      <div className="container py-24">
-        <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return null;
-  }
+  const chartData = generateChartData();
 
   return (
-    <div className="container py-24">
-      <div className="flex flex-col gap-8">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-          <p className="text-gray-400">Monitor your automation usage and performance</p>
-        </div>
+    <div className="min-h-screen bg-[#030303] text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
+        {userData?.user_name && (
+          <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-white/90">
+            Welcome back, {userData.user_name}
+          </h1>
+        )}
+        <div className="space-y-6">
+          <div className="p-4 sm:p-6 rounded-xl bg-white/5 border border-white/10">
+            <div className="flex flex-col gap-4 mb-6">
+              <h2 className="text-lg sm:text-xl font-medium text-white/90">
+                {formatDateDisplay()}
+              </h2>
+              <TimeRangeSelector
+                selectedRange={timeRange}
+                onRangeChange={setTimeRange}
+                onDateChange={handleDateChange}
+              />
+            </div>
+            <div className="h-[250px] sm:h-[300px] w-full">
+              <UsageChart 
+                data={chartData} 
+                timeRange={timeRange}
+              />
+            </div>
+          </div>
 
-        <TimeRangeSelector
-          selectedRange={timeRange}
-          onRangeChange={handleRangeChange}
-          onDateChange={handleDateChange}
-        />
-        
-        <UsageChart 
-          data={chartData}
-          timeRange={timeRange}
-        />
-        
-        <RunsTable
-          runs={filteredRuns}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
+          <div className="p-4 sm:p-6 rounded-xl bg-white/5 border border-white/10">
+            <h3 className="text-lg font-semibold mb-4">Recent Runs</h3>
+            <RunsTable
+              runs={recentAutomations?.map(run => ({
+                id: run.id,
+                created_at: run.created_at,
+                company_name: run.company_name,
+                credits_used: 1,
+              })) || []}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

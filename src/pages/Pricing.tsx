@@ -19,31 +19,20 @@ const Pricing = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!session
+    enabled: !!session // Only run query if user is logged in
   });
 
-  const handlePurchase = async (price: number) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { price, userId: session?.user?.id },
-      });
-
-      if (error) throw error;
-      if (data?.url) {
-        window.location.href = data.url;
-      }
-    } catch (error) {
-      console.error('Error creating checkout session:', error);
+  const handleGetStarted = () => {
+    if (!session) {
       toast({
-        title: "Error",
-        description: "There was an error processing your request. Please try again.",
-        variant: "destructive",
+        title: "Authentication required",
+        description: "Please sign in to purchase a plan",
+        variant: "destructive"
       });
+      navigate("/auth");
+      return;
     }
-  };
-
-  const handleContactUs = () => {
-    window.location.href = 'mailto:support@1clickseo.io';
+    navigate("/billing");
   };
 
   const plans = [{
@@ -60,7 +49,7 @@ const Pricing = () => {
     price: 97,
     description: "Most popular for growing businesses",
     features: ["15 runs", "No commitment", "Priority support", "Advanced analytics"],
-    buttonText: "Get Started",
+    buttonText: "Start Growth",
     featured: true,
     icon: CreditCard
   }, {
@@ -87,7 +76,7 @@ const Pricing = () => {
 
         <div className="grid md:grid-cols-3 gap-8">
           {plans.map(plan => <div key={plan.id} className={`pricing-card relative rounded-3xl p-8 bg-[#0A0A0A] border border-transparent transition-all duration-500 ${plan.featured ? "md:-mt-4 md:mb-4" : ""}`}>
-              {plan.featured && <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-10">
+              {plan.featured && <div className="absolute -top-5 left-1/2 -translate-x-1/2">
                   <span className="px-6 py-2 text-sm font-medium rounded-full bg-primary text-black">
                     Most Popular
                   </span>
@@ -115,10 +104,7 @@ const Pricing = () => {
                   </ul>
                 </div>
 
-                <button 
-                  onClick={() => plan.price ? handlePurchase(plan.price) : handleContactUs()}
-                  className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-full bg-primary text-white hover:bg-primary/90 transition-all duration-200"
-                >
+                <button onClick={handleGetStarted} className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-full bg-primary text-white hover:bg-primary/90 transition-all duration-200">
                   {plan.buttonText}
                   <ArrowUpRight className="h-5 w-5" />
                 </button>
