@@ -92,7 +92,7 @@ const Pricing = () => {
                 <div className="mb-8">
                   {plan.price !== null ? <div className="flex items-baseline">
                       <span className="text-4xl font-bold text-white">${plan.price}</span>
-                      <span className="ml-2 text-gray-400">/ per month</span>
+                      <span className="ml-2 text-gray-400">per month</span>
                     </div> : <div className="text-3xl font-bold text-white">{plan.priceLabel}</div>}
                 </div>
 
