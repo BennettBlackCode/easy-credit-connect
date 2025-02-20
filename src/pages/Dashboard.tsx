@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,7 +8,16 @@ import { useQuery } from "@tanstack/react-query";
 import TimeRangeSelector from "@/components/dashboard/TimeRangeSelector";
 import UsageChart from "@/components/dashboard/UsageChart";
 import RunsTable from "@/components/dashboard/RunsTable";
-import { startOfDay, endOfDay, format, getWeek } from "date-fns";
+import { 
+  startOfDay, 
+  endOfDay, 
+  format, 
+  getWeek, 
+  startOfMonth,
+  endOfMonth,
+  getDaysInMonth,
+  addDays 
+} from "date-fns";
 
 type TimeRange = "day" | "week" | "month" | "year";
 
@@ -21,6 +29,10 @@ const Dashboard = () => {
     end: endOfDay(new Date()),
   });
   const [searchQuery, setSearchQuery] = useState("");
+
+  const handleDateChange = (start: Date, end: Date) => {
+    setDateRange({ start, end });
+  };
 
   const { data: userData } = useQuery({
     queryKey: ["user-dashboard", session?.user?.id],
@@ -95,15 +107,18 @@ const Dashboard = () => {
             runs: Math.floor(Math.random() * 10),
           };
         });
-      case "month":
-        return Array.from({ length: 30 }, (_, i) => {
-          const date = new Date(dateRange.start);
-          date.setDate(date.getDate() + i);
+      case "month": {
+        const monthStart = startOfMonth(dateRange.start);
+        const daysInMonth = getDaysInMonth(monthStart);
+        
+        return Array.from({ length: daysInMonth }, (_, i) => {
+          const date = addDays(monthStart, i);
           return {
             date: date.toISOString(),
             runs: Math.floor(Math.random() * 15),
           };
         });
+      }
       case "year":
         return Array.from({ length: 12 }, (_, i) => {
           const date = new Date(dateRange.start);
@@ -133,7 +148,7 @@ const Dashboard = () => {
               <TimeRangeSelector
                 selectedRange={timeRange}
                 onRangeChange={setTimeRange}
-                onDateChange={(start, end) => setDateRange({ start, end })}
+                onDateChange={handleDateChange}
               />
             </div>
             <UsageChart 

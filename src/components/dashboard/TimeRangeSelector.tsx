@@ -1,9 +1,9 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, CalendarClock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
   format, 
@@ -16,7 +16,8 @@ import {
   startOfYear, 
   endOfYear,
   startOfDay,
-  endOfDay
+  endOfDay,
+  isToday
 } from "date-fns";
 
 type TimeRange = "day" | "week" | "month" | "year";
@@ -34,6 +35,11 @@ const TimeRangeSelector = ({
 }: TimeRangeSelectorProps) => {
   const ranges: TimeRange[] = ["day", "week", "month", "year"];
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [isCustomDate, setIsCustomDate] = useState(false);
+
+  useEffect(() => {
+    setIsCustomDate(!isToday(selectedDate));
+  }, [selectedDate]);
 
   const handleRangeChange = (range: TimeRange) => {
     onRangeChange(range);
@@ -88,6 +94,7 @@ const TimeRangeSelector = ({
   const handleReset = () => {
     const today = new Date();
     setSelectedDate(today);
+    setIsCustomDate(false);
     updateDateRange(selectedRange, today);
   };
 
@@ -129,11 +136,21 @@ const TimeRangeSelector = ({
               selected={selectedDate}
               onSelect={handleCalendarSelect}
               initialFocus
-              onReset={handleReset}
               className="rounded-md border"
             />
           </PopoverContent>
         </Popover>
+        {isCustomDate && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleReset}
+            className="h-9 w-9"
+            title="Reset to today"
+          >
+            <CalendarClock className="h-4 w-4" />
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon"
