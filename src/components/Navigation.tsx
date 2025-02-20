@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, ArrowUpRight, LogOut } from "lucide-react";
@@ -94,6 +93,7 @@ const Navigation = () => {
                   >
                     Billing
                   </Link>
+                  <div className="h-5 w-px bg-gray-700" />
                   <Link
                     to="/automation"
                     className="flex items-center gap-2 px-6 py-2.5 rounded-full text-white bg-primary hover:bg-primary/90 transition-colors duration-200"
@@ -101,12 +101,13 @@ const Navigation = () => {
                     Run Automation
                     <ArrowUpRight className="h-4 w-4" />
                   </Link>
+                  <div className="h-5 w-px bg-gray-700" />
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
+                    className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group"
                   >
-                    <LogOut className="h-4 w-4" />
-                    Logout
+                    <LogOut className="h-4 w-4 transition-colors group-hover:text-red-400" />
+                    <span>Logout</span>
                   </button>
                 </>
               ) : (
@@ -174,6 +175,7 @@ const Navigation = () => {
                   >
                     Billing
                   </Link>
+                  <div className="h-px w-full bg-gray-800" />
                   <Link
                     to="/automation"
                     className="flex items-center justify-center gap-2 w-full px-6 py-2.5 rounded-full text-white bg-primary hover:bg-primary/90 transition-colors duration-200"
@@ -182,12 +184,13 @@ const Navigation = () => {
                     Run Automation
                     <ArrowUpRight className="h-4 w-4" />
                   </Link>
+                  <div className="h-px w-full bg-gray-800" />
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors py-2"
+                    className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors py-2 group"
                   >
-                    <LogOut className="h-4 w-4" />
-                    Logout
+                    <LogOut className="h-4 w-4 transition-colors group-hover:text-red-400" />
+                    <span>Logout</span>
                   </button>
                 </>
               ) : (
