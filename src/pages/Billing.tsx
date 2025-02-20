@@ -1,6 +1,7 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CreditCard, ArrowUpRight, X } from "lucide-react";
+import { CreditCard, ArrowUpRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -15,22 +16,11 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 
 const Billing = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { session, isLoading: authLoading } = useAuth();
-  const [couponDialog, setCouponDialog] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
-  const [couponCode, setCouponCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -105,20 +95,12 @@ const Billing = () => {
   });
 
   const handlePurchase = async (productId: string) => {
-    setSelectedProduct(productId);
-    setCouponDialog(true);
-  };
-
-  const handleCheckout = async () => {
-    if (!selectedProduct) return;
-    
     setIsSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { 
-          productId: selectedProduct, 
+          productId: productId, 
           userId: session?.user?.id,
-          couponCode: couponCode.trim() || undefined
         },
       });
 
@@ -142,9 +124,6 @@ const Billing = () => {
       });
     } finally {
       setIsSubmitting(false);
-      setCouponDialog(false);
-      setCouponCode("");
-      setSelectedProduct(null);
     }
   };
 
@@ -236,8 +215,9 @@ const Billing = () => {
                     <Button 
                       className="w-full"
                       onClick={() => handlePurchase(product.id)}
+                      disabled={isSubmitting}
                     >
-                      {displayButton}
+                      {isSubmitting ? "Processing..." : displayButton}
                       <ArrowUpRight className="ml-2 h-4 w-4" />
                     </Button>
                   )}
@@ -282,51 +262,6 @@ const Billing = () => {
             </Table>
           </CardContent>
         </Card>
-
-        <Dialog open={couponDialog} onOpenChange={setCouponDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Have a coupon code?</DialogTitle>
-              <DialogDescription>
-                Enter your coupon code below or proceed with the purchase.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 pt-4">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Enter coupon code"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
-                  className="flex-1"
-                />
-                {couponCode && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCouponCode("")}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setCouponDialog(false);
-                    setCouponCode("");
-                    setSelectedProduct(null);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button onClick={handleCheckout} disabled={isSubmitting}>
-                  {isSubmitting ? "Processing..." : "Continue to Checkout"}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );

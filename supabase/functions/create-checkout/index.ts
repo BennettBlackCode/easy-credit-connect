@@ -19,7 +19,7 @@ serve(async (req) => {
   }
 
   try {
-    const { productId, userId, couponCode } = await req.json();
+    const { productId, userId } = await req.json();
 
     if (!productId || !userId) {
       throw new Error('Missing required parameters');
@@ -82,13 +82,13 @@ serve(async (req) => {
         },
       ],
       mode: 'payment',
+      allow_promotion_codes: true, // Enable coupon code field in Stripe Checkout
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
       metadata: {
         product_id: productId,
         user_id: userId,
       },
-      ...(couponCode ? { discounts: [{ coupon: couponCode }] } : {}),
     });
 
     return new Response(
