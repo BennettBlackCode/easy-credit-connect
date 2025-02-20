@@ -1,6 +1,7 @@
 
 import { ArrowRight, Check } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 
 const Index = () => {
   const features = [
@@ -65,15 +66,23 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Video Section with Gradient Border */}
-            <div className="relative max-w-4xl mx-auto rounded-2xl p-[1px] bg-gradient-to-r from-primary/50 via-primary/20 to-primary/50">
-              <div className="relative aspect-video rounded-2xl overflow-hidden bg-black">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <p className="text-white/50 text-lg">Product Demo Video</p>
+            {/* Video Section with Scroll Animation */}
+            <div id="demo" className="relative max-w-6xl mx-auto">
+              <ContainerScroll
+                titleComponent={
+                  <h2 className="text-3xl font-bold text-white/90 mb-8">
+                    Experience the Future of SEO
+                  </h2>
+                }
+              >
+                <div className="relative aspect-video rounded-2xl overflow-hidden bg-black">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <p className="text-white/50 text-lg">Product Demo Video</p>
+                  </div>
+                  {/* Glow Effect */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
                 </div>
-                {/* Glow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
-              </div>
+              </ContainerScroll>
             </div>
 
             {/* Stats Section */}
