@@ -131,18 +131,20 @@ const Dashboard = () => {
     }
   };
 
+  const chartData = generateChartData();
+
   return (
     <div className="min-h-screen bg-[#030303] text-white">
-      <div className="max-w-7xl mx-auto px-8 pt-32">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
         {userData?.user_name && (
-          <h1 className="text-3xl font-bold mb-12 text-white/90">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-white/90">
             Welcome back, {userData.user_name}
           </h1>
         )}
-        <div className="space-y-8">
-          <div className="p-6 rounded-xl bg-white/5 border border-white/10">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-medium text-white/90">
+        <div className="space-y-6">
+          <div className="p-4 sm:p-6 rounded-xl bg-white/5 border border-white/10">
+            <div className="flex flex-col gap-4 mb-6">
+              <h2 className="text-lg sm:text-xl font-medium text-white/90">
                 {formatDateDisplay()}
               </h2>
               <TimeRangeSelector
@@ -151,13 +153,15 @@ const Dashboard = () => {
                 onDateChange={handleDateChange}
               />
             </div>
-            <UsageChart 
-              data={generateChartData()} 
-              timeRange={timeRange}
-            />
+            <div className="h-[250px] sm:h-[300px] w-full">
+              <UsageChart 
+                data={chartData} 
+                timeRange={timeRange}
+              />
+            </div>
           </div>
 
-          <div className="p-6 rounded-xl bg-white/5 border border-white/10">
+          <div className="p-4 sm:p-6 rounded-xl bg-white/5 border border-white/10">
             <h3 className="text-lg font-semibold mb-4">Recent Runs</h3>
             <RunsTable
               runs={recentAutomations?.map(run => ({
