@@ -43,21 +43,49 @@ const Auth = () => {
     setIsLoading(true);
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { error, data } = await supabase.auth.signInWithPassword({
           email: values.email,
           password: values.password,
         });
+        
         if (error) throw error;
+
+        // Check if email is confirmed
+        if (data?.user && !data.user.email_confirmed_at) {
+          toast({
+            title: "Email not confirmed",
+            description: "Please check your email and confirm your account before signing in. Don't forget to check your spam folder.",
+            variant: "destructive",
+          });
+          return;
+        }
+
         navigate("/dashboard");
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { error, data } = await supabase.auth.signUp({
           email: values.email,
           password: values.password,
+          options: {
+            emailRedirectTo: `${config.baseUrl}/auth/callback`,
+          },
         });
+        
         if (error) throw error;
+
+        // Check if email confirmation was sent
+        if (data?.user?.identities?.length === 0) {
+          toast({
+            variant: "destructive",
+            title: "Account already exists",
+            description: "An account with this email already exists. Please sign in instead.",
+          });
+          setIsLogin(true);
+          return;
+        }
+
         toast({
-          title: "Account created!",
-          description: "Please check your email for the confirmation link. Check your spam folder if you don't see it.",
+          title: "Verification email sent!",
+          description: "Please check your email (including spam folder) for the confirmation link. You must verify your email before signing in.",
         });
       }
     } catch (error: any) {
