@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -8,6 +8,7 @@ const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { session } = useAuth();
 
   useEffect(() => {
@@ -18,10 +19,24 @@ const Navigation = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const handleGetStarted = () => {
+    if (session) {
+      navigate("/automation");
+    } else {
+      navigate("/auth");
+    }
+    setIsOpen(false);
+  };
+
   const scrollToSection = (sectionId: string) => {
+    if (location.pathname !== "/") {
+      navigate("/?section=" + sectionId);
+      return;
+    }
+    
     const element = document.getElementById(sectionId);
     if (element) {
-      const navHeight = 80; // Height of the navbar
+      const navHeight = 80;
       const elementPosition = element.offsetTop - navHeight;
       window.scrollTo({
         top: elementPosition,
@@ -47,12 +62,12 @@ const Navigation = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             <div className="flex items-center gap-6">
-              <Link
-                to="/"
+              <button
+                onClick={() => navigate("/")}
                 className="text-gray-300 hover:text-white transition-colors"
               >
                 Home
-              </Link>
+              </button>
               <button
                 onClick={() => scrollToSection("features")}
                 className="text-gray-300 hover:text-white transition-colors"
@@ -66,21 +81,12 @@ const Navigation = () => {
                 Pricing
               </button>
             </div>
-            {session ? (
-              <Link
-                to="/automation"
-                className="px-6 py-2.5 rounded-full text-black bg-primary hover:bg-primary/90 transition-colors duration-200 font-medium"
-              >
-                Get Started
-              </Link>
-            ) : (
-              <Link
-                to="/auth"
-                className="px-6 py-2.5 rounded-full text-black bg-primary hover:bg-primary/90 transition-colors duration-200 font-medium"
-              >
-                Get Started
-              </Link>
-            )}
+            <button
+              onClick={handleGetStarted}
+              className="px-6 py-2.5 rounded-full text-black bg-primary hover:bg-primary/90 transition-colors duration-200 font-medium"
+            >
+              Get Started
+            </button>
           </div>
 
           {/* Mobile menu button */}
@@ -104,13 +110,15 @@ const Navigation = () => {
         >
           <div className="px-4 py-4 bg-black/95 backdrop-blur-xl border-t border-white/10">
             <div className="flex flex-col gap-4">
-              <Link
-                to="/"
-                className="text-gray-300 hover:text-white transition-colors py-2"
-                onClick={() => setIsOpen(false)}
+              <button
+                onClick={() => {
+                  navigate("/");
+                  setIsOpen(false);
+                }}
+                className="text-left text-gray-300 hover:text-white transition-colors py-2"
               >
                 Home
-              </Link>
+              </button>
               <button
                 onClick={() => scrollToSection("features")}
                 className="text-left text-gray-300 hover:text-white transition-colors py-2"
@@ -123,23 +131,12 @@ const Navigation = () => {
               >
                 Pricing
               </button>
-              {session ? (
-                <Link
-                  to="/automation"
-                  className="w-full px-6 py-2.5 rounded-full text-black bg-primary hover:bg-primary/90 transition-colors duration-200 text-center font-medium"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Get Started
-                </Link>
-              ) : (
-                <Link
-                  to="/auth"
-                  className="w-full px-6 py-2.5 rounded-full text-black bg-primary hover:bg-primary/90 transition-colors duration-200 text-center font-medium"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Get Started
-                </Link>
-              )}
+              <button
+                onClick={handleGetStarted}
+                className="w-full px-6 py-2.5 rounded-full text-black bg-primary hover:bg-primary/90 transition-colors duration-200 text-center font-medium"
+              >
+                Get Started
+              </button>
             </div>
           </div>
         </div>

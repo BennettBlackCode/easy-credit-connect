@@ -1,8 +1,6 @@
 
-import { Check, CreditCard, Mail } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowRight, Check } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -11,12 +9,7 @@ const Pricing = () => {
   const { toast } = useToast();
   const { session } = useAuth();
 
-  const handlePlanClick = (isExternal: boolean, href: string) => {
-    if (isExternal) {
-      window.open(href, '_blank');
-      return;
-    }
-
+  const handleGetStarted = () => {
     if (!session) {
       toast({
         title: "Authentication required",
@@ -26,138 +19,91 @@ const Pricing = () => {
       navigate("/auth");
       return;
     }
-
-    navigate(href);
+    navigate("/billing");
   };
 
   const plans = [
     {
-      name: "Starter Pack",
-      price: "30",
-      interval: "monthly",
-      description: "Perfect for trying out the service",
+      name: "Starter",
+      description: "Ideal for business owners who prefer to take control and manage their own AI-powered systems.",
       features: [
-        "3 runs",
-        "No commitment",
-        "Basic support",
-        "Usage analytics"
+        "24/7 AI Chatbot & Voice Assistant",
+        "Website Builder, CRM, Email/SMS Marketing",
+        "Calendar, Invoices, Payments",
+        "Workflow & Review Management",
+        "Email/Chat Support & Resources"
       ],
-      href: "/billing",
+      price: "197",
       buttonText: "Get Started",
     },
     {
-      name: "Growth Pack",
-      price: "97",
-      interval: "monthly",
-      description: "Most popular for growing businesses",
+      name: "Ultimate",
+      description: "Ideal for business owners who want expert support managing their AI systems for maximum efficiency.",
       features: [
-        "15 runs",
-        "No commitment",
-        "Priority support"
+        "Every tool in the 'Do it yourself' plan",
+        "Full AI Management & Optimization",
+        "Dedicated Account Specialist",
+        "24/7 Priority Support",
+        "Personalized Onboarding & Training"
       ],
-      href: "/billing",
-      buttonText: "Start Growth",
+      price: "497",
+      buttonText: "Get Started",
       featured: true,
-    },
-    {
-      name: "Professional",
-      price: "Custom",
-      interval: "pricing",
-      description: "For businesses with high automation needs",
-      features: [
-        "Unlimited runs",
-        "Custom billing options",
-        "24/7 Premium support",
-        "Access to all workflows",
-        "Advanced analytics",
-        "API access",
-        "Custom integrations",
-        "Dedicated account manager"
-      ],
-      href: "https://1clickseo.io",
-      buttonText: "Contact Us",
-      isExternal: true,
-    },
+    }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black to-secondary py-24">
-      <div className="container px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-8">
-          <h1 className="text-4xl font-bold text-white mb-4">
-            Simple, Transparent Pricing
-          </h1>
-          <p className="text-xl text-gray-300 mb-8">
-            Choose the perfect plan for your automation needs. All plans include
-            access to our full feature set.
-          </p>
-        </div>
-
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+    <div className="py-24 relative" id="pricing">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid md:grid-cols-2 gap-8">
           {plans.map((plan) => (
-            <Card
+            <div
               key={plan.name}
-              className={`relative flex flex-col ${
+              className={`relative rounded-[32px] p-8 overflow-hidden ${
                 plan.featured
-                  ? "border-primary shadow-lg scale-105 glass-card"
-                  : "glass-card"
-              } transition-all duration-200 hover:shadow-lg`}
+                  ? "bg-[#1A1A1A]"
+                  : "bg-[#1A1A1A]"
+              }`}
             >
-              {plan.featured && (
-                <div className="absolute top-0 right-0 -translate-y-1/2 px-3 py-1 bg-primary text-white text-sm font-medium rounded-full">
-                  Most Popular
+              <div className="relative z-10">
+                <h3 className="text-4xl font-bold text-white mb-6">
+                  {plan.name}
+                </h3>
+                <p className="text-gray-400 mb-12 text-lg">
+                  {plan.description}
+                </p>
+                
+                <div className="mb-12">
+                  <h4 className="text-xl font-semibold text-white mb-6">What's included</h4>
+                  <ul className="space-y-4">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-3">
+                        <Check className="h-6 w-6 text-[#5B6CFF] flex-shrink-0 mt-0.5" />
+                        <span className="text-gray-300">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              )}
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold text-white">{plan.name}</CardTitle>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold text-white">{plan.price === "Custom" ? "" : "$"}{plan.price}</span>
-                  <span className="text-gray-300 ml-2">{plan.interval}</span>
-                </div>
-                <p className="text-gray-300 mt-2">{plan.description}</p>
-              </CardHeader>
-              <CardContent className="flex-grow">
-                <ul className="space-y-3">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2">
-                      <Check className="h-5 w-5 text-primary flex-shrink-0" />
-                      <span className="text-gray-300">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  onClick={() => handlePlanClick(!!plan.isExternal, plan.href)}
-                  className={`w-full mt-8 ${
-                    plan.featured ? "bg-primary hover:bg-primary/90 electric-glow" : "neo-gradient"
-                  }`}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    {plan.isExternal ? (
-                      <Mail className="h-5 w-5" />
-                    ) : (
-                      <CreditCard className="h-5 w-5" />
-                    )}
-                    {plan.buttonText}
-                  </div>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
 
-        {/* FAQ Preview */}
-        <div className="mt-24 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Have Questions?
-          </h2>
-          <p className="text-lg text-gray-300 mb-8">
-            Contact our support team or check out our FAQ section.
-          </p>
-          <Button variant="outline" asChild className="neo-gradient">
-            <Link to="/faq">View FAQ</Link>
-          </Button>
+                <div className="mt-8">
+                  <div className="flex items-center gap-2 mb-8">
+                    <span className="text-4xl font-bold text-white">${plan.price}</span>
+                    <span className="text-gray-400">/mo</span>
+                  </div>
+                  <button
+                    onClick={handleGetStarted}
+                    className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-full bg-white text-black hover:bg-gray-100 transition-colors"
+                  >
+                    {plan.buttonText}
+                    <ArrowRight className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+              
+              {/* Gradient background effect */}
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/20" />
+            </div>
+          ))}
         </div>
       </div>
     </div>
