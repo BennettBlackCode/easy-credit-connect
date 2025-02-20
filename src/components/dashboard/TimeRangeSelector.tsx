@@ -31,7 +31,7 @@ const TimeRangeSelector = ({
   const updateDateRange = (range: TimeRange, date: Date) => {
     switch (range) {
       case "day":
-        onDateChange(startOfToday(), endOfToday());
+        onDateChange(startOfDay(date), endOfDay(date));
         break;
       case "week":
         onDateChange(startOfWeek(date), endOfWeek(date));
@@ -72,6 +72,12 @@ const TimeRangeSelector = ({
     }
   };
 
+  const handleReset = () => {
+    const today = new Date();
+    setSelectedDate(today);
+    updateDateRange(selectedRange, today);
+  };
+
   return (
     <div className="flex justify-end items-center space-x-4">
       <div className="flex bg-white/5 rounded-lg p-1">
@@ -110,6 +116,7 @@ const TimeRangeSelector = ({
               selected={selectedDate}
               onSelect={handleCalendarSelect}
               initialFocus
+              onReset={handleReset}
               className="rounded-md border"
             />
           </PopoverContent>

@@ -118,9 +118,9 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#030303] text-white">
-      <div className="max-w-7xl mx-auto px-8 pt-24">
+      <div className="max-w-7xl mx-auto px-8 pt-32">
         {userData?.user_name && (
-          <h1 className="text-3xl font-bold mb-8 text-white/90">
+          <h1 className="text-3xl font-bold mb-12 text-white/90">
             Welcome back, {userData.user_name}
           </h1>
         )}
@@ -149,7 +149,7 @@ const Dashboard = () => {
                 id: run.id,
                 created_at: run.created_at,
                 company_name: run.company_name,
-                credits_used: 1, // Replace with actual credits used
+                credits_used: 1,
               })) || []}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
