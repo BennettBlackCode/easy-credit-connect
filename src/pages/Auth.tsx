@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,8 +20,29 @@ import { useToast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { config } from "@/lib/config";
 
+// List of allowed email domains
+const ALLOWED_EMAIL_DOMAINS = [
+  "gmail.com",
+  "yahoo.com",
+  "outlook.com",
+  "hotmail.com",
+  "aol.com",
+  "icloud.com",
+  "protonmail.com",
+  "me.com",
+  "mac.com",
+  "live.com",
+  "msn.com",
+];
+
 const formSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+  email: z
+    .string()
+    .email("Please enter a valid email address")
+    .refine((email) => {
+      const domain = email.split("@")[1].toLowerCase();
+      return ALLOWED_EMAIL_DOMAINS.includes(domain);
+    }, "Please use a valid email provider (Gmail, Yahoo, Outlook, etc.)"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -224,3 +246,4 @@ const Auth = () => {
 };
 
 export default Auth;
+
