@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CalendarClock } from "lucide-react";
-import { DayPicker, CaptionProps, SelectSingleEventHandler, DayClickEventHandler } from "react-day-picker";
+import { DayPicker, CaptionProps, DayClickEventHandler } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -17,11 +17,12 @@ function Calendar({
   defaultMonth,
   onReset,
   mode = "single",
+  onSelect,
   ...props
 }: CalendarProps) {
   const [viewMode, setViewMode] = React.useState<'dates' | 'months' | 'years' | 'decades'>('dates');
   const [viewDate, setViewDate] = React.useState<Date>(() => {
-    return defaultMonth || selected instanceof Date ? selected as Date : new Date();
+    return defaultMonth || (selected instanceof Date ? selected : new Date());
   });
   const [isCustomDate, setIsCustomDate] = React.useState(false);
 
@@ -51,13 +52,12 @@ function Calendar({
     }
   }, [onReset]);
 
-  const handleDateSelect: DayClickEventHandler = (day, modifiers) => {
+  const handleDateSelect: DayClickEventHandler = (day) => {
     if (day) {
       setViewDate(day);
       setIsCustomDate(!isDateToday(day));
-      
-      if (props.onSelect) {
-        (props.onSelect as SelectSingleEventHandler)(day);
+      if (onSelect) {
+        onSelect(day);
       }
     }
   };
@@ -383,7 +383,7 @@ function Calendar({
             Caption: CustomCaption,
           }}
           month={viewDate}
-          selected={selected}
+          selected={selected as Date}
           onDayClick={handleDateSelect}
           {...props}
         />
