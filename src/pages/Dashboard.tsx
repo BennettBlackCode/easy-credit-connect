@@ -17,7 +17,16 @@ import {
   startOfMonth,
   endOfMonth,
   getDaysInMonth,
-  addDays 
+  addDays,
+  addHours,
+  startOfWeek,
+  endOfWeek,
+  startOfYear,
+  endOfYear,
+  eachDayOfInterval,
+  eachWeekOfInterval,
+  eachMonthOfInterval,
+  subDays
 } from "date-fns";
 
 type TimeRange = "day" | "week" | "month" | "year";
@@ -33,6 +42,95 @@ const Dashboard = () => {
 
   const handleDateChange = (start: Date, end: Date) => {
     setDateRange({ start, end });
+  };
+
+  const generateChartData = () => {
+    const { data: automations } = useQuery({
+      queryKey: ["automations", session?.user?.id, dateRange],
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from("automations")
+          .select("created_at")
+          .eq("user_id", session?.user?.id)
+          .gte("created_at", dateRange.start.toISOString())
+          .lte("created_at", dateRange.end.toISOString())
+          .order("created_at", { ascending: true });
+
+        if (error) throw error;
+        return data || [];
+      },
+      enabled: !!session?.user?.id,
+    });
+
+    let intervals: Date[];
+    let format: string;
+
+    switch (timeRange) {
+      case "day":
+        intervals = Array.from({ length: 24 }, (_, i) => 
+          addHours(startOfDay(dateRange.start), i)
+        );
+        format = "HH:mm";
+        break;
+      case "week":
+        intervals = eachDayOfInterval({
+          start: startOfWeek(dateRange.start),
+          end: endOfWeek(dateRange.start)
+        });
+        format = "EEE";
+        break;
+      case "month":
+        intervals = eachDayOfInterval({
+          start: startOfMonth(dateRange.start),
+          end: endOfMonth(dateRange.start)
+        });
+        format = "MMM d";
+        break;
+      case "year":
+        intervals = eachMonthOfInterval({
+          start: startOfYear(dateRange.start),
+          end: endOfYear(dateRange.start)
+        });
+        format = "MMM";
+        break;
+      default:
+        intervals = [];
+        format = "";
+    }
+
+    return intervals.map(date => {
+      let periodStart: Date;
+      let periodEnd: Date;
+
+      switch (timeRange) {
+        case "day":
+          periodStart = date;
+          periodEnd = addHours(date, 1);
+          break;
+        case "week":
+        case "month":
+          periodStart = startOfDay(date);
+          periodEnd = endOfDay(date);
+          break;
+        case "year":
+          periodStart = startOfMonth(date);
+          periodEnd = endOfMonth(date);
+          break;
+        default:
+          periodStart = date;
+          periodEnd = date;
+      }
+
+      const runsInPeriod = automations?.filter(automation => {
+        const automationDate = new Date(automation.created_at);
+        return automationDate >= periodStart && automationDate < periodEnd;
+      }).length || 0;
+
+      return {
+        date: date.toISOString(),
+        runs: runsInPeriod
+      };
+    });
   };
 
   const { data: userData } = useQuery({
@@ -86,6 +184,8 @@ const Dashboard = () => {
     }
   };
 
+  const chartData = generateChartData();
+
   return (
     <div className="min-h-screen bg-[#030303] text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32">
@@ -108,7 +208,7 @@ const Dashboard = () => {
             </div>
             <div className="h-[250px] sm:h-[300px] md:h-[400px]">
               <UsageChart 
-                data={generateChartData()} 
+                data={chartData} 
                 timeRange={timeRange}
               />
             </div>
