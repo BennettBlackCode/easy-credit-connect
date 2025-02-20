@@ -28,7 +28,7 @@ export function AnimatedTitle() {
   }, [titleNumber, titles]);
 
   return (
-    <span className="relative flex w-full justify-center overflow-hidden text-center">
+    <span className="relative inline-flex w-48 justify-center overflow-hidden">
       {titles.map((title, index) => (
         <motion.span
           key={index}
