@@ -100,6 +100,13 @@ const Automation = () => {
     setIsSubmitting(true);
 
     try {
+      // Get user metadata to access agency_email
+      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) throw userError;
+
+      const agencyEmail = currentUser?.user_metadata?.agency_email || currentUser?.email || "";
+
       const automationData = {
         user_id: session.user.id,
         company_name: values.company_name,
@@ -109,7 +116,7 @@ const Automation = () => {
         city: values.city,
         state: values.state,
         postal_code: values.zip_code,
-        agency_email: session.user.email || "",
+        agency_email: agencyEmail,
         email: session.user.email || "",
         country: "United States",
         industry: "Unknown",
