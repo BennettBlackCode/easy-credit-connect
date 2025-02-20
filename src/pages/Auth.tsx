@@ -66,7 +66,7 @@ const Auth = () => {
           email: values.email,
           password: values.password,
           options: {
-            emailRedirectTo: `${config.baseUrl}/auth/callback`,
+            emailRedirectTo: `${config.baseUrl}`, // Changed to redirect to home page
           },
         });
         
