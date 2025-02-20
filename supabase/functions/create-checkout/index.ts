@@ -19,19 +19,19 @@ serve(async (req) => {
   }
 
   try {
-    const { productId, userId } = await req.json();
+    const { productId, userId, couponCode } = await req.json();
 
     if (!productId || !userId) {
-      throw new Error('Missing productId or userId');
+      throw new Error('Missing required parameters');
     }
 
-    // Get Supabase client
+    // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Get the product details
+    // Get product details
     const { data: product, error: productError } = await supabaseClient
       .from('stripe_products')
       .select('*')
@@ -42,7 +42,7 @@ serve(async (req) => {
       throw new Error('Product not found');
     }
 
-    // Get or create Stripe customer
+    // Get user details
     const { data: user, error: userError } = await supabaseClient
       .from('users')
       .select('stripe_customer_id, email')
@@ -55,6 +55,7 @@ serve(async (req) => {
 
     let customerId = user.stripe_customer_id;
 
+    // Create customer if not exists
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: user.email,
@@ -65,29 +66,13 @@ serve(async (req) => {
       customerId = customer.id;
 
       // Update user with Stripe customer ID
-      const { error: updateError } = await supabaseClient
+      await supabaseClient
         .from('users')
         .update({ stripe_customer_id: customerId })
         .eq('id', userId);
-
-      if (updateError) {
-        throw updateError;
-      }
     }
 
-    // Get the price details from Stripe to check if it's recurring
-    const price = await stripe.prices.retrieve(product.price_id);
-    const isRecurring = price.type === 'recurring';
-
-    console.log('Creating checkout session for:', {
-      customerId,
-      priceId: product.price_id,
-      productId,
-      userId,
-      isRecurring,
-    });
-
-    // Create Checkout Session with the appropriate mode
+    // Create Checkout Session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       line_items: [
@@ -96,26 +81,31 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: isRecurring ? 'subscription' : 'payment',
+      mode: 'payment',
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
       metadata: {
         product_id: productId,
         user_id: userId,
       },
+      ...(couponCode ? { discounts: [{ coupon: couponCode }] } : {}),
     });
 
-    console.log('Checkout session created:', session.id);
-
-    return new Response(JSON.stringify({ url: session.url }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    });
-  } catch (err) {
-    console.error('Error creating checkout session:', err);
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ url: session.url }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      },
+    );
+  } catch (error) {
+    console.error('Error:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      },
+    );
   }
 });

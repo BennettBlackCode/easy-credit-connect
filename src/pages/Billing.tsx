@@ -1,6 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CreditCard, ArrowUpRight } from "lucide-react";
+import { CreditCard, ArrowUpRight, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -15,20 +15,30 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const Billing = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { session, isLoading: authLoading } = useAuth();
+  const [couponDialog, setCouponDialog] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Redirect to auth page if not logged in
   useEffect(() => {
     if (!authLoading && !session) {
       navigate("/auth");
     }
   }, [session, authLoading, navigate]);
 
-  // Check URL parameters for Stripe status
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     const success = query.get('success');
@@ -39,7 +49,6 @@ const Billing = () => {
         title: "Payment successful",
         description: "Your credits have been added to your account.",
       });
-      // Clean up URL
       window.history.replaceState({}, '', window.location.pathname);
     } else if (canceled) {
       toast({
@@ -47,12 +56,10 @@ const Billing = () => {
         description: "Your payment was canceled.",
         variant: "destructive",
       });
-      // Clean up URL
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [toast]);
 
-  // Fetch user data including credits and stripe customer id
   const { data: userData, isLoading: userLoading } = useQuery({
     queryKey: ["user", session?.user?.id],
     queryFn: async () => {
@@ -68,7 +75,6 @@ const Billing = () => {
     enabled: !!session?.user?.id,
   });
 
-  // Fetch recent transactions
   const { data: transactions, isLoading: transactionsLoading } = useQuery({
     queryKey: ["transactions", session?.user?.id],
     queryFn: async () => {
@@ -84,7 +90,6 @@ const Billing = () => {
     enabled: !!session?.user?.id,
   });
 
-  // Fetch available products/plans
   const { data: products, isLoading: productsLoading } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
@@ -100,9 +105,21 @@ const Billing = () => {
   });
 
   const handlePurchase = async (productId: string) => {
+    setSelectedProduct(productId);
+    setCouponDialog(true);
+  };
+
+  const handleCheckout = async () => {
+    if (!selectedProduct) return;
+    
+    setIsSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { productId, userId: session?.user?.id },
+        body: { 
+          productId: selectedProduct, 
+          userId: session?.user?.id,
+          couponCode: couponCode.trim() || undefined
+        },
       });
 
       if (error) {
@@ -123,6 +140,11 @@ const Billing = () => {
         description: "There was an error processing your payment. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
+      setCouponDialog(false);
+      setCouponCode("");
+      setSelectedProduct(null);
     }
   };
 
@@ -140,10 +162,8 @@ const Billing = () => {
     return null;
   }
 
-  // Calculate total available credits
   const totalCredits = (userData?.permanent_credits || 0) + (userData?.subscription_credits || 0);
 
-  // Sort products in the correct order
   const sortedProducts = [...(products || [])].sort((a, b) => {
     const displayOrder = {
       'starter': 1,
@@ -160,7 +180,6 @@ const Billing = () => {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Billing & Credits</h1>
 
-        {/* Current Balance */}
         <Card className="mb-8">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
@@ -178,7 +197,6 @@ const Billing = () => {
           </CardContent>
         </Card>
 
-        {/* Available Plans */}
         <h2 className="text-xl font-semibold mb-4">Available Plans</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
           {sortedProducts.map((product) => {
@@ -229,7 +247,6 @@ const Billing = () => {
           })}
         </div>
 
-        {/* Transaction History */}
         <h2 className="text-xl font-semibold mb-4">Transaction History</h2>
         <Card>
           <CardContent className="p-0">
@@ -265,6 +282,51 @@ const Billing = () => {
             </Table>
           </CardContent>
         </Card>
+
+        <Dialog open={couponDialog} onOpenChange={setCouponDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Have a coupon code?</DialogTitle>
+              <DialogDescription>
+                Enter your coupon code below or proceed with the purchase.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter coupon code"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  className="flex-1"
+                />
+                {couponCode && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setCouponCode("")}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setCouponDialog(false);
+                    setCouponCode("");
+                    setSelectedProduct(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleCheckout} disabled={isSubmitting}>
+                  {isSubmitting ? "Processing..." : "Continue to Checkout"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
