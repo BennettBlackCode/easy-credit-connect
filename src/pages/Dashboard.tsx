@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -73,8 +72,6 @@ const Dashboard = () => {
     }
   };
 
-  const totalCredits = (userData?.permanent_credits || 0) + (userData?.subscription_credits || 0);
-
   const generateChartData = () => {
     switch (timeRange) {
       case "day":
@@ -133,7 +130,7 @@ const Dashboard = () => {
               <TimeRangeSelector
                 selectedRange={timeRange}
                 onRangeChange={setTimeRange}
-                onDateChange={(start, end) => setDateRange({ start, end })}
+                onDateChange={setDateRange}
               />
             </div>
             <UsageChart 
