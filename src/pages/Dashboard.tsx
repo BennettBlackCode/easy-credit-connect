@@ -11,6 +11,12 @@ import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth,
 
 type TimeRange = "day" | "week" | "month" | "year";
 
+interface Automation {
+  id: string;
+  created_at: string;
+  company_name: string;
+}
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { session, isLoading: authLoading } = useAuth();
@@ -26,20 +32,20 @@ const Dashboard = () => {
     }
   }, [session, authLoading, navigate]);
 
-  // Fetch runs data
-  const { data: runs = [], isLoading: runsLoading } = useQuery({
-    queryKey: ['runs', startDate, endDate],
+  // Fetch automation data
+  const { data: automations = [], isLoading: runsLoading } = useQuery({
+    queryKey: ['automations', startDate, endDate],
     queryFn: async () => {
       if (!session) return [];
       const { data, error } = await supabase
-        .from('runs')
-        .select('*')
+        .from('automations')
+        .select('id, created_at, company_name')
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString())
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as Automation[];
     },
     enabled: !!session
   });
@@ -75,9 +81,17 @@ const Dashboard = () => {
   };
 
   // Prepare data for usage chart
-  const chartData = runs.map(run => ({
+  const chartData = automations.map(run => ({
     date: run.created_at,
     runs: 1,
+  }));
+
+  // Transform automations into runs format
+  const runs = automations.map(automation => ({
+    id: automation.id,
+    created_at: automation.created_at,
+    company_name: automation.company_name,
+    credits_used: 1 // Default value since we don't have this in automations
   }));
 
   // Filter runs based on search query
