@@ -1,6 +1,7 @@
+
 import * as React from "react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CalendarClock } from "lucide-react";
-import { DayPicker, CaptionProps, SelectSingleEventHandler } from "react-day-picker";
+import { DayPicker, CaptionProps, SelectSingleEventHandler, DayClickEventHandler } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -24,6 +25,14 @@ function Calendar({
   });
   const [isCustomDate, setIsCustomDate] = React.useState(false);
 
+  // Check if a date is in today's decade
+  const isInTodayDecade = React.useCallback((date: Date) => {
+    const today = new Date();
+    const todayDecade = Math.floor(today.getFullYear() / 10) * 10;
+    const dateDecade = Math.floor(date.getFullYear() / 10) * 10;
+    return todayDecade === dateDecade;
+  }, []);
+
   // Check if a date is today
   const isDateToday = React.useCallback((date: Date) => {
     const today = new Date();
@@ -42,13 +51,13 @@ function Calendar({
     }
   }, [onReset]);
 
-  const handleDateSelect = (date: Date | undefined, selectedProps?: any) => {
-    if (date) {
-      setViewDate(date);
-      setIsCustomDate(!isDateToday(date));
+  const handleDateSelect: DayClickEventHandler = (day, modifiers) => {
+    if (day) {
+      setViewDate(day);
+      setIsCustomDate(!isDateToday(day));
       
-      if (selectedProps?.onSelect) {
-        (selectedProps.onSelect as SelectSingleEventHandler)(date, selected as Date, date, { selected: true });
+      if (props.onSelect) {
+        (props.onSelect as SelectSingleEventHandler)(day);
       }
     }
   };
@@ -375,7 +384,7 @@ function Calendar({
           }}
           month={viewDate}
           selected={selected}
-          onSelect={(date) => handleDateSelect(date, props)}
+          onDayClick={handleDateSelect}
           {...props}
         />
       ) : viewMode === 'months' ? (
