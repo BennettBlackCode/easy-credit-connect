@@ -74,6 +74,21 @@ export type Database = {
           },
         ]
       }
+      disposable_email_domains: {
+        Row: {
+          created_at: string
+          domain: string
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+        }
+        Relationships: []
+      }
       stripe_products: {
         Row: {
           active: boolean | null
@@ -214,6 +229,12 @@ export type Database = {
           credit_type: string
         }
         Returns: undefined
+      }
+      is_disposable_email: {
+        Args: {
+          email: string
+        }
+        Returns: boolean
       }
     }
     Enums: {
