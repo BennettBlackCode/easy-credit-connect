@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CalendarClock } from "lucide-react";
 import { DayPicker, CaptionProps, DayClickEventHandler } from "react-day-picker";
@@ -25,7 +24,15 @@ function Calendar({
   const [viewDate, setViewDate] = React.useState<Date>(() => {
     return defaultMonth || (selected instanceof Date ? selected : new Date());
   });
+  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(selected as Date);
   const [isCustomDate, setIsCustomDate] = React.useState(false);
+
+  React.useEffect(() => {
+    if (selected instanceof Date) {
+      setSelectedDate(selected);
+      setViewDate(selected);
+    }
+  }, [selected]);
 
   // Check if a date is in today's decade
   const isInTodayDecade = React.useCallback((date: Date) => {
@@ -56,6 +63,7 @@ function Calendar({
   const handleDateSelect: DayClickEventHandler = (day) => {
     if (day) {
       setViewDate(day);
+      setSelectedDate(day);
       setIsCustomDate(!isDateToday(day));
       if (onSelect) {
         onSelect(day);
@@ -384,7 +392,7 @@ function Calendar({
             Caption: CustomCaption,
           }}
           month={viewDate}
-          selected={selected as Date}
+          selected={selectedDate}
           onDayClick={handleDateSelect}
           {...props}
         />
