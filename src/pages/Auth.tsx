@@ -18,10 +18,12 @@ const Auth = () => {
     setIsLoading(true);
     try {
       if (isLogin) {
-        await signInWithEmail(values);
+        const { error } = await signInWithEmail(values);
+        if (error) throw error;
         navigate("/dashboard");
       } else {
-        await signUpWithEmail(values);
+        const { error } = await signUpWithEmail(values);
+        if (error) throw error;
         toast({
           title: "Success!",
           description: "Please check your email to verify your account.",
@@ -39,13 +41,10 @@ const Auth = () => {
   };
 
   const handleGoogleSignIn = async () => {
+    setIsLoading(true);
     try {
-      await signInWithGoogle();
-      setIsLoading(true);
-      toast({
-        title: "Redirecting to Google...",
-        description: "Please wait while we redirect you to Google sign in.",
-      });
+      const { error } = await signInWithGoogle();
+      if (error) throw error;
     } catch (error: any) {
       toast({
         variant: "destructive",
