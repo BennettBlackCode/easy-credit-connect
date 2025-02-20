@@ -40,23 +40,22 @@ const UsageChart = ({ data, timeRange }: UsageChartProps) => {
     }
   };
 
-  // Determine number of ticks based on screen size and time range
   const getNumberOfTicks = () => {
-    if (window.innerWidth < 640) { // mobile
+    if (window.innerWidth < 640) {
       switch (timeRange) {
         case "day":
-          return 6; // Show every 4 hours
+          return 6;
         case "week":
-          return 3; // Show 3 days
+          return 3;
         case "month":
-          return 4; // Show 4 dates
+          return 4;
         case "year":
-          return 4; // Show 4 months
+          return 4;
         default:
           return 4;
       }
     }
-    return undefined; // Use default for larger screens
+    return undefined;
   };
 
   return (
@@ -64,10 +63,10 @@ const UsageChart = ({ data, timeRange }: UsageChartProps) => {
       <BarChart 
         data={data} 
         margin={{ 
-          top: 5,
-          right: 5,
-          left: -15,
-          bottom: 5 
+          top: 20,
+          right: 20,
+          left: 0,
+          bottom: 20 
         }}
       >
         <XAxis 
@@ -88,7 +87,7 @@ const UsageChart = ({ data, timeRange }: UsageChartProps) => {
           tickLine={false}
           axisLine={false}
           tickFormatter={(value) => `${value}`}
-          width={25}
+          width={35}
           style={{ fill: 'rgba(255, 255, 255, 0.65)' }}
           allowDecimals={false}
         />
@@ -105,8 +104,9 @@ const UsageChart = ({ data, timeRange }: UsageChartProps) => {
         <Bar
           dataKey="runs"
           fill="#2ed573"
+          opacity={1}
           radius={[4, 4, 0, 0]}
-          maxBarSize={50}
+          maxBarSize={40}
         />
       </BarChart>
     </ResponsiveContainer>

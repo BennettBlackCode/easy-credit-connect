@@ -188,15 +188,15 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#030303] text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24">
         {userData?.user_name && (
-          <h1 className="text-2xl sm:text-3xl font-bold mb-8 sm:mb-12 text-white/90">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-white/90">
             Welcome back, {userData.user_name}
           </h1>
         )}
-        <div className="space-y-6 sm:space-y-8">
+        <div className="space-y-4 sm:space-y-6">
           <div className="p-4 sm:p-6 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
               <h2 className="text-lg sm:text-xl font-medium text-white/90">
                 {formatDateDisplay()}
               </h2>
@@ -206,7 +206,7 @@ const Dashboard = () => {
                 onDateChange={handleDateChange}
               />
             </div>
-            <div className="h-[200px] sm:h-[300px] md:h-[400px] w-full">
+            <div className="h-[180px] sm:h-[250px] md:h-[300px] w-full">
               <UsageChart 
                 data={chartData} 
                 timeRange={timeRange}
