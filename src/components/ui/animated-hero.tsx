@@ -28,11 +28,11 @@ export function AnimatedTitle() {
   }, [titleNumber, titles]);
 
   return (
-    <div className="relative h-20 w-full">
+    <div className="relative h-20 w-full flex items-center justify-center">
       {titles.map((title, index) => (
         <motion.span
           key={index}
-          className="absolute left-1/2 -translate-x-1/2 font-semibold bg-gradient-to-r from-primary via-primary to-[#95F9C3] bg-clip-text text-transparent whitespace-nowrap"
+          className="absolute font-semibold bg-gradient-to-r from-primary via-primary to-[#95F9C3] bg-clip-text text-transparent whitespace-nowrap"
           initial={{ opacity: 0, y: "100%" }}
           transition={{ type: "spring", stiffness: 50 }}
           animate={
