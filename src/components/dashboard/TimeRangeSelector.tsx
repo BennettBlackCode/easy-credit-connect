@@ -5,7 +5,19 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format, startOfToday, endOfToday, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from "date-fns";
+import { 
+  format, 
+  startOfToday, 
+  endOfToday, 
+  startOfWeek, 
+  endOfWeek, 
+  startOfMonth, 
+  endOfMonth, 
+  startOfYear, 
+  endOfYear,
+  startOfDay,
+  endOfDay
+} from "date-fns";
 
 type TimeRange = "day" | "week" | "month" | "year";
 
@@ -67,8 +79,9 @@ const TimeRangeSelector = ({
 
   const handleCalendarSelect = (date: Date | undefined) => {
     if (date) {
-      setSelectedDate(date);
-      updateDateRange(selectedRange, date);
+      const newDate = new Date(date);
+      setSelectedDate(newDate);
+      updateDateRange(selectedRange, newDate);
     }
   };
 
