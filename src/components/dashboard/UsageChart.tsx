@@ -40,14 +40,33 @@ const UsageChart = ({ data, timeRange }: UsageChartProps) => {
     }
   };
 
+  // Determine number of ticks based on screen size and time range
+  const getNumberOfTicks = () => {
+    if (window.innerWidth < 640) { // mobile
+      switch (timeRange) {
+        case "day":
+          return 6; // Show every 4 hours
+        case "week":
+          return 3; // Show 3 days
+        case "month":
+          return 4; // Show 4 dates
+        case "year":
+          return 4; // Show 4 months
+        default:
+          return 4;
+      }
+    }
+    return undefined; // Use default for larger screens
+  };
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart 
         data={data} 
         margin={{ 
           top: 5,
-          right: 10,
-          left: -20,
+          right: 5,
+          left: -15,
           bottom: 5 
         }}
       >
@@ -58,7 +77,10 @@ const UsageChart = ({ data, timeRange }: UsageChartProps) => {
           tickLine={false}
           axisLine={false}
           tickFormatter={getXAxisFormatter()}
-          minTickGap={5}
+          interval="preserveStartEnd"
+          minTickGap={15}
+          tickCount={getNumberOfTicks()}
+          style={{ fill: 'rgba(255, 255, 255, 0.65)' }}
         />
         <YAxis
           stroke="#888888"
@@ -66,13 +88,16 @@ const UsageChart = ({ data, timeRange }: UsageChartProps) => {
           tickLine={false}
           axisLine={false}
           tickFormatter={(value) => `${value}`}
-          width={30}
+          width={25}
+          style={{ fill: 'rgba(255, 255, 255, 0.65)' }}
+          allowDecimals={false}
         />
         <Tooltip
           contentStyle={{
             backgroundColor: "#1a1a1a",
             border: "1px solid rgba(255,255,255,0.1)",
             borderRadius: "6px",
+            padding: "8px 12px",
           }}
           labelFormatter={getTooltipFormatter()}
           formatter={(value: number) => [`${value} runs`, "Runs"]}
@@ -81,6 +106,7 @@ const UsageChart = ({ data, timeRange }: UsageChartProps) => {
           dataKey="runs"
           fill="#2ed573"
           radius={[4, 4, 0, 0]}
+          maxBarSize={50}
         />
       </BarChart>
     </ResponsiveContainer>

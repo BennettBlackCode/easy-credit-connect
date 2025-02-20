@@ -195,7 +195,7 @@ const Dashboard = () => {
           </h1>
         )}
         <div className="space-y-6 sm:space-y-8">
-          <div className="p-4 sm:p-6 rounded-xl bg-white/5 border border-white/10">
+          <div className="p-4 sm:p-6 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <h2 className="text-lg sm:text-xl font-medium text-white/90">
                 {formatDateDisplay()}
@@ -206,7 +206,7 @@ const Dashboard = () => {
                 onDateChange={handleDateChange}
               />
             </div>
-            <div className="h-[250px] sm:h-[300px] md:h-[400px]">
+            <div className="h-[200px] sm:h-[300px] md:h-[400px] w-full">
               <UsageChart 
                 data={chartData} 
                 timeRange={timeRange}
