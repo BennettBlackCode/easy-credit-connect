@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, ArrowRight } from "lucide-react";
+import { Menu, X, ArrowUpRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Navigation = () => {
@@ -81,13 +80,13 @@ const Navigation = () => {
                     className="flex items-center gap-2 px-6 py-2.5 rounded-full text-white bg-primary hover:bg-primary/90 transition-colors duration-200"
                   >
                     Run Automation
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowUpRight className="h-4 w-4" />
                   </Link>
                 </>
               ) : (
                 <>
                   <button
-                    onClick={() => navigate("/")}
+                    onClick={() => scrollToSection("hero")}
                     className="text-gray-300 hover:text-white transition-colors"
                   >
                     Home
@@ -109,7 +108,7 @@ const Navigation = () => {
                     className="flex items-center gap-2 px-6 py-2.5 rounded-full text-white bg-primary hover:bg-primary/90 transition-colors duration-200"
                   >
                     Get Started
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowUpRight className="h-4 w-4" />
                   </button>
                 </>
               )}
@@ -155,7 +154,7 @@ const Navigation = () => {
                     onClick={() => setIsOpen(false)}
                   >
                     Run Automation
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowUpRight className="h-4 w-4" />
                   </Link>
                 </>
               ) : (
@@ -186,7 +185,7 @@ const Navigation = () => {
                     className="flex items-center justify-center gap-2 w-full px-6 py-2.5 rounded-full text-white bg-primary hover:bg-primary/90 transition-colors duration-200"
                   >
                     Get Started
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowUpRight className="h-4 w-4" />
                   </button>
                 </>
               )}

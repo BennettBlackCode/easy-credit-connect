@@ -1,30 +1,25 @@
-import { ArrowRight, Check, CreditCard, Mail } from "lucide-react";
+
+import { ArrowUpRight, Check, CreditCard, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+
 const Pricing = () => {
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
-  const {
-    session
-  } = useAuth();
-  const {
-    data: products
-  } = useQuery({
+  const { toast } = useToast();
+  const { session } = useAuth();
+
+  const { data: products } = useQuery({
     queryKey: ['stripe_products'],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('stripe_products').select('*');
+      const { data, error } = await supabase.from('stripe_products').select('*');
       if (error) throw error;
       return data;
     }
   });
+
   const handleGetStarted = () => {
     if (!session) {
       toast({
@@ -37,6 +32,7 @@ const Pricing = () => {
     }
     navigate("/billing");
   };
+
   const plans = [{
     id: "3588c408-881f-4258-9cc9-fad1479d8d42",
     name: "Starter Pack",
@@ -58,12 +54,13 @@ const Pricing = () => {
     id: "4d3cebb2-f572-4bfa-a604-7a51473e7ab5",
     name: "Professional",
     price: null,
-    priceLabel: "Custom pricing",
+    priceLabel: "Custom",
     description: "For businesses with high automation needs",
     features: ["Unlimited runs", "Custom billing options", "24/7 Premium support", "Access to all workflows", "Advanced analytics", "API access", "Custom integrations", "Dedicated account manager"],
     buttonText: "Contact Us",
     icon: Mail
   }];
+
   return <div className="py-24 px-4 sm:px-6 lg:px-8 relative" id="pricing">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
@@ -107,14 +104,14 @@ const Pricing = () => {
 
                 <button onClick={handleGetStarted} className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-full bg-primary text-white hover:bg-primary/90 transition-all duration-200">
                   {plan.buttonText}
-                  <ArrowRight className="h-5 w-5" />
+                  <ArrowUpRight className="h-5 w-5" />
                 </button>
               </div>
             </div>)}
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @property --gradient-angle {
           syntax: "<angle>";
           initial-value: 0deg;
@@ -156,4 +153,5 @@ const Pricing = () => {
       `}</style>
     </div>;
 };
+
 export default Pricing;
