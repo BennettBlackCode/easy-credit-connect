@@ -163,6 +163,7 @@ export type Database = {
           subscription_renewal_date: string | null
           subscription_type: string | null
           total_credits: number | null
+          user_name: string | null
         }
         Insert: {
           created_at?: string | null
@@ -175,6 +176,7 @@ export type Database = {
           subscription_renewal_date?: string | null
           subscription_type?: string | null
           total_credits?: number | null
+          user_name?: string | null
         }
         Update: {
           created_at?: string | null
@@ -187,6 +189,7 @@ export type Database = {
           subscription_renewal_date?: string | null
           subscription_type?: string | null
           total_credits?: number | null
+          user_name?: string | null
         }
         Relationships: []
       }

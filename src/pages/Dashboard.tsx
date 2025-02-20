@@ -27,7 +27,7 @@ const Dashboard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("users")
-        .select("permanent_credits, subscription_credits, subscription_type")
+        .select("permanent_credits, subscription_credits, subscription_type, user_name")
         .eq("id", session?.user?.id)
         .single();
 
@@ -118,7 +118,12 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#030303] text-white">
-      <div className="max-w-7xl mx-auto px-8 pt-16">
+      <div className="max-w-7xl mx-auto px-8 pt-24">
+        {userData?.user_name && (
+          <h1 className="text-3xl font-bold mb-8 text-white/90">
+            Welcome back, {userData.user_name}
+          </h1>
+        )}
         <div className="space-y-8">
           <div className="p-6 rounded-xl bg-white/5 border border-white/10">
             <div className="flex justify-between items-center mb-6">

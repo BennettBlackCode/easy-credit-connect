@@ -34,14 +34,6 @@ function Calendar({
     }
   }, [selected]);
 
-  // Check if a date is in today's decade
-  const isInTodayDecade = React.useCallback((date: Date) => {
-    const today = new Date();
-    const todayDecade = Math.floor(today.getFullYear() / 10) * 10;
-    const dateDecade = Math.floor(date.getFullYear() / 10) * 10;
-    return todayDecade === dateDecade;
-  }, []);
-
   // Check if a date is today
   const isDateToday = React.useCallback((date: Date) => {
     const today = new Date();
@@ -54,6 +46,7 @@ function Calendar({
   const resetToToday = React.useCallback(() => {
     const today = new Date();
     setViewDate(today);
+    setSelectedDate(today);
     setIsCustomDate(false);
     if (onReset) {
       onReset();
@@ -62,11 +55,12 @@ function Calendar({
 
   const handleDateSelect: DayClickEventHandler = (day) => {
     if (day) {
-      setViewDate(day);
-      setSelectedDate(day);
-      setIsCustomDate(!isDateToday(day));
+      const newDate = new Date(day);
+      setViewDate(newDate);
+      setSelectedDate(newDate);
+      setIsCustomDate(!isDateToday(newDate));
       if (onSelect) {
-        onSelect(day);
+        onSelect(newDate);
       }
     }
   };
