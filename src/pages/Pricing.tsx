@@ -37,10 +37,24 @@ const Pricing = () => {
       buttonText: "Get Started",
     },
     {
-      name: "Ultimate",
+      name: "Growth",
+      description: "Perfect for growing businesses that need advanced features and dedicated support.",
+      features: [
+        "Everything in Starter, plus:",
+        "Advanced AI Optimization Tools",
+        "Priority Email & Chat Support",
+        "Custom Integration Options",
+        "Monthly Strategy Calls"
+      ],
+      price: "297",
+      buttonText: "Get Started",
+      featured: true,
+    },
+    {
+      name: "Unlimited Pack",
       description: "Ideal for business owners who want expert support managing their AI systems for maximum efficiency.",
       features: [
-        "Every tool in the 'Do it yourself' plan",
+        "Everything in Growth, plus:",
         "Full AI Management & Optimization",
         "Dedicated Account Specialist",
         "24/7 Priority Support",
@@ -48,25 +62,66 @@ const Pricing = () => {
       ],
       price: "497",
       buttonText: "Get Started",
-      featured: true,
     }
   ];
 
   return (
-    <div className="py-24 relative" id="pricing">
+    <div className="py-24 relative glow-gradient-parent" id="pricing">
+      <style>
+        {`
+          @property --gradient-angle {
+            syntax: "<angle>";
+            initial-value: 0deg;
+            inherits: false;
+          }
+
+          .glow-gradient-child::before,
+          .glow-gradient-child::after {
+            opacity: 0;
+            content: "";
+            position: absolute;
+            inset: -5px;
+            z-index: -1;
+            background: conic-gradient(
+              from var(--gradient-angle),
+              rgba(46, 213, 115, 0.5),
+              #fff,
+              rgba(46, 213, 115, 0.5),
+              #fff
+            );
+            border-radius: inherit;
+            animation: rotation-glow 10s linear infinite;
+            transition: opacity 1s;
+          }
+
+          .glow-gradient-child::after {
+            filter: blur(2rem);
+          }
+
+          .glow-gradient-child:hover::before,
+          .glow-gradient-child:hover::after {
+            opacity: 1;
+          }
+
+          @keyframes rotation-glow {
+            0% { --gradient-angle: 0deg; }
+            100% { --gradient-angle: 360deg; }
+          }
+        `}
+      </style>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-3 gap-8">
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`relative rounded-[32px] p-8 overflow-hidden ${
+              className={`relative rounded-[32px] p-8 overflow-hidden glow-gradient-child ${
                 plan.featured
-                  ? "bg-[#1A1A1A]"
+                  ? "bg-[#1A1A1A] scale-105 md:-mt-4"
                   : "bg-[#1A1A1A]"
               }`}
             >
               <div className="relative z-10">
-                <h3 className="text-4xl font-bold text-white mb-6">
+                <h3 className="text-3xl font-bold text-white mb-6">
                   {plan.name}
                 </h3>
                 <p className="text-gray-400 mb-12 text-lg">
@@ -78,7 +133,7 @@ const Pricing = () => {
                   <ul className="space-y-4">
                     {plan.features.map((feature) => (
                       <li key={feature} className="flex items-start gap-3">
-                        <Check className="h-6 w-6 text-[#5B6CFF] flex-shrink-0 mt-0.5" />
+                        <Check className="h-6 w-6 text-primary flex-shrink-0 mt-0.5" />
                         <span className="text-gray-300">{feature}</span>
                       </li>
                     ))}
