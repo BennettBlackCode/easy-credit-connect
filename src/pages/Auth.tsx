@@ -26,8 +26,9 @@ const Auth = () => {
         if (error) throw error;
         toast({
           title: "Success!",
-          description: "Please check your email to verify your account.",
+          description: "Account created successfully. You can now log in.",
         });
+        setIsLogin(true);
       }
     } catch (error: any) {
       toast({
@@ -41,17 +42,14 @@ const Auth = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true);
     try {
-      const { error } = await signInWithGoogle();
-      if (error) throw error;
+      await signInWithGoogle();
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Google Sign In Failed",
         description: error.message,
       });
-      setIsLoading(false);
     }
   };
 
