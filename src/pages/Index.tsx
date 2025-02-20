@@ -43,8 +43,11 @@ const Index = () => {
                 <span className="block bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent mb-2">
                   Automate Your
                 </span>
-                <span className="flex items-center justify-center gap-4 bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent">
-                  <AnimatedTitle /> With
+                <span className="block bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent">
+                  <AnimatedTitle />
+                </span>
+                <span className="block bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent">
+                  With
                 </span>
                 <span className="block mt-2 bg-gradient-to-r from-primary via-primary to-[#95F9C3] bg-clip-text text-transparent">
                   Artificial Intelligence
