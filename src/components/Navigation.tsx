@@ -1,8 +1,10 @@
 
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, ArrowUpRight } from "lucide-react";
+import { Menu, X, ArrowUpRight, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,6 +12,7 @@ const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { session } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,6 +25,25 @@ const Navigation = () => {
   const handleGetStarted = () => {
     navigate("/auth");
     setIsOpen(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account",
+      });
+      navigate("/");
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Error logging out:", error);
+      toast({
+        title: "Error logging out",
+        description: "There was a problem logging out. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const scrollToSection = (sectionId: string) => {
@@ -79,6 +101,13 @@ const Navigation = () => {
                     Run Automation
                     <ArrowUpRight className="h-4 w-4" />
                   </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </button>
                 </>
               ) : (
                 <>
@@ -153,6 +182,13 @@ const Navigation = () => {
                     Run Automation
                     <ArrowUpRight className="h-4 w-4" />
                   </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors py-2"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </button>
                 </>
               ) : (
                 <>
