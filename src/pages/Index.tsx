@@ -33,7 +33,6 @@ const Index = () => {
   return <div className="min-h-screen overflow-hidden bg-[#030303]">
       {/* Hero Section */}
       <div className="relative">
-        {/* Gradient Background */}
         <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-30" />
         
         <div className="relative pt-32 lg:pt-40 pb-20 px-4 sm:px-6 lg:px-8">
@@ -55,8 +54,8 @@ const Index = () => {
                   Try It For Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
-                <a href="#demo" className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-2xl text-white bg-white/5 hover:bg-white/10 transition-all duration-200 border border-white/10">
-                  Watch Demo
+                <a href="#pricing" className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-2xl text-white bg-white/5 hover:bg-white/10 transition-all duration-200 border border-white/10">
+                  Pricing
                 </a>
               </div>
             </div>
@@ -134,7 +133,7 @@ const Index = () => {
       </div>
 
       {/* Pricing Section */}
-      <div className="py-24 px-4 sm:px-6 lg:px-8 relative">
+      <div id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 relative">
         <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-30" />
         <div className="max-w-7xl mx-auto relative">
           <div className="text-center mb-16">
