@@ -55,7 +55,9 @@ serve(async (req) => {
         id: stripePrice.id,
         active: stripePrice.active,
         currency: stripePrice.currency,
-        unit_amount: stripePrice.unit_amount
+        unit_amount: stripePrice.unit_amount,
+        type: stripePrice.type,
+        recurring: stripePrice.recurring
       });
     } catch (error) {
       console.error('Error verifying Stripe price:', error);
@@ -88,7 +90,7 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: 'payment',
+      mode: 'subscription', // Changed from 'payment' to 'subscription'
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
       customer_email: user.email,
