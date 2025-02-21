@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreditCard, ArrowUpRight } from "lucide-react";
@@ -22,14 +21,12 @@ const Billing = () => {
   const { toast } = useToast();
   const { session, isLoading: authLoading } = useAuth();
 
-  // Redirect to auth page if not logged in
   useEffect(() => {
     if (!authLoading && !session) {
       navigate("/auth");
     }
   }, [session, authLoading, navigate]);
 
-  // Check URL parameters for Stripe status
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     const success = query.get('success');
@@ -40,7 +37,6 @@ const Billing = () => {
         title: "Payment successful",
         description: "Your credits have been added to your account.",
       });
-      // Clean up URL
       window.history.replaceState({}, '', window.location.pathname);
     } else if (canceled) {
       toast({
@@ -48,12 +44,10 @@ const Billing = () => {
         description: "Your payment was canceled.",
         variant: "destructive",
       });
-      // Clean up URL
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [toast]);
 
-  // Fetch user data including credits and stripe customer id
   const { data: userData, isLoading: userLoading } = useQuery({
     queryKey: ["user", session?.user?.id],
     queryFn: async () => {
@@ -69,7 +63,6 @@ const Billing = () => {
     enabled: !!session?.user?.id,
   });
 
-  // Fetch recent transactions
   const { data: transactions, isLoading: transactionsLoading } = useQuery({
     queryKey: ["credit_transactions", session?.user?.id],
     queryFn: async () => {
@@ -85,7 +78,6 @@ const Billing = () => {
     enabled: !!session?.user?.id,
   });
 
-  // Fetch available products/plans
   const { data: products, isLoading: productsLoading } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
@@ -141,10 +133,8 @@ const Billing = () => {
     return null;
   }
 
-  // Calculate total available credits
   const totalCredits = (userData?.permanent_credits || 0) + (userData?.subscription_credits || 0);
 
-  // Sort products in the correct order
   const sortedProducts = [...(products || [])].sort((a, b) => {
     const displayOrder = {
       'starter': 1,
@@ -161,7 +151,6 @@ const Billing = () => {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Billing & Credits</h1>
 
-        {/* Current Balance */}
         <Card className="mb-8">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
@@ -179,7 +168,6 @@ const Billing = () => {
           </CardContent>
         </Card>
 
-        {/* Available Plans */}
         <h2 className="text-xl font-semibold mb-4">Available Plans</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
           {sortedProducts.map((product) => {
@@ -196,16 +184,10 @@ const Billing = () => {
                   <p className="text-sm text-muted-foreground mb-4">
                     {product.description}
                   </p>
-                  {isUnlimited ? (
-                    <div className="text-2xl font-bold mb-4">
-                      Contact Us
-                    </div>
-                  ) : (
-                    <div className="text-2xl font-bold mb-4">
-                      ${(product.price_amount / 100).toFixed(2)}
-                    </div>
-                  )}
-                  <div className={`text-sm text-muted-foreground ${isUnlimited ? 'mb-8' : 'mb-4'}`}>
+                  <div className="text-2xl font-bold mb-4">
+                    {isUnlimited ? "Contact Us" : `$${(product.price_amount / 100).toFixed(2)}`}
+                  </div>
+                  <div className="text-sm text-muted-foreground mb-4">
                     {isUnlimited ? "Unlimited Runs" : `${product.credits_amount} ${product.credits_amount === 1 ? 'run' : 'runs'}`}
                   </div>
                   {isUnlimited ? (
@@ -235,7 +217,6 @@ const Billing = () => {
           })}
         </div>
 
-        {/* Transaction History */}
         <h2 className="text-xl font-semibold mb-4">Transaction History</h2>
         <Card>
           <CardContent className="p-0">
