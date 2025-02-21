@@ -48,12 +48,25 @@ const Navigation = () => {
     }
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  };
+
   const scrollToSection = (sectionId: string) => {
     if (location.pathname !== "/") {
       navigate("/?section=" + sectionId);
       return;
     }
     
+    if (sectionId === "home") {
+      scrollToTop();
+      setIsOpen(false);
+      return;
+    }
+
     const element = document.getElementById(sectionId);
     if (element) {
       const navHeight = 80;
@@ -72,6 +85,7 @@ const Navigation = () => {
       navigate("/dashboard");
     } else {
       navigate("/");
+      scrollToTop();
     }
   };
 
@@ -81,13 +95,12 @@ const Navigation = () => {
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          <Link
-            to={session ? "/dashboard" : "/"}
+          <button
             onClick={handleLogoClick}
             className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent"
           >
             1clickseo.io
-          </Link>
+          </button>
 
           <DesktopNavigation
             session={session}

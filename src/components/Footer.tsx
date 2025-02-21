@@ -1,7 +1,6 @@
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowUpRight, LogOut } from "lucide-react";
 
 const Footer = () => {
   const { session } = useAuth();
@@ -10,6 +9,13 @@ const Footer = () => {
 
   // Don't render footer if user is logged in
   if (session) return null;
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  };
 
   const scrollToSection = (sectionId: string) => {
     if (location.pathname !== "/") {
@@ -31,8 +37,7 @@ const Footer = () => {
   const navigation = [
     { name: "Features", href: "/#features", onClick: () => scrollToSection("features") },
     { name: "Pricing", href: "/#pricing", onClick: () => scrollToSection("pricing") },
-    { name: "Sign In", href: "/auth" },
-    { name: "Sign Up", href: "/auth?tab=signup" },
+    { name: "Log In", href: "/auth" }
   ];
 
   return (
@@ -40,12 +45,12 @@ const Footer = () => {
       <div className="container max-w-5xl mx-auto px-4">
         <div className="py-8">
           <div className="flex flex-col items-center space-y-6">
-            <Link
-              to="/"
+            <button
+              onClick={scrollToTop}
               className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent"
             >
               1clickseo.io
-            </Link>
+            </button>
             <nav className="flex flex-wrap justify-center gap-x-8 gap-y-4">
               {navigation.map((item) => (
                 <button
