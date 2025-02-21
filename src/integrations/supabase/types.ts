@@ -72,74 +72,67 @@ export type Database = {
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "automations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_with_calculated_credits"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "automations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_with_credits"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      stripe_products: {
+      credit_transactions: {
         Row: {
-          active: boolean | null
-          created_at: string
-          credits: number
+          created_at: string | null
+          credit_amount: number
+          credit_type: string | null
           description: string | null
           id: string
-          name: string
-          price_amount: number
-          price_id: string
-        }
-        Insert: {
-          active?: boolean | null
-          created_at?: string
-          credits: number
-          description?: string | null
-          id?: string
-          name: string
-          price_amount: number
-          price_id: string
-        }
-        Update: {
-          active?: boolean | null
-          created_at?: string
-          credits?: number
-          description?: string | null
-          id?: string
-          name?: string
-          price_amount?: number
-          price_id?: string
-        }
-        Relationships: []
-      }
-      transactions: {
-        Row: {
-          amount: number
-          created_at: string | null
-          credit_type: string | null
-          id: string
+          related_purchase_id: string | null
+          related_usage_id: string | null
           status: string | null
           stripe_payment_id: string | null
           stripe_price_id: string | null
-          type: string | null
-          user_id: string | null
+          transaction_date: string | null
+          transaction_type: string
+          user_id: string
         }
         Insert: {
-          amount: number
           created_at?: string | null
+          credit_amount: number
           credit_type?: string | null
+          description?: string | null
           id?: string
+          related_purchase_id?: string | null
+          related_usage_id?: string | null
           status?: string | null
           stripe_payment_id?: string | null
           stripe_price_id?: string | null
-          type?: string | null
-          user_id?: string | null
+          transaction_date?: string | null
+          transaction_type: string
+          user_id: string
         }
         Update: {
-          amount?: number
           created_at?: string | null
+          credit_amount?: number
           credit_type?: string | null
+          description?: string | null
           id?: string
+          related_purchase_id?: string | null
+          related_usage_id?: string | null
           status?: string | null
           stripe_payment_id?: string | null
           stripe_price_id?: string | null
-          type?: string | null
-          user_id?: string | null
+          transaction_date?: string | null
+          transaction_type?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -149,64 +142,197 @@ export type Database = {
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_with_calculated_credits"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_with_credits"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      credits_usage: {
+        Row: {
+          created_at: string
+          credits_used: number
+          feature_used: string | null
+          id: string
+          usage_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_used: number
+          feature_used?: string | null
+          id?: string
+          usage_date?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_used?: number
+          feature_used?: string | null
+          id?: string
+          usage_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      stripe_products: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          credits_amount: number
+          description: string | null
+          id: string
+          name: string
+          price_amount: number
+          stripe_price_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          credits_amount: number
+          description?: string | null
+          id?: string
+          name: string
+          price_amount: number
+          stripe_price_id: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          credits_amount?: number
+          description?: string | null
+          id?: string
+          name?: string
+          price_amount?: number
+          stripe_price_id?: string
+        }
+        Relationships: []
       }
       users: {
         Row: {
           created_at: string | null
-          email: string
+          email: string | null
           id: string
           permanent_credits: number | null
-          remaining_credits: number | null
           remaining_runs: number | null
           status: string | null
           stripe_customer_id: string | null
           subscription_credits: number | null
           subscription_renewal_date: string | null
           subscription_type: string | null
-          total_credits: number | null
-          updated_at: string | null
           user_name: string | null
         }
         Insert: {
           created_at?: string | null
-          email: string
+          email?: string | null
           id?: string
           permanent_credits?: number | null
-          remaining_credits?: number | null
           remaining_runs?: number | null
           status?: string | null
           stripe_customer_id?: string | null
           subscription_credits?: number | null
           subscription_renewal_date?: string | null
           subscription_type?: string | null
-          total_credits?: number | null
-          updated_at?: string | null
           user_name?: string | null
         }
         Update: {
           created_at?: string | null
-          email?: string
+          email?: string | null
           id?: string
           permanent_credits?: number | null
-          remaining_credits?: number | null
           remaining_runs?: number | null
           status?: string | null
           stripe_customer_id?: string | null
           subscription_credits?: number | null
           subscription_renewal_date?: string | null
           subscription_type?: string | null
-          total_credits?: number | null
-          updated_at?: string | null
           user_name?: string | null
         }
         Relationships: []
       }
     }
     Views: {
-      [_ in never]: never
+      users_with_calculated_credits: {
+        Row: {
+          email: string | null
+          remaining_credits: number | null
+          status: string | null
+          total_credits: number | null
+          updated_at: string | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Insert: {
+          email?: string | null
+          remaining_credits?: never
+          status?: string | null
+          total_credits?: never
+          updated_at?: never
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          email?: string | null
+          remaining_credits?: never
+          status?: string | null
+          total_credits?: never
+          updated_at?: never
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Relationships: []
+      }
+      users_with_credits: {
+        Row: {
+          email: string | null
+          id: string | null
+          remaining_credits: number | null
+          total_credits: number | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      add_user_credits: {
+        Args: {
+          _user_id: string
+          _credits_amount: number
+          _transaction_type: string
+          _description?: string
+          _related_purchase_id?: string
+        }
+        Returns: undefined
+      }
+      deduct_user_credits: {
+        Args: {
+          _user_id: string
+          _credits_amount: number
+          _transaction_type: string
+          _description?: string
+          _related_usage_id?: string
+        }
+        Returns: undefined
+      }
+      get_user_credits: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: {
+          total_credits: number
+          remaining_credits: number
+        }[]
+      }
       increment_user_credits: {
         Args: {
           user_id: string

@@ -21,6 +21,8 @@ import { Input } from "@/components/ui/input";
 
 const formSchema = z.object({
   company_name: z.string().min(1, "Company name is required"),
+  industry: z.string().min(1, "Industry is required"),
+  agency_email: z.string().email("Invalid email format"),
   domain: z
     .string()
     .min(1, "Domain is required")
@@ -61,6 +63,8 @@ const Automation = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       company_name: "",
+      industry: "",
+      agency_email: session?.user?.email || "",
       domain: "",
       phone_number: "",
       address_line_1: "",
@@ -103,16 +107,16 @@ const Automation = () => {
       const automationData = {
         user_id: session.user.id,
         company_name: values.company_name,
+        industry: values.industry,
+        agency_email: values.agency_email,
         domain: values.domain,
         phone_number: values.phone_number,
         street_address: values.address_line_1,
         city: values.city,
         state: values.state,
         postal_code: values.zip_code,
-        agency_email: session.user.email || "",
         email: session.user.email || "",
         country: "United States",
-        industry: "Unknown",
         last_name: "Unknown",
         web_url: `https://${values.domain}`,
       };
@@ -174,6 +178,34 @@ const Automation = () => {
                     <FormLabel>Company Name</FormLabel>
                     <FormControl>
                       <Input {...field} className="bg-white/5 border-white/10" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="industry"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Industry</FormLabel>
+                    <FormControl>
+                      <Input {...field} className="bg-white/5 border-white/10" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="agency_email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Agency Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" {...field} className="bg-white/5 border-white/10" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
