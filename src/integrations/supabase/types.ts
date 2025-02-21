@@ -344,6 +344,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      update_user_status_and_credits: {
+        Args: {
+          target_user_id: string
+          new_status: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
