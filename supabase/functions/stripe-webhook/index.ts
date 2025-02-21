@@ -12,7 +12,17 @@ const supabaseClient = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
   const signature = req.headers.get('stripe-signature');
   const webhook_secret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
 
@@ -26,68 +36,15 @@ serve(async (req) => {
     console.log('Stripe webhook event received:', event.type);
 
     switch (event.type) {
-      case 'checkout.session.completed': {
-        // Handle one-time purchases
-        const session = event.data.object as Stripe.Checkout.Session;
-        console.log('Checkout session completed:', session.id);
-
-        if (!session.customer) {
-          throw new Error('No customer ID in session');
-        }
-
-        // Get product details from line items
-        const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-        if (!lineItems.data.length) {
-          throw new Error('No line items found in session');
-        }
-
-        const priceId = lineItems.data[0].price?.id;
-        if (!priceId) {
-          throw new Error('No price ID found in line items');
-        }
-
-        // Get product name from stripe_products table
-        const { data: productData } = await supabaseClient
-          .from('stripe_products')
-          .select('name')
-          .eq('stripe_price_id', priceId)
-          .single();
-
-        if (!productData) {
-          throw new Error('Product not found');
-        }
-
-        // For one-time purchases, use handle_stripe_purchase
-        const { error: purchaseError } = await supabaseClient.rpc(
-          'handle_stripe_purchase',
-          {
-            _user_id: session.client_reference_id,
-            _customer_id: session.customer,
-            _product_name: productData.name,
-            _stripe_price_id: priceId,
-            _payment_id: session.payment_intent,
-          }
-        );
-
-        if (purchaseError) {
-          console.error('Error handling purchase:', purchaseError);
-          throw purchaseError;
-        }
-
-        console.log('Successfully processed one-time purchase');
-        break;
-      }
-
       case 'invoice.payment_succeeded': {
-        // Handle subscription payments
         const invoice = event.data.object as Stripe.Invoice;
-        console.log('Invoice payment succeeded:', invoice.id);
+        console.log('Payment successful for invoice:', invoice.id);
 
         if (!invoice.customer || !invoice.subscription) {
           throw new Error('Missing customer or subscription ID');
         }
 
-        // Get customer metadata
+        // Get customer metadata from Stripe
         const customer = await stripe.customers.retrieve(invoice.customer as string);
         const userId = (customer as any).metadata.supabase_id;
 
@@ -101,22 +58,23 @@ serve(async (req) => {
           throw new Error('No price ID found in invoice');
         }
 
-        const { data: productData } = await supabaseClient
+        const { data: productData, error: productError } = await supabaseClient
           .from('stripe_products')
           .select('name')
           .eq('stripe_price_id', priceId)
           .single();
 
-        if (!productData) {
-          throw new Error('Product not found');
+        if (productError || !productData) {
+          console.error('Error fetching product:', productError);
+          throw new Error('Product not found for price ID: ' + priceId);
         }
 
-        // For subscriptions, use handle_subscription_purchase
+        // Use handle_subscription_purchase to update user status and add credits
         const { error: subscriptionError } = await supabaseClient.rpc(
           'handle_subscription_purchase',
           {
             user_id: userId,
-            product_name: productData.name,
+            product_name: productData.name
           }
         );
 
@@ -125,20 +83,74 @@ serve(async (req) => {
           throw subscriptionError;
         }
 
-        console.log('Successfully processed subscription payment');
+        console.log(`Successfully processed subscription payment for user ${userId}`);
+        break;
+      }
+
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session;
+        console.log('Checkout session completed:', session.id);
+
+        // Only process if it's a one-time payment (not a subscription)
+        if (!session.subscription) {
+          if (!session.client_reference_id || !session.customer) {
+            throw new Error('Missing client_reference_id or customer');
+          }
+
+          const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+          if (!lineItems.data.length) {
+            throw new Error('No line items found');
+          }
+
+          const priceId = lineItems.data[0].price?.id;
+          if (!priceId) {
+            throw new Error('No price ID found');
+          }
+
+          const { data: productData } = await supabaseClient
+            .from('stripe_products')
+            .select('name')
+            .eq('stripe_price_id', priceId)
+            .single();
+
+          if (!productData) {
+            throw new Error('Product not found');
+          }
+
+          // Handle one-time purchase
+          const { error: purchaseError } = await supabaseClient.rpc(
+            'handle_stripe_purchase',
+            {
+              _user_id: session.client_reference_id,
+              _customer_id: session.customer,
+              _product_name: productData.name,
+              _stripe_price_id: priceId,
+              _payment_id: session.payment_intent as string,
+            }
+          );
+
+          if (purchaseError) {
+            console.error('Error handling purchase:', purchaseError);
+            throw purchaseError;
+          }
+
+          console.log('Successfully processed one-time purchase');
+        } else {
+          console.log('Subscription created, waiting for invoice.payment_succeeded');
+        }
         break;
       }
     }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   } catch (err) {
     console.error('Error processing webhook:', err);
     return new Response(JSON.stringify({ error: err.message }), {
       status: 400,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
 });

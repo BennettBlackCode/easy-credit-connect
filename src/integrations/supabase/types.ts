@@ -335,16 +335,34 @@ export type Database = {
           remaining_credits: number
         }[]
       }
-      handle_stripe_purchase: {
-        Args: {
-          _user_id: string
-          _customer_id: string
-          _product_name: string
-          _stripe_price_id: string
-          _payment_id: string
-        }
-        Returns: undefined
-      }
+      handle_stripe_purchase:
+        | {
+            Args: {
+              _user_id: string
+              _customer_id: string
+              _product_name: string
+              _stripe_price_id: string
+              _payment_id: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _user_id: string
+              _stripe_price_id: string
+              _payment_id: string
+              _event_description: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_user_id: string
+              p_stripe_price_id: string
+              p_description: string
+            }
+            Returns: undefined
+          }
       handle_subscription_purchase: {
         Args: {
           user_id: string
