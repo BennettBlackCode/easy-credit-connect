@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -57,7 +58,7 @@ const Automation = () => {
       if (!session?.user?.id) return null;
       const { data, error } = await supabase
         .from("users_with_calculated_credits")
-        .select("total_credits")
+        .select("remaining_credits, total_credits")
         .eq("user_id", session.user.id)
         .maybeSingle();
       
@@ -67,6 +68,7 @@ const Automation = () => {
     enabled: !!session?.user?.id,
   });
 
+  const remainingCredits = userCredits?.remaining_credits ?? 0;
   const totalCredits = userCredits?.total_credits ?? 0;
 
   const form = useForm<FormValues>({
@@ -96,7 +98,8 @@ const Automation = () => {
       return;
     }
 
-    if (!totalCredits || totalCredits <= 0) {
+    // Check remaining credits instead of total credits
+    if (!remainingCredits || remainingCredits <= 0) {
       setShowCreditsDialog(true);
       return;
     }
@@ -163,7 +166,7 @@ const Automation = () => {
           <h1 className="text-3xl font-bold">Run Automation</h1>
           <div className="bg-white/5 px-4 py-2 rounded-lg">
             <span className="text-sm text-gray-400">Remaining Runs: </span>
-            <span className="text-primary font-semibold">{totalCredits}</span>
+            <span className="text-primary font-semibold">{remainingCredits}</span>
           </div>
         </div>
 
