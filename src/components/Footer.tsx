@@ -6,7 +6,7 @@ const Footer = () => {
   const { session } = useAuth();
 
   const navigation = [
-    { name: "Pricing", href: "/pricing" },
+    { name: "Pricing", href: "/#pricing" },
     ...(session
       ? [
           { name: "Dashboard", href: "/dashboard" },
