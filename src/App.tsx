@@ -10,7 +10,6 @@ import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
-import Pricing from "./pages/Pricing";
 import Billing from "./pages/Billing";
 import Auth from "./pages/Auth";
 import Automation from "./pages/Automation";
@@ -29,7 +28,6 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
-                <Route path="/pricing" element={<Pricing />} />
                 <Route 
                   path="/dashboard" 
                   element={
