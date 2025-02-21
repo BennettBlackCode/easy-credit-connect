@@ -71,9 +71,14 @@ const Automation = () => {
 
   useEffect(() => {
     if (remainingCredits <= 0) {
-      setShowCreditsDialog(true);
+      toast({
+        title: "Insufficient Credits",
+        description: "You need at least 1 credit to run automations. Please purchase more credits to continue.",
+        variant: "destructive",
+      });
+      navigate("/dashboard");
     }
-  }, [remainingCredits]);
+  }, [remainingCredits, navigate, toast]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -103,7 +108,12 @@ const Automation = () => {
     }
 
     if (!remainingCredits || remainingCredits <= 0) {
-      setShowCreditsDialog(true);
+      toast({
+        title: "Insufficient Credits",
+        description: "You need at least 1 credit to run automations. Please purchase more credits to continue.",
+        variant: "destructive",
+      });
+      navigate("/dashboard");
       return;
     }
 
