@@ -18,119 +18,30 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Handle initial session check
   useEffect(() => {
-    const currentUrl = window.location.href;
-    console.log('Current URL:', currentUrl);
-    
-    // Check if we're in a redirect with an access_token
-    if (currentUrl.includes('access_token')) {
-      console.log('Detected access_token in URL');
-    }
-
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session check:', session?.user?.id);
       if (session?.user) {
-        handleUser(session.user);
+        navigate(productId ? '/billing' : '/dashboard');
       }
     });
-  }, []);
 
-  // Handle auth state changes
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.id);
-      
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        await handleUser(session.user);
+        navigate(productId ? '/billing' : '/dashboard');
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
-
-  const handleUser = async (user) => {
-    console.log('Handling user:', user.id);
-    try {
-      // Check if user exists
-      const { data: existingUser, error: checkError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('id', user.id)
-        .single();
-
-      console.log('Existing user check:', existingUser, checkError);
-
-      if (!existingUser) {
-        // Create user record
-        const { error: createError } = await supabase
-          .from('users')
-          .insert({
-            id: user.id,
-            email: user.email,
-            first_name: user.user_metadata.full_name?.split(' ')[0] || '',
-            last_name: user.user_metadata.full_name?.split(' ').slice(1).join(' ') || '',
-            user_name: user.user_metadata.full_name || user.email?.split('@')[0] || '',
-            status: 'Free Tier',
-            subscription_type: 'free',
-            permanent_credits: 0,
-            subscription_credits: 0
-          });
-
-        if (createError) {
-          console.error('Error creating user:', createError);
-          throw createError;
-        }
-
-        console.log('Created new user record');
-
-        // Create initial credit transaction
-        const { error: transactionError } = await supabase
-          .from('credit_transactions')
-          .insert({
-            user_id: user.id,
-            credit_amount: 0,
-            transaction_type: 'initial',
-            description: 'Account creation',
-            status: 'completed'
-          });
-
-        if (transactionError) {
-          console.error('Error creating transaction:', transactionError);
-          throw transactionError;
-        }
-
-        console.log('Created initial transaction');
-      }
-
-      // Navigate after successful setup
-      console.log('Navigating to:', productId ? '/billing' : '/dashboard');
-      navigate(productId ? '/billing' : '/dashboard');
-
-    } catch (error) {
-      console.error('Error in handleUser:', error);
-      toast({
-        variant: "destructive",
-        title: "Setup Error",
-        description: "There was an error setting up your account. Please try again.",
-      });
-    }
-  };
+  }, [navigate, productId]);
 
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
-      console.log('Starting Google sign in...');
-
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
           redirectTo: `${window.location.origin}/auth`
-        },
+        }
       });
 
       if (error) throw error;
@@ -160,7 +71,7 @@ const Auth = () => {
         if (data?.user && !data.user.email_confirmed_at) {
           toast({
             title: "Email not confirmed",
-            description: "Please check your email and confirm your account before signing in. Don't forget to check your spam folder.",
+            description: "Please check your email and confirm your account before signing in.",
             variant: "destructive",
           });
           return;
