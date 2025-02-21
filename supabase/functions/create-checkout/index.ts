@@ -45,33 +45,13 @@ serve(async (req) => {
     console.log('Found product:', {
       id: product.id,
       name: product.name,
-      priceId: product.stripe_price_id
+      stripe_price_id: product.stripe_price_id
     });
 
-    // Verify price exists in Stripe
-    try {
-      const stripePrice = await stripe.prices.retrieve(product.stripe_price_id);
-      console.log('Verified Stripe price:', {
-        id: stripePrice.id,
-        active: stripePrice.active,
-        currency: stripePrice.currency,
-        unit_amount: stripePrice.unit_amount,
-        type: stripePrice.type,
-        recurring: stripePrice.recurring
-      });
-
-      if (!stripePrice.active) {
-        throw new Error('Price is not active');
-      }
-    } catch (error) {
-      console.error('Error verifying Stripe price:', error);
-      throw new Error('Invalid price ID in database');
-    }
-
-    // Get user details - we don't need to check status anymore
+    // Get user details with their status
     const { data: user, error: userError } = await supabaseClient
       .from('users')
-      .select('email')
+      .select('email, status, stripe_customer_id')
       .eq('id', userId)
       .single();
 
@@ -80,14 +60,38 @@ serve(async (req) => {
       throw new Error('User not found');
     }
 
-    console.log('Creating checkout session for user:', {
+    console.log('User details:', {
       email: user.email,
-      productId,
-      priceId: product.stripe_price_id
+      status: user.status,
+      hasStripeCustomerId: !!user.stripe_customer_id
     });
 
-    // Create Checkout Session - removed any status checks
+    let stripeCustomerId = user.stripe_customer_id;
+
+    // If user doesn't have a Stripe customer ID, create one
+    if (!stripeCustomerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: {
+          supabase_id: userId
+        }
+      });
+      stripeCustomerId = customer.id;
+
+      // Update user with new Stripe customer ID
+      const { error: updateError } = await supabaseClient
+        .from('users')
+        .update({ stripe_customer_id: stripeCustomerId })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.error('Error updating user with Stripe customer ID:', updateError);
+      }
+    }
+
+    // Create Checkout Session
     const session = await stripe.checkout.sessions.create({
+      customer: stripeCustomerId,
       line_items: [
         {
           price: product.stripe_price_id,
@@ -97,7 +101,6 @@ serve(async (req) => {
       mode: 'payment',
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
-      customer_email: user.email,
       metadata: {
         product_id: productId,
         user_id: userId,
