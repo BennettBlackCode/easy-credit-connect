@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { AnimatedTitle } from "@/components/ui/animated-hero";
 import Pricing from "@/pages/Pricing";
-
 const Index = () => {
   const features = [{
     title: "Your AI Assistant",
@@ -18,7 +17,6 @@ const Index = () => {
     title: "Smart Automation",
     description: "Let AI handle your repetitive SEO tasks"
   }];
-
   return <div className="min-h-screen overflow-hidden bg-[#030303]">
       {/* Hero Section */}
       <div className="relative">
@@ -29,16 +27,14 @@ const Index = () => {
           <div className="max-w-5xl mx-auto">
             <div className="text-center space-y-8 mb-16">
               <div className="inline-block">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary/10 text-primary border border-primary/20 mb-8">
-                  Launching soon - Join the waitlist
-                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary/10 text-primary border border-primary/20 mb-8">Released 02.21.25 | Beta Version 2.0</span>
               </div>
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8 leading-[1.1]">
                 <span className="block bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent mb-2">
                   Automate Your
                 </span>
                 <AnimatedTitle />
-                <span className="block mt-2 bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent">With One Click</span>
+                <span className="block mt-2 bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent">In One Click</span>
               </h1>
               <p className="text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto leading-relaxed">Built for marketing agencies to deliver SEO campaigns in record time. Sign up today and try it out for free.</p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
@@ -145,5 +141,4 @@ const Index = () => {
       </div>
     </div>;
 };
-
 export default Index;
