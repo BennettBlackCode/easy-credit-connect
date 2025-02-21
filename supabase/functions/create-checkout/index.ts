@@ -42,10 +42,32 @@ serve(async (req) => {
       throw new Error('Product not found');
     }
 
+    console.log('Found product:', {
+      id: product.id,
+      name: product.name,
+      priceId: product.stripe_price_id
+    });
+
+    // Verify price exists in Stripe
+    try {
+      const stripePrice = await stripe.prices.retrieve(product.stripe_price_id);
+      console.log('Verified Stripe price:', {
+        id: stripePrice.id,
+        active: stripePrice.active,
+        currency: stripePrice.currency,
+        unit_amount: stripePrice.unit_amount,
+        type: stripePrice.type,
+        recurring: stripePrice.recurring
+      });
+    } catch (error) {
+      console.error('Error verifying Stripe price:', error);
+      throw new Error('Invalid price ID in database');
+    }
+
     // Get user details
     const { data: user, error: userError } = await supabaseClient
       .from('users')
-      .select('email, status, stripe_customer_id')
+      .select('email')
       .eq('id', userId)
       .single();
 
@@ -54,52 +76,35 @@ serve(async (req) => {
       throw new Error('User not found');
     }
 
-    let stripeCustomerId = user.stripe_customer_id;
+    console.log('Creating checkout session for user:', {
+      email: user.email,
+      productId,
+      priceId: product.stripe_price_id
+    });
 
-    // If user doesn't have a Stripe customer ID, create one
-    if (!stripeCustomerId) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: {
-          supabase_id: userId
-        }
-      });
-      stripeCustomerId = customer.id;
-
-      // Update user with new Stripe customer ID
-      const { error: updateError } = await supabaseClient
-        .from('users')
-        .update({ stripe_customer_id: stripeCustomerId })
-        .eq('id', userId);
-
-      if (updateError) {
-        console.error('Error updating user with Stripe customer ID:', updateError);
-      }
-    }
-
-    // Create Checkout Session with payment mode
+    // Create Checkout Session
     const session = await stripe.checkout.sessions.create({
-      customer: stripeCustomerId,
       line_items: [
         {
           price: product.stripe_price_id,
           quantity: 1,
         },
       ],
-      mode: 'payment', // Use payment mode for one-time purchases
+      mode: 'subscription',
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
+      customer_email: user.email,
       metadata: {
         product_id: productId,
         user_id: userId,
       },
       client_reference_id: userId,
-      allow_promotion_codes: true,
+      allow_promotion_codes: true, // Enable promotion codes in checkout
     });
 
-    console.log('Checkout session created:', {
+    console.log('Checkout session created successfully:', {
       sessionId: session.id,
-      mode: 'payment'
+      url: session.url
     });
 
     return new Response(JSON.stringify({ url: session.url }), {

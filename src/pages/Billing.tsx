@@ -47,7 +47,6 @@ const Billing = () => {
   useEffect(() => {
     if (!session?.user?.id) return;
 
-    // Create a real-time subscription for credit transaction changes
     const channel = supabase
       .channel('credit-updates')
       .on(
@@ -58,9 +57,7 @@ const Billing = () => {
           table: 'credit_transactions',
           filter: `user_id=eq.${session.user.id}`,
         },
-        (payload) => {
-          console.log('Credit transaction update:', payload);
-          // Invalidate both queries to refresh the data
+        () => {
           queryClient.invalidateQueries({ queryKey: ["user-calculated-credits"] });
           queryClient.invalidateQueries({ queryKey: ["credit_transactions"] });
         }
@@ -73,44 +70,22 @@ const Billing = () => {
   }, [session?.user?.id, queryClient]);
 
   const handlePurchase = async (productId: string) => {
-    if (!session?.user?.id) {
-      toast({
-        title: "Error",
-        description: "Please sign in to make a purchase.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
-      console.log('Creating checkout session for:', { productId, userId: session.user.id });
-      
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { productId, userId: session.user.id },
+        body: { productId, userId: session?.user?.id },
       });
 
       if (error) {
         console.error('Function error:', error);
-        toast({
-          title: "Error",
-          description: "There was an error processing your payment. Please try again.",
-          variant: "destructive",
-        });
-        return;
+        throw error;
       }
 
-      if (!data?.url) {
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
         console.error('No URL in response:', data);
-        toast({
-          title: "Error",
-          description: "Unable to initialize checkout. Please try again.",
-          variant: "destructive",
-        });
-        return;
+        throw new Error('No checkout URL received');
       }
-
-      // Redirect to Stripe checkout
-      window.location.href = data.url;
     } catch (error) {
       console.error('Error creating checkout session:', error);
       toast({
@@ -150,7 +125,6 @@ const Billing = () => {
         <PricingCards
           products={products || []}
           onPurchase={handlePurchase}
-          currentPlan={userCredits?.status || "Free Tier"}
         />
 
         <h2 className="text-xl font-semibold mb-4">Transaction History</h2>
