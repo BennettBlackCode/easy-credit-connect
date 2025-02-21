@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom"; // Add useSearchParams
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -18,7 +18,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
-import { config } from "@/lib/config";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -30,6 +29,8 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const productId = searchParams.get('productId');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -38,6 +39,42 @@ const Auth = () => {
       password: "",
     },
   });
+
+  const handleAuthSuccess = async (userId: string) => {
+    if (productId) {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              productId,
+              userId,
+            }),
+          }
+        );
+
+        const { url } = await response.json();
+        if (url) {
+          window.location.href = url;
+          return;
+        }
+      } catch (error) {
+        console.error('Error creating checkout session:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not create checkout session. Please try again.",
+        });
+      }
+    }
+    
+    navigate("/dashboard");
+  };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
@@ -60,13 +97,13 @@ const Auth = () => {
           return;
         }
 
-        navigate("/dashboard");
+        await handleAuthSuccess(data.user.id);
       } else {
         const { error, data } = await supabase.auth.signUp({
           email: values.email,
           password: values.password,
           options: {
-            emailRedirectTo: `${config.baseUrl}`, // Changed to redirect to home page
+            emailRedirectTo: `${window.location.origin}`,
           },
         });
         
@@ -104,7 +141,7 @@ const Auth = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${config.baseUrl}/dashboard`,
+          redirectTo: `${window.location.origin}/dashboard`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
