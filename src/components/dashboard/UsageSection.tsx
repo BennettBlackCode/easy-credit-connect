@@ -2,26 +2,64 @@
 import { useState } from "react";
 import { 
   startOfDay, 
-  endOfDay, 
-  format, 
-  getWeek, 
+  endOfDay,
+  startOfWeek,
+  endOfWeek,
   startOfMonth,
-  getDaysInMonth,
-  addDays,
+  endOfMonth,
+  startOfYear,
+  endOfYear,
+  format, 
+  getWeek,
 } from "date-fns";
 import TimeRangeSelector from "./TimeRangeSelector";
 import UsageChart from "./UsageChart";
+import { useUsageData } from "@/hooks/useUsageData";
 
 export type TimeRange = "day" | "week" | "month" | "year";
 
 const UsageSection = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>("day");
-  const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>({
-    start: startOfDay(new Date()),
-    end: endOfDay(new Date()),
+  const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>(() => {
+    const now = new Date();
+    return {
+      start: startOfDay(now),
+      end: endOfDay(now),
+    };
   });
 
   const handleDateChange = (start: Date, end: Date) => {
+    setDateRange({ start, end });
+  };
+
+  const handleTimeRangeChange = (newRange: TimeRange) => {
+    const now = new Date();
+    let start: Date;
+    let end: Date;
+
+    switch (newRange) {
+      case "day":
+        start = startOfDay(now);
+        end = endOfDay(now);
+        break;
+      case "week":
+        start = startOfWeek(now, { weekStartsOn: 1 });
+        end = endOfWeek(now, { weekStartsOn: 1 });
+        break;
+      case "month":
+        start = startOfMonth(now);
+        end = endOfMonth(now);
+        break;
+      case "year":
+        start = startOfYear(now);
+        end = endOfYear(now);
+        break;
+      default:
+        start = startOfDay(now);
+        end = endOfDay(now);
+    }
+
+    setTimeRange(newRange);
     setDateRange({ start, end });
   };
 
@@ -41,51 +79,7 @@ const UsageSection = () => {
     }
   };
 
-  const generateChartData = () => {
-    switch (timeRange) {
-      case "day":
-        return Array.from({ length: 24 }, (_, i) => {
-          const date = new Date(dateRange.start);
-          date.setHours(i);
-          return {
-            date: date.toISOString(),
-            runs: Math.floor(Math.random() * 5),
-          };
-        });
-      case "week":
-        return Array.from({ length: 7 }, (_, i) => {
-          const date = new Date(dateRange.start);
-          date.setDate(date.getDate() + i);
-          return {
-            date: date.toISOString(),
-            runs: Math.floor(Math.random() * 10),
-          };
-        });
-      case "month": {
-        const monthStart = startOfMonth(dateRange.start);
-        const daysInMonth = getDaysInMonth(monthStart);
-        
-        return Array.from({ length: daysInMonth }, (_, i) => {
-          const date = addDays(monthStart, i);
-          return {
-            date: date.toISOString(),
-            runs: Math.floor(Math.random() * 15),
-          };
-        });
-      }
-      case "year":
-        return Array.from({ length: 12 }, (_, i) => {
-          const date = new Date(dateRange.start);
-          date.setMonth(i);
-          return {
-            date: date.toISOString(),
-            runs: Math.floor(Math.random() * 50),
-          };
-        });
-    }
-  };
-
-  const chartData = generateChartData();
+  const { data: usageData, isLoading } = useUsageData(timeRange, dateRange);
 
   return (
     <div className="p-4 sm:p-6 rounded-xl bg-white/5 border border-white/10">
@@ -95,15 +89,21 @@ const UsageSection = () => {
         </h2>
         <TimeRangeSelector
           selectedRange={timeRange}
-          onRangeChange={setTimeRange}
+          onRangeChange={handleTimeRangeChange}
           onDateChange={handleDateChange}
         />
       </div>
       <div className="h-[250px] sm:h-[300px] w-full">
-        <UsageChart 
-          data={chartData} 
-          timeRange={timeRange}
-        />
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <UsageChart 
+            data={usageData || []} 
+            timeRange={timeRange}
+          />
+        )}
       </div>
     </div>
   );

@@ -49,7 +49,11 @@ const UsageChart = ({ data, timeRange }: UsageChartProps) => {
             stroke="#888888"
             tickFormatter={getXAxisFormatter()}
           />
-          <YAxis stroke="#888888" />
+          <YAxis 
+            stroke="#888888"
+            allowDecimals={false}
+            domain={[0, 'auto']}
+          />
           <Tooltip
             contentStyle={{
               backgroundColor: "#1a1a1a",
