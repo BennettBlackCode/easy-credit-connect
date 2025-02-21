@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,87 +18,106 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // This effect handles the post-authentication setup
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session?.user?.id);
-      
-      if (event === 'SIGNED_IN' && session?.user) {
-        try {
-          // Wait a moment for the database triggers to complete
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          // Check if user exists in our users table
-          const { data: userData, error: userError } = await supabase
+    const setupNewUser = async (session) => {
+      if (!session?.user) return;
+
+      try {
+        // First, check if user exists
+        const { data: existingUser } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (!existingUser) {
+          // Create new user record
+          const { error: userError } = await supabase
             .from('users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+            .insert([
+              {
+                id: session.user.id,
+                email: session.user.email,
+                first_name: session.user.user_metadata.full_name?.split(' ')[0] || '',
+                last_name: session.user.user_metadata.full_name?.split(' ').slice(1).join(' ') || '',
+                user_name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || '',
+                status: 'Free Tier',
+                subscription_type: 'free',
+                permanent_credits: 0,
+                subscription_credits: 0
+              }
+            ]);
 
-          if (userError || !userData) {
-            console.error('User data fetch error:', userError);
-            // Handle new user scenario
-            const { error: insertError } = await supabase
-              .from('users')
-              .insert([
-                {
-                  id: session.user.id,
-                  email: session.user.email,
-                  first_name: session.user.user_metadata.full_name?.split(' ')[0] || '',
-                  last_name: session.user.user_metadata.full_name?.split(' ').slice(1).join(' ') || '',
-                  status: 'Free Tier',
-                  subscription_type: 'free',
-                  user_name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || ''
-                }
-              ]);
+          if (userError) throw userError;
 
-            if (insertError) {
-              console.error('Error inserting user:', insertError);
-              throw new Error('Failed to create user account');
-            }
-          }
+          // Create initial credit transaction
+          const { error: transactionError } = await supabase
+            .from('credit_transactions')
+            .insert([
+              {
+                user_id: session.user.id,
+                credit_amount: 0,
+                transaction_type: 'initial',
+                description: 'Account creation',
+                status: 'completed'
+              }
+            ]);
 
-          // Navigate after successful auth
-          if (productId) {
-            navigate('/billing');
-          } else {
-            navigate('/dashboard');
-          }
-        } catch (error) {
-          console.error('Error handling auth change:', error);
-          toast({
-            variant: "destructive",
-            title: "Authentication Error",
-            description: "There was an error setting up your account. Please try again.",
-          });
+          if (transactionError) throw transactionError;
         }
+
+        // Navigate to appropriate page
+        navigate(productId ? '/billing' : '/dashboard');
+      } catch (error) {
+        console.error('Error in user setup:', error);
+        toast({
+          variant: "destructive",
+          title: "Setup Error",
+          description: "There was an error setting up your account. Please try again.",
+        });
+      }
+    };
+
+    // Check current session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setupNewUser(session);
+      }
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event);
+      if (event === 'SIGNED_IN') {
+        setupNewUser(session);
       }
     });
 
     return () => {
-      authListener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, [navigate, productId, toast]);
 
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
-      console.log('Starting Google sign in process');
-      
-      const { error: signInError } = await supabase.auth.signInWithOAuth({
+      console.log('Initiating Google sign in...');
+
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth`,
         },
       });
 
-      if (signInError) throw signInError;
-
-    } catch (error: any) {
+      if (error) throw error;
+    } catch (error) {
       console.error('Google sign in error:', error);
       toast({
         variant: "destructive",
-        title: "Google Sign In Failed",
-        description: error.message || "Failed to sign in with Google. Please try again.",
+        title: "Sign In Failed",
+        description: error.message || "Could not sign in with Google. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -170,11 +190,7 @@ const Auth = () => {
     if (!isLogin && !user.app_metadata.provider) {
       setShowNameDialog(true);
     } else {
-      if (productId) {
-        navigate("/billing");
-      } else {
-        navigate("/dashboard");
-      }
+      navigate(productId ? "/billing" : "/dashboard");
     }
   };
 
