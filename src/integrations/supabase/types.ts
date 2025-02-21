@@ -372,6 +372,12 @@ export type Database = {
         }
         Returns: undefined
       }
+      reset_user_to_free_tier: {
+        Args: {
+          target_user_id: string
+        }
+        Returns: undefined
+      }
       update_user_status_and_credits: {
         Args: {
           target_user_id: string
