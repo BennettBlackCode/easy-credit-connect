@@ -1,4 +1,3 @@
-
 import { ArrowUpRight, Check, CreditCard, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -84,9 +83,7 @@ const Pricing = () => {
 
                 {plan.name.toLowerCase() === 'professional' ? (
                   <a 
-                    href="https://boldslate.com" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
+                    href="mailto:support@boldslate.com"
                     className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-full bg-primary text-black hover:bg-primary/90 transition-all duration-200"
                   >
                     {plan.buttonText}
@@ -94,7 +91,7 @@ const Pricing = () => {
                   </a>
                 ) : (
                   <Link 
-                    to="/signup"
+                    to="/auth"
                     className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-full bg-primary text-black hover:bg-primary/90 transition-all duration-200"
                   >
                     {plan.buttonText}
