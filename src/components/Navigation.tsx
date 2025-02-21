@@ -84,7 +84,7 @@ const Navigation = () => {
     if (session) {
       navigate("/dashboard");
     } else {
-      navigate("/");
+      navigate("/home");
       scrollToTop();
     }
   };
