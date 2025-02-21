@@ -25,6 +25,7 @@ const Footer = () => {
   };
 
   const navigation = [
+    { name: "Features", href: "/#features", onClick: () => scrollToSection("features") },
     { name: "Pricing", href: "/#pricing", onClick: () => scrollToSection("pricing") },
     ...(session
       ? [

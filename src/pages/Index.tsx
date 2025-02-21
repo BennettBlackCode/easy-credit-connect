@@ -1,4 +1,3 @@
-
 import { ArrowRight, Check, CreditCard, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
@@ -77,7 +76,7 @@ const Index = () => {
             </div>
 
             {/* Features Section */}
-            <div className="py-24 px-4 sm:px-6 lg:px-8 relative">
+            <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 relative">
               <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-30" />
               <div className="max-w-7xl mx-auto relative">
                 <div className="text-center mb-16">
@@ -105,7 +104,7 @@ const Index = () => {
                     </div>)}
                 </div>
               </div>
-            </div>
+            </section>
 
             {/* Pricing Section */}
             <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 relative">
