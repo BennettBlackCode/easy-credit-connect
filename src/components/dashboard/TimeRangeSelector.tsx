@@ -107,7 +107,7 @@ const TimeRangeSelector = ({
             onClick={() => handleRangeChange(range)}
             variant="ghost"
             className={cn(
-              "px-4 py-2 text-sm capitalize",
+              "px-3 py-2 text-sm capitalize min-w-[60px]", // Increased min-width
               selectedRange === range && "bg-white/10"
             )}
           >
