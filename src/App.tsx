@@ -27,7 +27,8 @@ const App = () => (
             <main className="flex-1">
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
+                <Route path="/home" element={<Index />} />
+                <Route path="/auth" element={<Auth defaultTab="sign-in" />} />
                 <Route 
                   path="/dashboard" 
                   element={
