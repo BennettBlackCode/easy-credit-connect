@@ -56,14 +56,7 @@ serve(async (req) => {
         }
 
         const paymentIntent = await stripe.paymentIntents.retrieve(session.payment_intent as string);
-        const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-        const priceId = lineItems.data[0]?.price?.id;
-        
-        if (!priceId) {
-          throw new Error('No price ID found in session');
-        }
-
-        const price = await stripe.prices.retrieve(priceId);
+        const price = await stripe.prices.retrieve(session.line_items?.data[0]?.price?.id || '');
         const product = await stripe.products.retrieve(price.product as string);
 
         console.log('Processing purchase for user:', session.metadata.userId);
@@ -74,7 +67,7 @@ serve(async (req) => {
           paymentId: paymentIntent.id
         });
 
-        // Call the database function to handle the purchase with all required parameters
+        // Call the database function to handle the purchase
         const { error } = await supabase.rpc('handle_stripe_purchase', {
           _user_id: session.metadata.userId,
           _customer_id: session.customer as string,

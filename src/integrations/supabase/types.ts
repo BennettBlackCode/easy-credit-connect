@@ -314,12 +314,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      delete_user_and_allow_email_reuse: {
-        Args: {
-          _user_id: string
-        }
-        Returns: undefined
-      }
       delete_user_completely: {
         Args: {
           _user_id: string
