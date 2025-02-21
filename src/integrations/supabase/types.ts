@@ -271,7 +271,6 @@ export type Database = {
           remaining_credits: number | null
           status: string | null
           total_credits: number | null
-          updated_at: string | null
           user_id: string | null
           user_name: string | null
         }
@@ -280,7 +279,6 @@ export type Database = {
           remaining_credits?: never
           status?: string | null
           total_credits?: never
-          updated_at?: never
           user_id?: string | null
           user_name?: string | null
         }
@@ -289,7 +287,6 @@ export type Database = {
           remaining_credits?: never
           status?: string | null
           total_credits?: never
-          updated_at?: never
           user_id?: string | null
           user_name?: string | null
         }
