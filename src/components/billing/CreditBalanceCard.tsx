@@ -28,7 +28,7 @@ export const CreditBalanceCard = ({
         <CardContent className="p-6">
           <div className="space-y-1">
             <p className="text-gray-400 text-sm">Current Plan</p>
-            <p className="font-bold text-white my-[12px] text-3xl">
+            <p className="font-bold text-white text-3xl my-[14px]">
               {status}
             </p>
           </div>
