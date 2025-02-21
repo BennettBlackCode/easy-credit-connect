@@ -1,5 +1,5 @@
-import { ArrowUpRight, Check, CreditCard, Mail } from "lucide-react";
-import { Link } from "react-router-dom";
+
+import { Check, CreditCard, Mail } from "lucide-react";
 
 const Pricing = () => {
   const plans = [{
@@ -8,7 +8,6 @@ const Pricing = () => {
     description: "Perfect for trying out the service",
     price: 30,
     features: ["3 runs", "No commitment", "Basic support", "Usage analytics"],
-    buttonText: "Get Started",
     icon: CreditCard
   }, {
     id: "3a66f202-9e69-4adf-be5b-d50ed21ca619",
@@ -16,7 +15,6 @@ const Pricing = () => {
     price: 97,
     description: "Most popular for growing businesses",
     features: ["15 runs", "No commitment", "Priority support", "Advanced analytics"],
-    buttonText: "Start Growth",
     featured: true,
     icon: CreditCard
   }, {
@@ -26,7 +24,6 @@ const Pricing = () => {
     priceLabel: "Custom",
     description: "For businesses with high automation needs",
     features: ["Unlimited runs", "Custom billing options", "24/7 Premium support", "Access to all workflows", "Advanced analytics", "API access", "Custom integrations", "Dedicated account manager"],
-    buttonText: "Contact Us",
     icon: Mail
   }];
 
@@ -80,24 +77,6 @@ const Pricing = () => {
                     ))}
                   </ul>
                 </div>
-
-                {plan.name.toLowerCase() === 'professional' ? (
-                  <a 
-                    href="mailto:support@boldslate.com"
-                    className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-full bg-primary text-black hover:bg-primary/90 transition-all duration-200"
-                  >
-                    {plan.buttonText}
-                    <ArrowUpRight className="h-5 w-5" />
-                  </a>
-                ) : (
-                  <Link 
-                    to="/auth"
-                    className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-full bg-primary text-black hover:bg-primary/90 transition-all duration-200"
-                  >
-                    {plan.buttonText}
-                    <ArrowUpRight className="h-5 w-5" />
-                  </Link>
-                )}
               </div>
             </div>
           ))}
