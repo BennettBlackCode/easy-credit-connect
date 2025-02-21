@@ -105,6 +105,9 @@ const Auth = () => {
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
+            hd: '*',
+            // This ensures we get email provider as well
+            scopes: 'email profile',
           },
         },
       });
