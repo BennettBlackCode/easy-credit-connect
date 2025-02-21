@@ -1,12 +1,31 @@
 
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Footer = () => {
   const { session } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const scrollToSection = (sectionId: string) => {
+    if (location.pathname !== "/") {
+      navigate("/?section=" + sectionId);
+      return;
+    }
+    
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const navHeight = 80;
+      const elementPosition = element.offsetTop - navHeight;
+      window.scrollTo({
+        top: elementPosition,
+        behavior: "smooth"
+      });
+    }
+  };
 
   const navigation = [
-    { name: "Pricing", href: "/#pricing" },
+    { name: "Pricing", href: "/#pricing", onClick: () => scrollToSection("pricing") },
     ...(session
       ? [
           { name: "Dashboard", href: "/dashboard" },
@@ -31,13 +50,13 @@ const Footer = () => {
             </Link>
             <nav className="flex flex-wrap justify-center gap-x-8 gap-y-4">
               {navigation.map((item) => (
-                <Link
+                <button
                   key={item.name}
-                  to={item.href}
+                  onClick={item.onClick || (() => navigate(item.href))}
                   className="text-sm text-gray-400 hover:text-white transition-colors"
                 >
                   {item.name}
-                </Link>
+                </button>
               ))}
             </nav>
             <p className="text-sm text-gray-500">
