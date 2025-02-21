@@ -1,8 +1,6 @@
+
 import { ArrowUpRight, Check, CreditCard, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -96,7 +94,7 @@ const Pricing = () => {
 
                 <button 
                   onClick={() => handleGetStarted(plan.name)}
-                  className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-full bg-primary text-white hover:bg-primary/90 transition-all duration-200"
+                  className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-full bg-primary text-black hover:bg-primary/90 transition-all duration-200"
                 >
                   {plan.buttonText}
                   <ArrowUpRight className="h-5 w-5" />
