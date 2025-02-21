@@ -1,41 +1,17 @@
-
 import { ArrowUpRight, Check, CreditCard, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 const Pricing = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { session } = useAuth();
-
-  const { data: products } = useQuery({
-    queryKey: ['stripe_products'],
-    queryFn: async () => {
-      if (!session) return null;
-      const { data, error } = await supabase.from('stripe_products').select('*');
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!session // Only run query if user is logged in
-  });
 
   const handleGetStarted = (planName: string) => {
-    if (!session) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to purchase a plan",
-      });
-      navigate("/auth");
-      return;
-    }
-
     if (planName.toLowerCase() === 'professional') {
       window.open('https://boldslate.com', '_blank');
     } else {
-      navigate("/billing");
+      navigate("/auth");
     }
   };
 
