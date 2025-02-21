@@ -77,7 +77,7 @@ serve(async (req) => {
       }
     }
 
-    // Create Checkout Session with payment mode
+    // Create Checkout Session with subscription mode
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       line_items: [
@@ -86,7 +86,7 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: 'payment', // Use payment mode for one-time purchases
+      mode: 'subscription', // Changed from 'payment' to 'subscription'
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
       metadata: {
@@ -99,7 +99,7 @@ serve(async (req) => {
 
     console.log('Checkout session created:', {
       sessionId: session.id,
-      mode: 'payment'
+      mode: 'subscription' // Updated log to match new mode
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
