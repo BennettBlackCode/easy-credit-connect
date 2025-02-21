@@ -12,7 +12,7 @@ export const useBillingData = () => {
       if (!session?.user?.id) return null;
       const { data, error } = await supabase
         .from("users_with_calculated_credits")
-        .select("remaining_credits, total_credits, status")
+        .select("remaining_credits, total_credits")
         .eq("user_id", session.user.id)
         .maybeSingle();
 
