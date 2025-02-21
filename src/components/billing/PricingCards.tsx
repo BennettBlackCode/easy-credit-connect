@@ -14,9 +14,20 @@ interface Product {
 interface PricingCardsProps {
   products: Product[];
   onPurchase: (productId: string) => void;
+  currentPlan?: string;
 }
 
-export const PricingCards = ({ products, onPurchase }: PricingCardsProps) => {
+export const PricingCards = ({ products, onPurchase, currentPlan = "Free Tier" }: PricingCardsProps) => {
+  const getButtonText = (productName: string) => {
+    if (currentPlan === productName) {
+      return "Refill";
+    }
+    if (currentPlan === "Starter Pack" && productName === "Growth Pack") {
+      return "Upgrade";
+    }
+    return "Purchase";
+  };
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
       {products && products.map((product) => (
@@ -41,7 +52,7 @@ export const PricingCards = ({ products, onPurchase }: PricingCardsProps) => {
                 className="w-full"
                 onClick={() => onPurchase(product.id)}
               >
-                Purchase
+                {getButtonText(product.name)}
                 <ArrowUpRight className="ml-2 h-4 w-4" />
               </Button>
             </div>

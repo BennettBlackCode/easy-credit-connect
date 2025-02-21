@@ -128,6 +128,7 @@ const Billing = () => {
         <PricingCards
           products={products || []}
           onPurchase={handlePurchase}
+          currentPlan={userCredits?.status || "Free Tier"}
         />
 
         <h2 className="text-xl font-semibold mb-4">Transaction History</h2>
