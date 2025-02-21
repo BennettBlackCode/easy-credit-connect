@@ -336,6 +336,13 @@ export type Database = {
           remaining_credits: number
         }[]
       }
+      handle_subscription_purchase: {
+        Args: {
+          user_id: string
+          product_name: string
+        }
+        Returns: undefined
+      }
       increment_user_credits: {
         Args: {
           user_id: string
