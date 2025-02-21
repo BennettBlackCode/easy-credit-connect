@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,6 +50,7 @@ const Automation = () => {
   const { session } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: userCredits } = useQuery({
     queryKey: ["user-calculated-credits"],
@@ -140,6 +141,10 @@ const Automation = () => {
       const { error } = await supabase.from("automations").insert(automationData);
 
       if (error) throw error;
+
+      await queryClient.invalidateQueries({ queryKey: ["user-calculated-credits"] });
+      await queryClient.invalidateQueries({ queryKey: ["period-runs"] });
+      await queryClient.invalidateQueries({ queryKey: ["recent-automations"] });
 
       const webhookUrl = "https://boldslate.app.n8n.cloud/webhook/685d206b-107d-4b95-a7b4-9d07133417e7";
       
