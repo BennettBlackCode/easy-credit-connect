@@ -7,7 +7,7 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
   httpClient: Stripe.createFetchHttpClient(),
 });
 
-const supabaseClient = createClient(
+const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
@@ -23,19 +23,23 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const signature = req.headers.get('stripe-signature');
-  const webhook_secret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+  const signature = req.headers.get("stripe-signature");
+  const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
 
-  if (!signature || !webhook_secret) {
-    return new Response('Missing signature or webhook secret', { status: 400 });
+  if (!signature || !webhookSecret) {
+    return new Response('Missing signature or webhook secret', { 
+      status: 400,
+      headers: corsHeaders
+    });
   }
 
   try {
     const body = await req.text();
-    const event = stripe.webhooks.constructEvent(body, signature, webhook_secret);
+    const event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     console.log('Stripe webhook event received:', event.type);
 
     switch (event.type) {
+      // Handle subscription payments
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice;
         console.log('Payment successful for invoice:', invoice.id);
@@ -44,7 +48,7 @@ serve(async (req) => {
           throw new Error('Missing customer or subscription ID');
         }
 
-        // Get customer metadata from Stripe
+        // Get customer metadata
         const customer = await stripe.customers.retrieve(invoice.customer as string);
         const userId = (customer as any).metadata.supabase_id;
 
@@ -58,7 +62,7 @@ serve(async (req) => {
           throw new Error('No price ID found in invoice');
         }
 
-        const { data: productData, error: productError } = await supabaseClient
+        const { data: productData, error: productError } = await supabase
           .from('stripe_products')
           .select('name')
           .eq('stripe_price_id', priceId)
@@ -69,8 +73,8 @@ serve(async (req) => {
           throw new Error('Product not found for price ID: ' + priceId);
         }
 
-        // Use handle_subscription_purchase to update user status and add credits
-        const { error: subscriptionError } = await supabaseClient.rpc(
+        // Use handle_subscription_purchase for subscription payments
+        const { error: subscriptionError } = await supabase.rpc(
           'handle_subscription_purchase',
           {
             user_id: userId,
@@ -87,6 +91,7 @@ serve(async (req) => {
         break;
       }
 
+      // Handle one-time purchases
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         console.log('Checkout session completed:', session.id);
@@ -107,7 +112,7 @@ serve(async (req) => {
             throw new Error('No price ID found');
           }
 
-          const { data: productData } = await supabaseClient
+          const { data: productData } = await supabase
             .from('stripe_products')
             .select('name')
             .eq('stripe_price_id', priceId)
@@ -117,8 +122,8 @@ serve(async (req) => {
             throw new Error('Product not found');
           }
 
-          // Handle one-time purchase
-          const { error: purchaseError } = await supabaseClient.rpc(
+          // Handle one-time purchase using handle_stripe_purchase
+          const { error: purchaseError } = await supabase.rpc(
             'handle_stripe_purchase',
             {
               _user_id: session.client_reference_id,
@@ -134,7 +139,7 @@ serve(async (req) => {
             throw purchaseError;
           }
 
-          console.log('Successfully processed one-time purchase');
+          console.log(`Successfully processed one-time purchase for user ${session.client_reference_id}`);
         } else {
           console.log('Subscription created, waiting for invoice.payment_succeeded');
         }
