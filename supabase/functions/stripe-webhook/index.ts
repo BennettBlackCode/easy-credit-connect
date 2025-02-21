@@ -17,6 +17,7 @@ serve(async (req) => {
   const webhook_secret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
 
   if (!signature || !webhook_secret) {
+    console.error('Missing signature or webhook secret');
     return new Response('Missing signature or webhook secret', { status: 400 });
   }
 
@@ -34,28 +35,23 @@ serve(async (req) => {
           throw new Error('No client_reference_id found in session');
         }
 
-        // Get the product details from the line items
-        const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-        if (!lineItems.data.length) {
-          throw new Error('No line items found in session');
-        }
+        // Get the subscription details
+        const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+        const priceId = subscription.items.data[0].price.id;
 
-        const priceId = lineItems.data[0].price?.id;
-        if (!priceId) {
-          throw new Error('No price ID found in line items');
-        }
-
-        // Get product name from stripe_products table
+        // Get product details from our database
         const { data: productData, error: productError } = await supabaseClient
           .from('stripe_products')
-          .select('name')
+          .select('name, credits_amount')
           .eq('stripe_price_id', priceId)
           .single();
 
         if (productError || !productData) {
           console.error('Error fetching product:', productError);
-          throw new Error('Product not found for price ID: ' + priceId);
+          throw new Error(`Product not found for price ID: ${priceId}`);
         }
+
+        console.log('Found product:', productData);
 
         // Call the database function to handle the purchase
         const { error: purchaseError } = await supabaseClient.rpc(
@@ -65,7 +61,7 @@ serve(async (req) => {
             _customer_id: session.customer as string,
             _product_name: productData.name,
             _stripe_price_id: priceId,
-            _payment_id: session.payment_intent as string,
+            _payment_id: session.subscription
           }
         );
 
@@ -74,10 +70,10 @@ serve(async (req) => {
           throw purchaseError;
         }
 
-        console.log('Successfully processed checkout session:', {
+        console.log('Successfully processed purchase:', {
           userId: session.client_reference_id,
           productName: productData.name,
-          priceId: priceId
+          creditsAmount: productData.credits_amount
         });
         break;
       }
@@ -87,20 +83,21 @@ serve(async (req) => {
         const subscription = event.data.object as Stripe.Subscription;
         console.log('Processing subscription event:', subscription.id);
 
-        // Get the product details
         const priceId = subscription.items.data[0].price.id;
+        
+        // Get the product details
         const { data: productData, error: productError } = await supabaseClient
           .from('stripe_products')
-          .select('name')
+          .select('name, credits_amount')
           .eq('stripe_price_id', priceId)
           .single();
 
         if (productError || !productData) {
           console.error('Error fetching product:', productError);
-          throw new Error('Product not found for price ID: ' + priceId);
+          throw new Error(`Product not found for price ID: ${priceId}`);
         }
 
-        // Get the user ID from the customer metadata
+        // Get the user ID from customer metadata
         const customer = await stripe.customers.retrieve(subscription.customer as string);
         const userId = customer.metadata.supabase_id;
 
@@ -113,7 +110,7 @@ serve(async (req) => {
           'handle_subscription_purchase',
           {
             user_id: userId,
-            product_name: productData.name,
+            product_name: productData.name
           }
         );
 
@@ -125,7 +122,7 @@ serve(async (req) => {
         console.log('Successfully processed subscription:', {
           userId: userId,
           productName: productData.name,
-          subscriptionId: subscription.id
+          creditsAmount: productData.credits_amount
         });
         break;
       }
