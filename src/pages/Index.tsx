@@ -2,7 +2,6 @@ import { ArrowRight, Check, CreditCard, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { AnimatedTitle } from "@/components/ui/animated-hero";
-
 const Index = () => {
   const features = [{
     title: "48 Blog Posts Ready To Post",
@@ -18,19 +17,20 @@ const Index = () => {
     description: "Get keyword data complete with CPC, KD, and search volume, along with a list of the top 100 local competitors nearby, and a Google Business Profile optimization checklist"
   }];
   const plans = [{
-    id: "3a66f202-9e69-4adf-be5b-d50ed21ca619", // Add the actual product ID from your stripe_products table
+    id: "3a66f202-9e69-4adf-be5b-d50ed21ca619",
+    // Add the actual product ID from your stripe_products table
     name: "Starter Pack",
     price: 30,
     description: "Perfect for trying out the service",
     features: ["3 runs", "No commitment", "Basic support", "Usage analytics"]
   }, {
-    id: "d04d2c11-1111-2222-3333-444455556666", // Add the actual product ID from your stripe_products table
+    id: "d04d2c11-1111-2222-3333-444455556666",
+    // Add the actual product ID from your stripe_products table
     name: "Growth Pack",
     price: 97,
     description: "Most popular for growing businesses",
     features: ["15 runs", "No commitment", "Priority support", "Advanced analytics"]
   }];
-
   return <div className="min-h-screen overflow-hidden bg-[#030303]">
       {/* Hero Section */}
       <div className="relative">
@@ -43,9 +43,7 @@ const Index = () => {
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary/10 text-primary border border-primary/20 mb-8">Released 02.21.25 | Beta Version 1.1</span>
               </div>
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8 leading-[1.1]">
-                <span className="block bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent mb-2">
-                  Automate Your
-                </span>
+                <span className="block bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent mb-2">Complete Your</span>
                 <AnimatedTitle />
                 <span className="block mt-2 bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent">In One Click</span>
               </h1>
@@ -142,10 +140,7 @@ const Index = () => {
                             </li>)}
                         </ul>
 
-                        <Link 
-                          to={`/auth?productId=${plan.id}`} 
-                          className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-2xl bg-primary text-black hover:bg-primary/90 transition-all duration-200"
-                        >
+                        <Link to={`/auth?productId=${plan.id}`} className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-2xl bg-primary text-black hover:bg-primary/90 transition-all duration-200">
                           Get Started
                           <ArrowRight className="h-5 w-5" />
                         </Link>
@@ -198,5 +193,4 @@ const Index = () => {
       </div>
     </div>;
 };
-
 export default Index;
