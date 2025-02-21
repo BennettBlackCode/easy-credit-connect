@@ -1,22 +1,25 @@
+
 import { ArrowRight, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { AnimatedTitle } from "@/components/ui/animated-hero";
 import Pricing from "@/pages/Pricing";
+
 const Index = () => {
   const features = [{
-    title: "Your AI Assistant",
-    description: "Automate your SEO tasks instantly with our intelligent AI engine"
+    title: "48 Blog Posts Ready To Post",
+    description: "Fully SEO optimized blog posts that already include interlinking, external linking, and are already formatted with headers so you can just copy and paste posts onto your website"
   }, {
-    title: "Seamless Integration",
-    description: "Connect with your existing tools in just one click"
+    title: "360 Google Business Posts In CSV",
+    description: "Ready to schedule GBP posts that are SEO optimized and pre-formatted in GoHighLevel's social planner csv for easy 1 click imports"
   }, {
-    title: "Real-time Analytics",
-    description: "Track your SEO performance with live insights"
+    title: "1000+ Top Backlinks from Local Competitors",
+    description: "Get a complete list of the top backlinks from the local competition, including dofollow / nofollow tags, domain rating, and more"
   }, {
-    title: "Smart Automation",
-    description: "Let AI handle your repetitive SEO tasks"
+    title: "KW Research, SERP Research, GBP Optimization",
+    description: "Get keyword data complete with CPC, KD, and search volume, along with a list of the top 100 local competitors nearby, and a Google Business Profile optimization checklist"
   }];
+
   return <div className="min-h-screen overflow-hidden bg-[#030303]">
       {/* Hero Section */}
       <div className="relative">
@@ -67,17 +70,17 @@ const Index = () => {
             {/* Stats Section */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto mt-24">
               {[{
-              value: "10x",
-              label: "Faster SEO"
+              value: "48+",
+              label: "Blog Posts"
             }, {
-              value: "24/7",
-              label: "Automation"
+              value: "360",
+              label: "GBP Posts"
+            }, {
+              value: "1000+",
+              label: "Backlinks"
             }, {
               value: "100%",
-              label: "AI Powered"
-            }, {
-              value: "1-Click",
-              label: "Integration"
+              label: "Automated"
             }].map((stat, index) => <div key={index} className="text-center space-y-2">
                   <div className="text-3xl font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
                     {stat.value}
@@ -95,10 +98,10 @@ const Index = () => {
         <div className="max-w-7xl mx-auto relative">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-4">
-              AI-Powered SEO Automation
+              What You Get With Each Run
             </h2>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Experience the future of SEO with our advanced AI technology
+              Everything you need to deliver a complete SEO campaign
             </p>
           </div>
           
@@ -141,4 +144,5 @@ const Index = () => {
       </div>
     </div>;
 };
+
 export default Index;
