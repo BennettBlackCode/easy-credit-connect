@@ -73,22 +73,44 @@ const Billing = () => {
   }, [session?.user?.id, queryClient]);
 
   const handlePurchase = async (productId: string) => {
+    if (!session?.user?.id) {
+      toast({
+        title: "Error",
+        description: "Please sign in to make a purchase.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
+      console.log('Creating checkout session for:', { productId, userId: session.user.id });
+      
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { productId, userId: session?.user?.id },
+        body: { productId, userId: session.user.id },
       });
 
       if (error) {
         console.error('Function error:', error);
-        throw error;
+        toast({
+          title: "Error",
+          description: "There was an error processing your payment. Please try again.",
+          variant: "destructive",
+        });
+        return;
       }
 
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
+      if (!data?.url) {
         console.error('No URL in response:', data);
-        throw new Error('No checkout URL received');
+        toast({
+          title: "Error",
+          description: "Unable to initialize checkout. Please try again.",
+          variant: "destructive",
+        });
+        return;
       }
+
+      // Redirect to Stripe checkout
+      window.location.href = data.url;
     } catch (error) {
       console.error('Error creating checkout session:', error);
       toast({
