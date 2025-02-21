@@ -94,7 +94,7 @@ const Pricing = () => {
                   </a>
                 ) : (
                   <Link 
-                    to="/auth"
+                    to="/signup"
                     className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-full bg-primary text-black hover:bg-primary/90 transition-all duration-200"
                   >
                     {plan.buttonText}
