@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { AnimatedTitle } from "@/components/ui/animated-hero";
 import Pricing from "@/pages/Pricing";
+
 const Index = () => {
   const features = [{
     title: "Your AI Assistant",
@@ -17,6 +18,7 @@ const Index = () => {
     title: "Smart Automation",
     description: "Let AI handle your repetitive SEO tasks"
   }];
+
   return <div className="min-h-screen overflow-hidden bg-[#030303]">
       {/* Hero Section */}
       <div className="relative">
@@ -41,7 +43,7 @@ const Index = () => {
               <p className="text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto leading-relaxed">Built for marketing agencies to deliver SEO campaigns in record time. Sign up today and try it out for free.</p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <Link to="/signup" className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-2xl text-black bg-primary hover:bg-primary/90 transition-all duration-200 shadow-[0_0_30px_rgba(46,213,115,0.4)]">
-                  Get Early Access
+                  Try It For Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
                 <a href="#demo" className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-2xl text-white bg-white/5 hover:bg-white/10 transition-all duration-200 border border-white/10">
@@ -143,4 +145,5 @@ const Index = () => {
       </div>
     </div>;
 };
+
 export default Index;
