@@ -18,7 +18,6 @@ import {
   endOfMonth,
   getDaysInMonth,
   addDays,
-  startOfBillingPeriod,
   subMonths 
 } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
@@ -59,15 +58,14 @@ const Dashboard = () => {
     queryKey: ["period-runs", session?.user?.id],
     queryFn: async () => {
       const startDate = startOfMonth(new Date()); // Using start of month as billing period
-      const { data, error } = await supabase
+      const { count, error } = await supabase
         .from("automations")
-        .select("id")
+        .select("*", { count: 'exact', head: true })
         .eq("user_id", session?.user?.id)
-        .gte("created_at", startDate.toISOString())
-        .count();
+        .gte("created_at", startDate.toISOString());
 
       if (error) throw error;
-      return data;
+      return count || 0;
     },
     enabled: !!session?.user?.id,
   });
