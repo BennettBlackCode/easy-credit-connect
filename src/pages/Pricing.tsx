@@ -22,17 +22,21 @@ const Pricing = () => {
     enabled: !!session // Only run query if user is logged in
   });
 
-  const handleGetStarted = () => {
+  const handleGetStarted = (planName: string) => {
     if (!session) {
       toast({
         title: "Authentication required",
         description: "Please sign in to purchase a plan",
-        variant: "destructive"
       });
       navigate("/auth");
       return;
     }
-    navigate("/billing");
+
+    if (planName.toLowerCase() === 'professional') {
+      window.open('https://boldslate.com', '_blank');
+    } else {
+      navigate("/billing");
+    }
   };
 
   const plans = [{
@@ -63,7 +67,8 @@ const Pricing = () => {
     icon: Mail
   }];
 
-  return <div className="py-24 px-4 sm:px-6 lg:px-8 relative" id="pricing">
+  return (
+    <div className="py-24 px-4 sm:px-6 lg:px-8 relative" id="pricing">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">
@@ -75,12 +80,15 @@ const Pricing = () => {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {plans.map(plan => <div key={plan.id} className={`pricing-card relative rounded-3xl p-8 bg-[#0A0A0A] border border-transparent transition-all duration-500 ${plan.featured ? "md:-mt-4 md:mb-4" : ""}`}>
-              {plan.featured && <div className="absolute -top-5 left-1/2 -translate-x-1/2">
+          {plans.map(plan => (
+            <div key={plan.id} className={`pricing-card relative rounded-3xl p-8 bg-[#0A0A0A] border border-transparent transition-all duration-500 ${plan.featured ? "md:-mt-4 md:mb-4" : ""}`}>
+              {plan.featured && (
+                <div className="absolute -top-5 left-1/2 -translate-x-1/2">
                   <span className="px-6 py-2 text-sm font-medium rounded-full bg-primary text-black">
                     Most Popular
                   </span>
-                </div>}
+                </div>
+              )}
 
               <div className="flex flex-col h-full">
                 <div className="mb-8">
@@ -89,27 +97,37 @@ const Pricing = () => {
                 </div>
 
                 <div className="mb-8">
-                  {plan.price !== null ? <div className="flex items-baseline">
+                  {plan.price !== null ? (
+                    <div className="flex items-baseline">
                       <span className="text-4xl font-bold text-white">${plan.price}</span>
                       <span className="ml-2 text-gray-400">/ per month</span>
-                    </div> : <div className="text-3xl font-bold text-white">{plan.priceLabel}</div>}
+                    </div>
+                  ) : (
+                    <div className="text-3xl font-bold text-white">{plan.priceLabel}</div>
+                  )}
                 </div>
 
                 <div className="flex-grow">
                   <ul className="space-y-4 mb-8">
-                    {plan.features.map(feature => <li key={feature} className="flex items-start gap-3">
+                    {plan.features.map(feature => (
+                      <li key={feature} className="flex items-start gap-3">
                         <Check className="h-6 w-6 text-primary flex-shrink-0" />
                         <span className="text-gray-300">{feature}</span>
-                      </li>)}
+                      </li>
+                    ))}
                   </ul>
                 </div>
 
-                <button onClick={handleGetStarted} className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-full bg-primary text-white hover:bg-primary/90 transition-all duration-200">
+                <button 
+                  onClick={() => handleGetStarted(plan.name)}
+                  className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-full bg-primary text-white hover:bg-primary/90 transition-all duration-200"
+                >
                   {plan.buttonText}
                   <ArrowUpRight className="h-5 w-5" />
                 </button>
               </div>
-            </div>)}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -168,7 +186,8 @@ const Pricing = () => {
           opacity: 0.4;
         }
       `}</style>
-    </div>;
+    </div>
+  );
 };
 
 export default Pricing;
