@@ -2,6 +2,7 @@ import { ArrowRight, Check, CreditCard, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { AnimatedTitle } from "@/components/ui/animated-hero";
+
 const Index = () => {
   const features = [{
     title: "48 Blog Posts Ready To Post",
@@ -27,6 +28,7 @@ const Index = () => {
     description: "Most popular for growing businesses",
     features: ["15 runs", "No commitment", "Priority support", "Advanced analytics"]
   }];
+
   return <div className="min-h-screen overflow-hidden bg-[#030303]">
       {/* Hero Section */}
       <div className="relative">
@@ -74,25 +76,42 @@ const Index = () => {
             </div>
 
             {/* Stats Section */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto mt-24">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8 max-w-4xl mx-auto mt-24">
               {[{
-              value: "48+",
-              label: "Blog Posts"
-            }, {
-              value: "360",
-              label: "GBP Posts"
-            }, {
-              value: "1000+",
-              label: "Backlinks"
-            }, {
-              value: "100%",
-              label: "Automated"
-            }].map((stat, index) => <div key={index} className="text-center space-y-2">
-                  <div className="text-3xl font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
-                    {stat.value}
+                value: "48+",
+                label: "Blog Posts",
+                gradient: "from-[#FF5733] to-[#FFB533]"
+              }, {
+                value: "360",
+                label: "GBP Posts",
+                gradient: "from-[#4CAF50] to-[#8BC34A]"
+              }, {
+                value: "1000+",
+                label: "Backlinks",
+                gradient: "from-[#2196F3] to-[#00BCD4]"
+              }, {
+                value: "100%",
+                label: "Automated",
+                gradient: "from-[#9C27B0] to-[#E91E63]"
+              }].map((stat, index) => (
+                <div 
+                  key={index} 
+                  className="group relative p-6 rounded-2xl transition-all duration-300 hover:scale-105"
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-10 group-hover:opacity-15 rounded-2xl transition-opacity duration-300`} />
+                  
+                  <div className="absolute inset-0 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10" />
+                  
+                  <div className="relative text-center space-y-2">
+                    <div className={`text-4xl font-bold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent`}>
+                      {stat.value}
+                    </div>
+                    <div className="text-gray-400 font-medium text-sm">{stat.label}</div>
                   </div>
-                  <div className="text-gray-400 text-sm">{stat.label}</div>
-                </div>)}
+
+                  <div className={`absolute -inset-0.5 bg-gradient-to-r ${stat.gradient} opacity-0 group-hover:opacity-20 rounded-2xl blur-lg transition-opacity duration-300`} />
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -213,4 +232,5 @@ const Index = () => {
       </div>
     </div>;
 };
+
 export default Index;
