@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreditCard, ArrowUpRight } from "lucide-react";
@@ -184,9 +185,11 @@ const Billing = () => {
                   <p className="text-sm text-muted-foreground mb-4">
                     {product.description}
                   </p>
-                  <div className="text-2xl font-bold mb-4">
-                    {isUnlimited ? "Contact Us" : `$${(product.price_amount / 100).toFixed(2)}`}
-                  </div>
+                  {!isUnlimited && (
+                    <div className="text-2xl font-bold mb-4">
+                      ${(product.price_amount / 100).toFixed(2)}
+                    </div>
+                  )}
                   <div className="text-sm text-muted-foreground mb-4">
                     {isUnlimited ? "Unlimited Runs" : `${product.credits_amount} ${product.credits_amount === 1 ? 'run' : 'runs'}`}
                   </div>
@@ -198,7 +201,7 @@ const Billing = () => {
                         rel="noopener noreferrer"
                         className="flex items-center justify-center"
                       >
-                        {displayButton}
+                        Contact Us
                         <ArrowUpRight className="ml-2 h-4 w-4" />
                       </a>
                     </Button>
