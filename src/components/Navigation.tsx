@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
@@ -24,7 +25,7 @@ const Navigation = () => {
   }, []);
 
   const handleGetStarted = () => {
-    navigate("/auth");  // It will now default to sign-in due to the defaultTab prop
+    navigate("/auth");
     setIsOpen(false);
   };
 
