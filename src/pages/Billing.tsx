@@ -47,6 +47,7 @@ const Billing = () => {
   useEffect(() => {
     if (!session?.user?.id) return;
 
+    // Create a real-time subscription for credit transaction changes
     const channel = supabase
       .channel('credit-updates')
       .on(
@@ -57,7 +58,9 @@ const Billing = () => {
           table: 'credit_transactions',
           filter: `user_id=eq.${session.user.id}`,
         },
-        () => {
+        (payload) => {
+          console.log('Credit transaction update:', payload);
+          // Invalidate both queries to refresh the data
           queryClient.invalidateQueries({ queryKey: ["user-calculated-credits"] });
           queryClient.invalidateQueries({ queryKey: ["credit_transactions"] });
         }
