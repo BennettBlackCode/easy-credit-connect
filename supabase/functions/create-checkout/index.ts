@@ -90,7 +90,7 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: 'subscription', // Changed from 'payment' to 'subscription'
+      mode: 'subscription',
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
       customer_email: user.email,
@@ -99,6 +99,7 @@ serve(async (req) => {
         user_id: userId,
       },
       client_reference_id: userId,
+      allow_promotion_codes: true, // Enable promotion codes in checkout
     });
 
     console.log('Checkout session created successfully:', {
