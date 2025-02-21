@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -6,7 +7,7 @@ import * as z from "zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -75,16 +76,14 @@ const Automation = () => {
 
   useEffect(() => {
     if (remainingCredits <= 0) {
-      setShowCreditsDialog(true);
-    }
-  }, [remainingCredits]);
-
-  const handleDialogChange = (open: boolean) => {
-    setShowCreditsDialog(open);
-    if (!open) {
+      toast({
+        title: "Insufficient Credits",
+        description: "You need at least 1 credit to run automations. Please purchase more credits to continue.",
+        variant: "destructive",
+      });
       navigate("/dashboard");
     }
-  };
+  }, [remainingCredits, navigate, toast]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -116,7 +115,7 @@ const Automation = () => {
     if (!remainingCredits || remainingCredits <= 0) {
       toast({
         title: "Insufficient Credits",
-        description: "You need at least 1 credit to run automations. Would you like to purchase more credits?",
+        description: "You need at least 1 credit to run automations. Please purchase more credits to continue.",
         variant: "destructive",
       });
       navigate("/dashboard");
@@ -180,6 +179,11 @@ const Automation = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleDialogClose = () => {
+    setShowCreditsDialog(false);
+    navigate("/dashboard");
   };
 
   return (
@@ -348,20 +352,23 @@ const Automation = () => {
         </div>
       </div>
 
-      <Dialog open={showCreditsDialog} onOpenChange={handleDialogChange}>
+      <Dialog open={showCreditsDialog} onOpenChange={handleDialogClose}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Insufficient Credits</DialogTitle>
             <DialogDescription>
-              You need at least 1 credit to run this automation. Would you like to purchase more credits?
+              You need at least 1 credit to run this automation. Purchase more credits to continue.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button
-              onClick={() => navigate("/billing")}
-              className="w-full bg-primary hover:bg-primary/90"
+              onClick={() => {
+                setShowCreditsDialog(false);
+                navigate("/billing");
+              }}
+              className="w-full"
             >
-              Purchase Credits
+              Buy More Credits
             </Button>
           </DialogFooter>
         </DialogContent>

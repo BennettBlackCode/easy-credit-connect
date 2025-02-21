@@ -275,24 +275,6 @@ export type Database = {
           user_id: string | null
           user_name: string | null
         }
-        Insert: {
-          email?: string | null
-          remaining_credits?: never
-          status?: string | null
-          total_credits?: never
-          updated_at?: never
-          user_id?: string | null
-          user_name?: string | null
-        }
-        Update: {
-          email?: string | null
-          remaining_credits?: never
-          status?: string | null
-          total_credits?: never
-          updated_at?: never
-          user_id?: string | null
-          user_name?: string | null
-        }
         Relationships: []
       }
       users_with_credits: {
@@ -336,13 +318,6 @@ export type Database = {
           remaining_credits: number
         }[]
       }
-      handle_subscription_purchase: {
-        Args: {
-          user_id: string
-          product_name: string
-        }
-        Returns: undefined
-      }
       increment_user_credits: {
         Args: {
           user_id: string
@@ -356,12 +331,6 @@ export type Database = {
           email: string
         }
         Returns: boolean
-      }
-      reset_user_credits: {
-        Args: {
-          target_user_id: string
-        }
-        Returns: undefined
       }
     }
     Enums: {
