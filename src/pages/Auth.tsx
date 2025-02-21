@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,7 +12,7 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const productId = searchParams.get('productId');
   const [isLoading, setIsLoading] = useState(false);
-  const [isLogin, setIsLogin] = useState(mode === 'login');
+  const [isLogin, setIsLogin] = useState(true); // Default to login view
   const [showNameDialog, setShowNameDialog] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
