@@ -86,7 +86,7 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: 'subscription', // Changed from 'payment' to 'subscription'
+      mode: 'subscription', // Always use subscription mode
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
       metadata: {
@@ -99,7 +99,7 @@ serve(async (req) => {
 
     console.log('Checkout session created:', {
       sessionId: session.id,
-      mode: 'subscription' // Updated log to match new mode
+      mode: 'subscription'
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
