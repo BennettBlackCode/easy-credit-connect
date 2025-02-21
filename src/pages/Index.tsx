@@ -2,6 +2,7 @@ import { ArrowRight, Check, CreditCard, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { AnimatedTitle } from "@/components/ui/animated-hero";
+
 const Index = () => {
   const features = [{
     title: "48 Blog Posts Ready To Post",
@@ -16,23 +17,22 @@ const Index = () => {
     title: "KW Research, SERP Research, GBP Optimization",
     description: "Get keyword data complete with CPC, KD, and search volume, along with a list of the top 100 local competitors nearby, and a Google Business Profile optimization checklist"
   }];
+
   const plans = [{
     id: "3a66f202-9e69-4adf-be5b-d50ed21ca619",
-    // Add the actual product ID from your stripe_products table
     name: "Starter Pack",
     price: 30,
     description: "Perfect for trying out the service",
     features: ["3 runs", "No commitment", "Basic support", "Usage analytics"]
   }, {
     id: "d04d2c11-1111-2222-3333-444455556666",
-    // Add the actual product ID from your stripe_products table
     name: "Growth Pack",
     price: 97,
     description: "Most popular for growing businesses",
     features: ["15 runs", "No commitment", "Priority support", "Advanced analytics"]
   }];
+
   return <div className="min-h-screen overflow-hidden bg-[#030303]">
-      {/* Hero Section */}
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-30" />
         
@@ -59,7 +59,6 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Video Section with Scroll Animation */}
             <div className="flex flex-col overflow-hidden -mt-20">
               <ContainerScroll titleComponent={<div className="h-4" />}>
                 <div className="relative w-full h-full rounded-2xl overflow-hidden">
@@ -75,7 +74,6 @@ const Index = () => {
               </ContainerScroll>
             </div>
 
-            {/* Features Section */}
             <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 relative">
               <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-30" />
               <div className="max-w-7xl mx-auto relative">
@@ -106,7 +104,6 @@ const Index = () => {
               </div>
             </section>
 
-            {/* Pricing Section */}
             <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 relative">
               <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-30" />
               <div className="max-w-7xl mx-auto relative">
@@ -119,9 +116,9 @@ const Index = () => {
                   </p>
                 </div>
 
-                {/* Main Plans */}
                 <div className="grid md:grid-cols-2 gap-8 mb-8">
-                  {plans.map((plan, index) => <div key={index} className="group p-8 rounded-2xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white/[0.05] to-transparent border border-white/[0.05] backdrop-blur-sm">
+                  {plans.map((plan, index) => (
+                    <div key={index} className="group p-8 rounded-2xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white/[0.05] to-transparent border border-white/[0.05] backdrop-blur-sm">
                       <div className="space-y-6">
                         <div>
                           <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
@@ -134,31 +131,38 @@ const Index = () => {
                         </div>
 
                         <ul className="space-y-4">
-                          {plan.features.map((feature, idx) => <li key={idx} className="flex items-start gap-3">
+                          {plan.features.map((feature, idx) => (
+                            <li key={idx} className="flex items-start gap-3">
                               <Check className="h-6 w-6 text-primary flex-shrink-0" />
                               <span className="text-gray-300">{feature}</span>
-                            </li>)}
+                            </li>
+                          ))}
                         </ul>
 
-                        <Link to={`/auth?productId=${plan.id}`} className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-2xl bg-primary text-black hover:bg-primary/90 transition-all duration-200">
+                        <Link 
+                          to={`/auth?productId=${plan.id}`}
+                          className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-2xl bg-primary text-black hover:bg-primary/90 transition-all duration-200"
+                        >
                           Get Started
                           <ArrowRight className="h-5 w-5" />
                         </Link>
                       </div>
-                    </div>)}
+                    </div>
+                  ))}
                 </div>
 
-                {/* Enterprise Plan */}
                 <div className="p-8 rounded-2xl bg-gradient-to-br from-white/[0.08] to-transparent border border-white/[0.08] backdrop-blur-sm">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
                     <div className="space-y-4 md:max-w-xl">
                       <h3 className="text-2xl font-bold text-white">Enterprise</h3>
                       <p className="text-gray-400">For agencies and large businesses with custom requirements. Includes unlimited runs, dedicated support, and custom integrations.</p>
                       <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {["Unlimited runs", "Custom integrations", "24/7 Premium support", "API access", "Dedicated account manager"].map((feature, idx) => <li key={idx} className="flex items-center gap-2">
+                        {["Unlimited runs", "Custom integrations", "24/7 Premium support", "API access", "Dedicated account manager"].map((feature, idx) => (
+                          <li key={idx} className="flex items-center gap-2">
                             <Check className="h-5 w-5 text-primary flex-shrink-0" />
                             <span className="text-gray-300 text-sm">{feature}</span>
-                          </li>)}
+                          </li>
+                        ))}
                       </ul>
                     </div>
                     <div className="flex-shrink-0">
@@ -172,7 +176,6 @@ const Index = () => {
               </div>
             </section>
 
-            {/* CTA Section */}
             <div className="py-24 px-4 sm:px-6 lg:px-8 relative">
               <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-30" />
               <div className="max-w-4xl mx-auto text-center space-y-8 relative">
@@ -193,4 +196,5 @@ const Index = () => {
       </div>
     </div>;
 };
+
 export default Index;
