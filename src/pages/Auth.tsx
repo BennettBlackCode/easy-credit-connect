@@ -18,96 +18,118 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // This effect handles the post-authentication setup
+  // Handle initial session check
   useEffect(() => {
-    const setupNewUser = async (session) => {
-      if (!session?.user) return;
+    const currentUrl = window.location.href;
+    console.log('Current URL:', currentUrl);
+    
+    // Check if we're in a redirect with an access_token
+    if (currentUrl.includes('access_token')) {
+      console.log('Detected access_token in URL');
+    }
 
-      try {
-        // First, check if user exists
-        const { data: existingUser } = await supabase
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.id);
+      if (session?.user) {
+        handleUser(session.user);
+      }
+    });
+  }, []);
+
+  // Handle auth state changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.id);
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        await handleUser(session.user);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleUser = async (user) => {
+    console.log('Handling user:', user.id);
+    try {
+      // Check if user exists
+      const { data: existingUser, error: checkError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+
+      console.log('Existing user check:', existingUser, checkError);
+
+      if (!existingUser) {
+        // Create user record
+        const { error: createError } = await supabase
           .from('users')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+          .insert({
+            id: user.id,
+            email: user.email,
+            first_name: user.user_metadata.full_name?.split(' ')[0] || '',
+            last_name: user.user_metadata.full_name?.split(' ').slice(1).join(' ') || '',
+            user_name: user.user_metadata.full_name || user.email?.split('@')[0] || '',
+            status: 'Free Tier',
+            subscription_type: 'free',
+            permanent_credits: 0,
+            subscription_credits: 0
+          });
 
-        if (!existingUser) {
-          // Create new user record
-          const { error: userError } = await supabase
-            .from('users')
-            .insert([
-              {
-                id: session.user.id,
-                email: session.user.email,
-                first_name: session.user.user_metadata.full_name?.split(' ')[0] || '',
-                last_name: session.user.user_metadata.full_name?.split(' ').slice(1).join(' ') || '',
-                user_name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || '',
-                status: 'Free Tier',
-                subscription_type: 'free',
-                permanent_credits: 0,
-                subscription_credits: 0
-              }
-            ]);
-
-          if (userError) throw userError;
-
-          // Create initial credit transaction
-          const { error: transactionError } = await supabase
-            .from('credit_transactions')
-            .insert([
-              {
-                user_id: session.user.id,
-                credit_amount: 0,
-                transaction_type: 'initial',
-                description: 'Account creation',
-                status: 'completed'
-              }
-            ]);
-
-          if (transactionError) throw transactionError;
+        if (createError) {
+          console.error('Error creating user:', createError);
+          throw createError;
         }
 
-        // Navigate to appropriate page
-        navigate(productId ? '/billing' : '/dashboard');
-      } catch (error) {
-        console.error('Error in user setup:', error);
-        toast({
-          variant: "destructive",
-          title: "Setup Error",
-          description: "There was an error setting up your account. Please try again.",
-        });
-      }
-    };
+        console.log('Created new user record');
 
-    // Check current session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setupNewUser(session);
-      }
-    });
+        // Create initial credit transaction
+        const { error: transactionError } = await supabase
+          .from('credit_transactions')
+          .insert({
+            user_id: user.id,
+            credit_amount: 0,
+            transaction_type: 'initial',
+            description: 'Account creation',
+            status: 'completed'
+          });
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state changed:', event);
-      if (event === 'SIGNED_IN') {
-        setupNewUser(session);
-      }
-    });
+        if (transactionError) {
+          console.error('Error creating transaction:', transactionError);
+          throw transactionError;
+        }
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate, productId, toast]);
+        console.log('Created initial transaction');
+      }
+
+      // Navigate after successful setup
+      console.log('Navigating to:', productId ? '/billing' : '/dashboard');
+      navigate(productId ? '/billing' : '/dashboard');
+
+    } catch (error) {
+      console.error('Error in handleUser:', error);
+      toast({
+        variant: "destructive",
+        title: "Setup Error",
+        description: "There was an error setting up your account. Please try again.",
+      });
+    }
+  };
 
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
-      console.log('Initiating Google sign in...');
+      console.log('Starting Google sign in...');
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+          redirectTo: `${window.location.origin}/auth`
         },
       });
 
