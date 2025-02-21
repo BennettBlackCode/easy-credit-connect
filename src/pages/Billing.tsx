@@ -185,8 +185,6 @@ const Billing = () => {
           {sortedProducts.map((product) => {
             const isUnlimited = product.name.toLowerCase().includes('professional');
             const displayName = isUnlimited ? "Unlimited" : product.name;
-            const displayPrice = isUnlimited ? "Contact Us" : `$${(product.price_amount / 100).toFixed(2)}`;
-            const displayCredits = isUnlimited ? "Unlimited Runs" : `${product.credits_amount} ${product.credits_amount === 1 ? 'run' : 'runs'}`;
             const displayButton = isUnlimited ? "Contact Us" : "Purchase";
 
             return (
@@ -198,13 +196,17 @@ const Billing = () => {
                   <p className="text-sm text-muted-foreground mb-4">
                     {product.description}
                   </p>
-                  {!isUnlimited && (
+                  {isUnlimited ? (
                     <div className="text-2xl font-bold mb-4">
-                      {displayPrice}
+                      Contact Us
+                    </div>
+                  ) : (
+                    <div className="text-2xl font-bold mb-4">
+                      ${(product.price_amount / 100).toFixed(2)}
                     </div>
                   )}
                   <div className={`text-sm text-muted-foreground ${isUnlimited ? 'mb-8' : 'mb-4'}`}>
-                    {displayCredits}
+                    {isUnlimited ? "Unlimited Runs" : `${product.credits_amount} ${product.credits_amount === 1 ? 'run' : 'runs'}`}
                   </div>
                   {isUnlimited ? (
                     <Button asChild className="w-full">
