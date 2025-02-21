@@ -51,7 +51,7 @@ const Index = () => {
               </h1>
               <p className="text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto leading-relaxed">Built for marketing agencies to deliver SEO campaigns in record time. Sign up today and try it out for free.</p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <Link to="/signup" className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-2xl text-black bg-primary hover:bg-primary/90 transition-all duration-200 shadow-[0_0_30px_rgba(46,213,115,0.4)]">
+                <Link to="/auth" className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-2xl text-black bg-primary hover:bg-primary/90 transition-all duration-200 shadow-[0_0_30px_rgba(46,213,115,0.4)]">
                   Try It For Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
