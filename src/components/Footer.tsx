@@ -8,6 +8,9 @@ const Footer = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Don't render footer if user is logged in
+  if (session) return null;
+
   const scrollToSection = (sectionId: string) => {
     if (location.pathname !== "/") {
       navigate("/?section=" + sectionId);
@@ -25,20 +28,7 @@ const Footer = () => {
     }
   };
 
-  const handleLogoClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (session) {
-      navigate("/dashboard");
-    } else {
-      navigate("/");
-    }
-  };
-
-  const navigation = session ? [
-    { name: "Dashboard", href: "/dashboard" },
-    { name: "Billing", href: "/billing" },
-    { name: "Run Automation", href: "/automation", primary: true },
-  ] : [
+  const navigation = [
     { name: "Features", href: "/#features", onClick: () => scrollToSection("features") },
     { name: "Pricing", href: "/#pricing", onClick: () => scrollToSection("pricing") },
     { name: "Sign In", href: "/auth" },
@@ -51,8 +41,7 @@ const Footer = () => {
         <div className="py-8">
           <div className="flex flex-col items-center space-y-6">
             <Link
-              to={session ? "/dashboard" : "/"}
-              onClick={handleLogoClick}
+              to="/"
               className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent"
             >
               1clickseo.io
@@ -62,25 +51,11 @@ const Footer = () => {
                 <button
                   key={item.name}
                   onClick={item.onClick || (() => navigate(item.href))}
-                  className={`text-sm ${
-                    item.primary
-                      ? "flex items-center gap-2 px-6 py-2.5 rounded-full text-white bg-primary hover:bg-primary/90 transition-colors duration-200"
-                      : "text-gray-400 hover:text-white transition-colors"
-                  }`}
+                  className="text-sm text-gray-400 hover:text-white transition-colors"
                 >
                   {item.name}
-                  {item.primary && <ArrowUpRight className="h-4 w-4" />}
                 </button>
               ))}
-              {session && (
-                <button
-                  onClick={() => navigate("/auth")}
-                  className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </button>
-              )}
             </nav>
             <p className="text-sm text-gray-500">
               © {new Date().getFullYear()} 1clickseo.io. All rights reserved.
