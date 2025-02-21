@@ -19,7 +19,7 @@ const StatsCards = ({ remainingRuns, periodRuns }: StatsCardsProps) => {
       </Card>
       <Card className="bg-white/5 border-white/10">
         <CardContent className="p-6">
-          <div className="text-sm text-gray-400 mb-2">Runs This Month</div>
+          <div className="text-sm text-gray-400 mb-2">Runs Used This Month</div>
           <div className="text-3xl font-bold text-white">
             {periodRuns || 0}
           </div>
