@@ -12,17 +12,19 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const productId = searchParams.get('productId');
   const [isLoading, setIsLoading] = useState(false);
-  const [isLogin, setIsLogin] = useState(true); // Default to login view
+  const [isLogin, setIsLogin] = useState(true);
   const [showNameDialog, setShowNameDialog] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         navigate(productId ? '/billing' : '/dashboard');
       }
-    });
+    };
+    checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
@@ -36,15 +38,27 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth`
+          redirectTo: `${window.location.origin}/auth`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+          }
         }
       });
 
-      if (error) throw error;
-    } catch (error) {
+      if (error) {
+        throw error;
+      }
+
+      if (!data) {
+        throw new Error('No data returned from authentication');
+      }
+
+      // Success will be handled by onAuthStateChange
+    } catch (error: any) {
       console.error('Google sign in error:', error);
       toast({
         variant: "destructive",
