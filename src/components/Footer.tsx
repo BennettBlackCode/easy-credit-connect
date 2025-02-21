@@ -1,6 +1,7 @@
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { ArrowUpRight, LogOut } from "lucide-react";
 
 const Footer = () => {
   const { session } = useAuth();
@@ -24,18 +25,24 @@ const Footer = () => {
     }
   };
 
-  const navigation = [
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (session) {
+      navigate("/dashboard");
+    } else {
+      navigate("/");
+    }
+  };
+
+  const navigation = session ? [
+    { name: "Dashboard", href: "/dashboard" },
+    { name: "Billing", href: "/billing" },
+    { name: "Run Automation", href: "/automation", primary: true },
+  ] : [
     { name: "Features", href: "/#features", onClick: () => scrollToSection("features") },
     { name: "Pricing", href: "/#pricing", onClick: () => scrollToSection("pricing") },
-    ...(session
-      ? [
-          { name: "Dashboard", href: "/dashboard" },
-          { name: "Billing", href: "/billing" },
-        ]
-      : [
-          { name: "Sign In", href: "/auth" },
-          { name: "Sign Up", href: "/auth?tab=signup" },
-        ]),
+    { name: "Sign In", href: "/auth" },
+    { name: "Sign Up", href: "/auth?tab=signup" },
   ];
 
   return (
@@ -44,7 +51,8 @@ const Footer = () => {
         <div className="py-8">
           <div className="flex flex-col items-center space-y-6">
             <Link
-              to="/"
+              to={session ? "/dashboard" : "/"}
+              onClick={handleLogoClick}
               className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent"
             >
               1clickseo.io
@@ -54,11 +62,25 @@ const Footer = () => {
                 <button
                   key={item.name}
                   onClick={item.onClick || (() => navigate(item.href))}
-                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                  className={`text-sm ${
+                    item.primary
+                      ? "flex items-center gap-2 px-6 py-2.5 rounded-full text-white bg-primary hover:bg-primary/90 transition-colors duration-200"
+                      : "text-gray-400 hover:text-white transition-colors"
+                  }`}
                 >
                   {item.name}
+                  {item.primary && <ArrowUpRight className="h-4 w-4" />}
                 </button>
               ))}
+              {session && (
+                <button
+                  onClick={() => navigate("/auth")}
+                  className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </button>
+              )}
             </nav>
             <p className="text-sm text-gray-500">
               © {new Date().getFullYear()} 1clickseo.io. All rights reserved.

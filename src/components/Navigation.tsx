@@ -66,6 +66,15 @@ const Navigation = () => {
     setIsOpen(false);
   };
 
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (session) {
+      navigate("/dashboard");
+    } else {
+      navigate("/");
+    }
+  };
+
   return (
     <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
       scrolled ? "bg-black/90 backdrop-blur-lg" : "bg-transparent"
@@ -73,7 +82,8 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           <Link
-            to="/"
+            to={session ? "/dashboard" : "/"}
+            onClick={handleLogoClick}
             className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent"
           >
             1clickseo.io
