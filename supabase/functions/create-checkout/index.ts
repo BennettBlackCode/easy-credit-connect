@@ -20,6 +20,7 @@ serve(async (req) => {
 
   try {
     const { productId, userId } = await req.json();
+    console.log('Received request with productId:', productId, 'userId:', userId);
 
     if (!productId || !userId) {
       throw new Error('Missing productId or userId');
@@ -39,10 +40,13 @@ serve(async (req) => {
       .single();
 
     if (productError || !product) {
+      console.error('Product error:', productError);
       throw new Error('Product not found');
     }
 
-    // Get or create Stripe customer
+    console.log('Found product:', product);
+
+    // Get user details
     const { data: user, error: userError } = await supabaseClient
       .from('users')
       .select('stripe_customer_id, email')
@@ -50,8 +54,11 @@ serve(async (req) => {
       .single();
 
     if (userError || !user) {
+      console.error('User error:', userError);
       throw new Error('User not found');
     }
+
+    console.log('Found user:', { userId, email: user.email, customerId: user.stripe_customer_id });
 
     let customerId = user.stripe_customer_id;
 
@@ -71,32 +78,28 @@ serve(async (req) => {
         .eq('id', userId);
 
       if (updateError) {
+        console.error('Error updating user with customer ID:', updateError);
         throw updateError;
       }
     }
 
-    // Get the price details from Stripe to check if it's recurring
-    const price = await stripe.prices.retrieve(product.price_id);
-    const isRecurring = price.type === 'recurring';
-
-    console.log('Creating checkout session for:', {
+    // Create Checkout Session
+    console.log('Creating checkout session with:', {
       customerId,
-      priceId: product.price_id,
+      priceId: product.stripe_price_id,
       productId,
       userId,
-      isRecurring,
     });
 
-    // Create Checkout Session with the appropriate mode
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       line_items: [
         {
-          price: product.price_id,
+          price: product.stripe_price_id,
           quantity: 1,
         },
       ],
-      mode: isRecurring ? 'subscription' : 'payment',
+      mode: 'payment',
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
       metadata: {
