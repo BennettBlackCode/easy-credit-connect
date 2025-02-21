@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -33,7 +34,10 @@ const formSchema = z.object({
   domain: z
     .string()
     .min(1, "Domain is required")
-    .regex(/^[^www.https:\/\/].*$/, "Please enter domain without www. or https://"),
+    .refine(
+      (value) => !value.startsWith("www.") && !value.startsWith("https://"),
+      "Please enter domain without www. or https://"
+    ),
   phone_number: z.string().min(1, "Phone number is required"),
   address_line_1: z.string().min(1, "Address is required"),
   address_line_2: z.string().optional(),
