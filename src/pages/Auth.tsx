@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -25,12 +25,13 @@ const formSchema = z.object({
 });
 
 const Auth = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLogin, setIsLogin] = useState(true);
-  const navigate = useNavigate();
-  const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const productId = searchParams.get('productId');
+  const mode = searchParams.get('mode') || 'signup'; // Default to signup unless explicitly set to login
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLogin, setIsLogin] = useState(mode === 'login');
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -40,10 +41,11 @@ const Auth = () => {
     },
   });
 
-  const handleAuthSuccess = async (userId: string) => {
+  const handleAuthSuccess = async (user: any) => {
+    if (!user) return;
+
     if (productId) {
       try {
-        // Get current session
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.access_token) {
@@ -60,7 +62,7 @@ const Auth = () => {
             },
             body: JSON.stringify({
               productId,
-              userId,
+              userId: user.id,
             }),
           }
         );
@@ -84,8 +86,6 @@ const Auth = () => {
           title: "Error",
           description: error.message || "Could not create checkout session. Please try again.",
         });
-        // Redirect to dashboard as fallback
-        navigate("/dashboard");
       }
     } else {
       navigate("/dashboard");
@@ -103,7 +103,6 @@ const Auth = () => {
         
         if (error) throw error;
 
-        // Check if email is confirmed
         if (data?.user && !data.user.email_confirmed_at) {
           toast({
             title: "Email not confirmed",
@@ -113,7 +112,7 @@ const Auth = () => {
           return;
         }
 
-        await handleAuthSuccess(data.user.id);
+        await handleAuthSuccess(data.user);
       } else {
         const { error, data } = await supabase.auth.signUp({
           email: values.email,
@@ -125,7 +124,6 @@ const Auth = () => {
         
         if (error) throw error;
 
-        // Check if email confirmation was sent
         if (data?.user?.identities?.length === 0) {
           toast({
             variant: "destructive",
@@ -137,9 +135,14 @@ const Auth = () => {
         }
 
         toast({
-          title: "Verification email sent!",
-          description: "Please check your email (including spam folder) for the confirmation link. You must verify your email before signing in.",
+          title: "Account created!",
+          description: "Please check your email to verify your account.",
         });
+
+        // Immediately try to handle success for Stripe checkout
+        if (data.user) {
+          await handleAuthSuccess(data.user);
+        }
       }
     } catch (error: any) {
       toast({
