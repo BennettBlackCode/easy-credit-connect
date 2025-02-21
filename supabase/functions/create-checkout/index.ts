@@ -59,12 +59,16 @@ serve(async (req) => {
         type: stripePrice.type,
         recurring: stripePrice.recurring
       });
+
+      if (!stripePrice.active) {
+        throw new Error('Price is not active');
+      }
     } catch (error) {
       console.error('Error verifying Stripe price:', error);
       throw new Error('Invalid price ID in database');
     }
 
-    // Get user details
+    // Get user details - we don't need to check status anymore
     const { data: user, error: userError } = await supabaseClient
       .from('users')
       .select('email')
@@ -82,7 +86,7 @@ serve(async (req) => {
       priceId: product.stripe_price_id
     });
 
-    // Create Checkout Session
+    // Create Checkout Session - removed any status checks
     const session = await stripe.checkout.sessions.create({
       line_items: [
         {
@@ -90,7 +94,7 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: 'subscription',
+      mode: 'payment',
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
       customer_email: user.email,
@@ -99,7 +103,7 @@ serve(async (req) => {
         user_id: userId,
       },
       client_reference_id: userId,
-      allow_promotion_codes: true, // Enable promotion codes in checkout
+      allow_promotion_codes: true,
     });
 
     console.log('Checkout session created successfully:', {
