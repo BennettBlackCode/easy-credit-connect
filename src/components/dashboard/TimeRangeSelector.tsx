@@ -99,7 +99,7 @@ const TimeRangeSelector = ({
   };
 
   return (
-    <div className="flex justify-end items-center space-x-4">
+    <div className="flex justify-end items-center space-x-2">
       <div className="flex bg-white/5 rounded-lg p-1">
         {ranges.map((range) => (
           <Button
@@ -107,7 +107,7 @@ const TimeRangeSelector = ({
             onClick={() => handleRangeChange(range)}
             variant="ghost"
             className={cn(
-              "px-3 py-2 text-sm capitalize min-w-[60px]", // Increased min-width
+              "px-2.5 py-1.5 text-sm capitalize min-w-[70px]",
               selectedRange === range && "bg-white/10"
             )}
           >
@@ -115,18 +115,18 @@ const TimeRangeSelector = ({
           </Button>
         ))}
       </div>
-      <div className="flex items-center space-x-2 bg-white/5 rounded-lg p-1">
+      <div className="flex items-center space-x-1 bg-white/5 rounded-lg p-1">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => handleNavigate("prev")}
-          className="h-9 w-9"
+          className="h-8 w-8"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-9 w-9">
+            <Button variant="ghost" size="icon" className="h-8 w-8">
               <CalendarIcon className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
@@ -145,7 +145,7 @@ const TimeRangeSelector = ({
             variant="ghost"
             size="icon"
             onClick={handleReset}
-            className="h-9 w-9"
+            className="h-8 w-8"
             title="Reset to today"
           >
             <CalendarClock className="h-4 w-4" />
@@ -155,7 +155,7 @@ const TimeRangeSelector = ({
           variant="ghost"
           size="icon"
           onClick={() => handleNavigate("next")}
-          className="h-9 w-9"
+          className="h-8 w-8"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
