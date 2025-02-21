@@ -223,7 +223,7 @@ const Index = () => {
           <p className="text-xl text-gray-400">
             Join the future of SEO automation today.
           </p>
-          <Link to="/signup" className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-2xl text-black bg-primary hover:bg-primary/90 transition-all duration-200 shadow-[0_0_30px_rgba(46,213,115,0.4)]">
+          <Link to="/auth" className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-2xl text-black bg-primary hover:bg-primary/90 transition-all duration-200 shadow-[0_0_30px_rgba(46,213,115,0.4)]">
             Get Started Free
             <ArrowRight className="ml-2 h-5 w-4" />
           </Link>
