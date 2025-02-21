@@ -67,6 +67,11 @@ const Automation = () => {
     enabled: !!session?.user?.id,
   });
 
+  const totalCredits = 
+    (userData?.remaining_runs ?? 0) + 
+    (userData?.permanent_credits ?? 0) + 
+    (userData?.subscription_credits ?? 0);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -94,12 +99,7 @@ const Automation = () => {
       return;
     }
 
-    const remainingRuns = userData?.remaining_runs || 0;
-    const permanentCredits = userData?.permanent_credits || 0;
-    const subscriptionCredits = userData?.subscription_credits || 0;
-    const totalCredits = remainingRuns + permanentCredits + subscriptionCredits;
-
-    if (totalCredits < 1) {
+    if (!totalCredits || totalCredits <= 0) {
       setShowCreditsDialog(true);
       return;
     }
@@ -166,7 +166,7 @@ const Automation = () => {
           <h1 className="text-3xl font-bold">Run Automation</h1>
           <div className="bg-white/5 px-4 py-2 rounded-lg">
             <span className="text-sm text-gray-400">Remaining Runs: </span>
-            <span className="text-primary font-semibold">{(userData?.remaining_runs || 0) + (userData?.permanent_credits || 0) + (userData?.subscription_credits || 0)}</span>
+            <span className="text-primary font-semibold">{totalCredits}</span>
           </div>
         </div>
 
