@@ -42,7 +42,7 @@ export const useBillingData = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stripe_products")
-        .select("*")
+        .select("*, credits_amount")
         .eq("active", true)
         .order("price_amount", { ascending: true });
 

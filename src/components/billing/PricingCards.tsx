@@ -8,6 +8,7 @@ interface Product {
   name: string;
   description: string | null;
   price_amount: number;
+  credits_amount: number;
 }
 
 interface PricingCardsProps {
@@ -27,8 +28,13 @@ export const PricingCards = ({ products, onPurchase }: PricingCardsProps) => {
             <p className="text-sm text-muted-foreground mb-4">
               {product.description}
             </p>
-            <div className="text-2xl font-bold mb-4">
-              ${(product.price_amount / 100).toFixed(2)}
+            <div className="flex flex-col gap-2 mb-4">
+              <div className="text-2xl font-bold">
+                ${(product.price_amount / 100).toFixed(2)}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Includes {product.credits_amount} credits
+              </div>
             </div>
             <div className="mt-auto">
               <Button 
