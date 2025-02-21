@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,8 +17,11 @@ import {
   startOfMonth,
   endOfMonth,
   getDaysInMonth,
-  addDays 
+  addDays,
+  startOfBillingPeriod,
+  subMonths 
 } from "date-fns";
+import { Card, CardContent } from "@/components/ui/card";
 
 type TimeRange = "day" | "week" | "month" | "year";
 
@@ -34,14 +38,33 @@ const Dashboard = () => {
     setDateRange({ start, end });
   };
 
+  // Query to get user data including remaining runs
   const { data: userData } = useQuery({
     queryKey: ["user-dashboard", session?.user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("users")
-        .select("permanent_credits, subscription_credits, subscription_type, user_name")
+        .select("permanent_credits, subscription_credits, subscription_type, user_name, remaining_runs")
         .eq("id", session?.user?.id)
         .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!session?.user?.id,
+  });
+
+  // Query to get runs used this billing period
+  const { data: periodRuns } = useQuery({
+    queryKey: ["period-runs", session?.user?.id],
+    queryFn: async () => {
+      const startDate = startOfMonth(new Date()); // Using start of month as billing period
+      const { data, error } = await supabase
+        .from("automations")
+        .select("id")
+        .eq("user_id", session?.user?.id)
+        .gte("created_at", startDate.toISOString())
+        .count();
 
       if (error) throw error;
       return data;
@@ -142,6 +165,26 @@ const Dashboard = () => {
           </h1>
         )}
         <div className="space-y-6">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="bg-white/5 border-white/10">
+              <CardContent className="p-6">
+                <div className="text-sm text-gray-400 mb-2">Remaining Runs</div>
+                <div className="text-3xl font-bold text-white">
+                  {userData?.remaining_runs || 0}
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-white/5 border-white/10">
+              <CardContent className="p-6">
+                <div className="text-sm text-gray-400 mb-2">Runs This Month</div>
+                <div className="text-3xl font-bold text-white">
+                  {periodRuns || 0}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           <div className="p-4 sm:p-6 rounded-xl bg-white/5 border border-white/10">
             <div className="flex flex-col gap-4 mb-6">
               <h2 className="text-lg sm:text-xl font-medium text-white/90">
