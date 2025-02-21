@@ -1,6 +1,11 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
-import { stripe } from './stripe'
+import Stripe from 'https://esm.sh/stripe@13.6.0?target=deno'
+
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
+  apiVersion: '2023-10-16',
+  httpClient: Stripe.createFetchHttpClient(),
+});
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,7 +19,7 @@ const supabaseAdmin = createClient(
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
@@ -52,7 +57,7 @@ Deno.serve(async (req) => {
         const { data: productData, error: productError } = await supabaseAdmin
           .from('stripe_products')
           .select('*')
-          .eq('price_id', priceId)
+          .eq('stripe_price_id', priceId)
           .single()
 
         if (productError || !productData) {
@@ -60,37 +65,21 @@ Deno.serve(async (req) => {
           return new Response('Product not found', { status: 404 })
         }
 
-        // Create transaction record
+        // Create credit transaction record
         const { error: transactionError } = await supabaseAdmin
-          .from('transactions')
+          .from('credit_transactions')
           .insert({
             user_id: userId,
-            amount: productData.credits,
-            type: 'purchase',
+            credit_amount: productData.credits,
+            transaction_type: 'purchase',
             status: 'completed',
             stripe_payment_id: session.id,
-            stripe_price_id: priceId,
-            credit_type: 'permanent'
+            stripe_price_id: priceId
           })
 
         if (transactionError) {
           console.error('Error creating transaction:', transactionError)
           return new Response('Error creating transaction', { status: 500 })
-        }
-
-        // Update user credits using the increment_user_credits function
-        const { error: creditError } = await supabaseAdmin.rpc(
-          'increment_user_credits',
-          {
-            user_id: userId,
-            amount: productData.credits,
-            credit_type: 'permanent'
-          }
-        )
-
-        if (creditError) {
-          console.error('Error updating credits:', creditError)
-          return new Response('Error updating credits', { status: 500 })
         }
 
         break
