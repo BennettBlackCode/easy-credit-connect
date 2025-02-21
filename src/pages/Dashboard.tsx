@@ -31,6 +31,7 @@ const Dashboard = () => {
                 created_at: run.created_at,
                 company_name: run.company_name,
                 credits_used: 1,
+                google_drive: run.google_drive,
               })) || []}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
