@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -25,13 +25,12 @@ const formSchema = z.object({
 });
 
 const Auth = () => {
-  const [searchParams] = useSearchParams();
-  const productId = searchParams.get('productId');
-  const loginRedirect = searchParams.get('login') === 'true';
   const [isLoading, setIsLoading] = useState(false);
-  const [isLogin, setIsLogin] = useState(loginRedirect);
+  const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const productId = searchParams.get('productId');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -44,6 +43,7 @@ const Auth = () => {
   const handleAuthSuccess = async (userId: string) => {
     if (productId) {
       try {
+        // Get current session
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.access_token) {
@@ -84,6 +84,7 @@ const Auth = () => {
           title: "Error",
           description: error.message || "Could not create checkout session. Please try again.",
         });
+        // Redirect to dashboard as fallback
         navigate("/dashboard");
       }
     } else {
@@ -102,6 +103,7 @@ const Auth = () => {
         
         if (error) throw error;
 
+        // Check if email is confirmed
         if (data?.user && !data.user.email_confirmed_at) {
           toast({
             title: "Email not confirmed",
@@ -123,6 +125,7 @@ const Auth = () => {
         
         if (error) throw error;
 
+        // Check if email confirmation was sent
         if (data?.user?.identities?.length === 0) {
           toast({
             variant: "destructive",
@@ -137,10 +140,6 @@ const Auth = () => {
           title: "Verification email sent!",
           description: "Please check your email (including spam folder) for the confirmation link. You must verify your email before signing in.",
         });
-
-        if (data.user) {
-          await handleAuthSuccess(data.user.id);
-        }
       }
     } catch (error: any) {
       toast({
