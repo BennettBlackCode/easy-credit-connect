@@ -142,10 +142,7 @@ const Index = () => {
                         </ul>
 
                         <Link 
-                          to={{
-                            pathname: "/auth",
-                            search: `?productId=${encodeURIComponent(plan.id)}`
-                          }}
+                          to={`/auth?productId=${encodeURIComponent(plan.id)}`}
                           className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-2xl bg-primary text-black hover:bg-primary/90 transition-all duration-200"
                         >
                           Get Started
