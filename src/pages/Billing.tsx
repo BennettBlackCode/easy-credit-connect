@@ -184,9 +184,11 @@ const Billing = () => {
                   <p className="text-sm text-muted-foreground mb-4">
                     {product.description}
                   </p>
-                  <div className="text-2xl font-bold mb-4">
-                    {isUnlimited ? "Contact Us" : `$${(product.price_amount / 100).toFixed(2)}`}
-                  </div>
+                  {!isUnlimited && (
+                    <div className="text-2xl font-bold mb-4">
+                      ${(product.price_amount / 100).toFixed(2)}
+                    </div>
+                  )}
                   {isUnlimited ? (
                     <Button asChild className="w-full">
                       <a
