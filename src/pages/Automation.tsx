@@ -51,15 +51,15 @@ const Automation = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const { data: userData } = useQuery({
-    queryKey: ["user-credits"],
+  const { data: userCredits } = useQuery({
+    queryKey: ["user-calculated-credits"],
     queryFn: async () => {
       if (!session?.user?.id) return null;
       const { data, error } = await supabase
-        .from("users")
-        .select("remaining_runs, permanent_credits, subscription_credits")
-        .eq("id", session.user.id)
-        .single();
+        .from("users_with_calculated_credits")
+        .select("total_credits")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
       
       if (error) throw error;
       return data;
@@ -67,10 +67,7 @@ const Automation = () => {
     enabled: !!session?.user?.id,
   });
 
-  const totalCredits = 
-    (userData?.remaining_runs ?? 0) + 
-    (userData?.permanent_credits ?? 0) + 
-    (userData?.subscription_credits ?? 0);
+  const totalCredits = userCredits?.total_credits ?? 0;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
