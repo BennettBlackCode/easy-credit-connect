@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { UserNameDialog } from "@/components/UserNameDialog";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -29,6 +30,7 @@ const Auth = () => {
   const mode = searchParams.get('mode');
   const [isLoading, setIsLoading] = useState(false);
   const [isLogin, setIsLogin] = useState(mode === 'login');
+  const [showNameDialog, setShowNameDialog] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -40,11 +42,15 @@ const Auth = () => {
     },
   });
 
-  const handleSuccessfulAuth = (user: any) => {
-    if (productId) {
-      navigate("/billing");
+  const handleSuccessfulAuth = async (user: any) => {
+    if (!isLogin && !user.app_metadata.provider) {
+      setShowNameDialog(true);
     } else {
-      navigate("/dashboard");
+      if (productId) {
+        navigate("/billing");
+      } else {
+        navigate("/dashboard");
+      }
     }
   };
 
@@ -263,6 +269,10 @@ const Auth = () => {
           </button>
         </div>
       </div>
+      <UserNameDialog 
+        open={showNameDialog} 
+        onOpenChange={setShowNameDialog}
+      />
     </div>
   );
 };
