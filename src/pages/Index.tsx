@@ -1,9 +1,11 @@
 import { ArrowRight, Check, CreditCard, Mail } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { AnimatedTitle } from "@/components/ui/animated-hero";
 
 const Index = () => {
+  const navigate = useNavigate();
+
   const features = [{
     title: "48 Blog Posts Ready To Post",
     description: "Fully SEO optimized blog posts that already include interlinking, external linking, and are already formatted with headers so you can just copy and paste posts onto your website"
@@ -140,7 +142,10 @@ const Index = () => {
                         </ul>
 
                         <Link 
-                          to={`/auth?productId=${plan.id}`}
+                          to={{
+                            pathname: "/auth",
+                            search: `?productId=${encodeURIComponent(plan.id)}`
+                          }}
                           className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-2xl bg-primary text-black hover:bg-primary/90 transition-all duration-200"
                         >
                           Get Started
