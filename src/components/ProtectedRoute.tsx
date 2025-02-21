@@ -1,9 +1,13 @@
 
 import { useEffect } from "react";
-import { useNavigate, Outlet } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
-const ProtectedRoute = () => {
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
+
+const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { session, isLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -21,7 +25,7 @@ const ProtectedRoute = () => {
     );
   }
 
-  return session ? <Outlet /> : null;
+  return session ? <>{children}</> : null;
 };
 
 export default ProtectedRoute;
