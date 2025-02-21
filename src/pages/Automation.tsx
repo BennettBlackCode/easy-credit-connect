@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -18,6 +17,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const formSchema = z.object({
   company_name: z.string().min(1, "Company name is required"),
@@ -39,6 +46,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 const Automation = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCreditsDialog, setShowCreditsDialog] = useState(false);
   const { session } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -92,12 +100,7 @@ const Automation = () => {
     const totalCredits = remainingRuns + permanentCredits + subscriptionCredits;
 
     if (totalCredits < 1) {
-      toast({
-        title: "Insufficient Credits",
-        description: "You need at least 1 credit to run this automation",
-        variant: "destructive",
-      });
-      navigate("/billing");
+      setShowCreditsDialog(true);
       return;
     }
 
@@ -321,6 +324,28 @@ const Automation = () => {
           </Form>
         </div>
       </div>
+
+      <Dialog open={showCreditsDialog} onOpenChange={setShowCreditsDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Insufficient Credits</DialogTitle>
+            <DialogDescription>
+              You need at least 1 credit to run this automation. Purchase more credits to continue.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                setShowCreditsDialog(false);
+                navigate("/billing");
+              }}
+              className="w-full"
+            >
+              Buy More Credits
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
