@@ -10,21 +10,13 @@ export const useBillingData = () => {
     queryKey: ["user-calculated-credits"],
     queryFn: async () => {
       if (!session?.user?.id) return null;
-      
-      console.log("Fetching credits for user:", session.user.id); // Debug log
-      
       const { data, error } = await supabase
         .from("users_with_calculated_credits")
-        .select("*")
+        .select("remaining_credits, total_credits, status")
         .eq("user_id", session.user.id)
         .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching credits:", error); // Debug log
-        throw error;
-      }
-      
-      console.log("Fetched credits data:", data); // Debug log
+      if (error) throw error;
       return data;
     },
     enabled: !!session?.user?.id,
