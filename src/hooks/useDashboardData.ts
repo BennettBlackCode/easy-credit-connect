@@ -43,7 +43,7 @@ export const useDashboardData = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("automations")
-        .select("*")
+        .select("id, created_at, company_name, google_drive")
         .eq("user_id", session?.user?.id)
         .order("created_at", { ascending: false });
 

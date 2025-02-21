@@ -18,6 +18,7 @@ export type Database = {
           created_at: string
           domain: string
           email: string
+          google_drive: string | null
           id: string
           industry: string
           last_name: string
@@ -36,6 +37,7 @@ export type Database = {
           created_at?: string
           domain: string
           email: string
+          google_drive?: string | null
           id?: string
           industry: string
           last_name: string
@@ -54,6 +56,7 @@ export type Database = {
           created_at?: string
           domain?: string
           email?: string
+          google_drive?: string | null
           id?: string
           industry?: string
           last_name?: string
