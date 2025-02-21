@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreditCard, ArrowUpRight } from "lucide-react";
@@ -50,7 +49,6 @@ const Billing = () => {
     }
   }, [toast]);
 
-  // Set up real-time subscription for credit updates
   useEffect(() => {
     if (!session?.user?.id) return;
 
@@ -65,7 +63,6 @@ const Billing = () => {
           filter: `user_id=eq.${session.user.id}`,
         },
         () => {
-          // Invalidate queries to refresh data
           queryClient.invalidateQueries({ queryKey: ["user-calculated-credits"] });
           queryClient.invalidateQueries({ queryKey: ["credit_transactions"] });
         }
@@ -137,7 +134,6 @@ const Billing = () => {
         description: "Your credits have been reset to 0.",
       });
 
-      // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["user-calculated-credits"] });
       queryClient.invalidateQueries({ queryKey: ["credit_transactions"] });
     } catch (error) {
@@ -244,7 +240,6 @@ const Billing = () => {
             </Card>
           ))}
           
-          {/* Manually added Unlimited plan */}
           <Card className="flex flex-col">
             <CardHeader>
               <CardTitle>Unlimited</CardTitle>
@@ -314,4 +309,3 @@ const Billing = () => {
 };
 
 export default Billing;
-
