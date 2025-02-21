@@ -1,18 +1,8 @@
 
 import { ArrowUpRight, Check, CreditCard, Mail } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Pricing = () => {
-  const navigate = useNavigate();
-
-  const handleGetStarted = (planName: string) => {
-    if (planName.toLowerCase() === 'professional') {
-      window.open('https://boldslate.com', '_blank');
-    } else {
-      navigate("/auth");
-    }
-  };
-
   const plans = [{
     id: "3588c408-881f-4258-9cc9-fad1479d8d42",
     name: "Starter Pack",
@@ -92,13 +82,25 @@ const Pricing = () => {
                   </ul>
                 </div>
 
-                <button 
-                  onClick={() => handleGetStarted(plan.name)}
-                  className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-full bg-primary text-black hover:bg-primary/90 transition-all duration-200"
-                >
-                  {plan.buttonText}
-                  <ArrowUpRight className="h-5 w-5" />
-                </button>
+                {plan.name.toLowerCase() === 'professional' ? (
+                  <a 
+                    href="https://boldslate.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-full bg-primary text-black hover:bg-primary/90 transition-all duration-200"
+                  >
+                    {plan.buttonText}
+                    <ArrowUpRight className="h-5 w-5" />
+                  </a>
+                ) : (
+                  <Link 
+                    to="/auth"
+                    className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-full bg-primary text-black hover:bg-primary/90 transition-all duration-200"
+                  >
+                    {plan.buttonText}
+                    <ArrowUpRight className="h-5 w-5" />
+                  </Link>
+                )}
               </div>
             </div>
           ))}
