@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SignInForm } from "@/components/auth/SignInForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
@@ -10,8 +10,16 @@ interface AuthProps {
 }
 
 const Auth = ({ defaultTab = "sign-in" }: AuthProps) => {
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<"sign-in" | "sign-up">(defaultTab);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "sign-in" || tab === "sign-up") {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const handleSuccess = () => {
     navigate("/dashboard");
