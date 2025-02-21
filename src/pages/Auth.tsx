@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -17,6 +17,67 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session?.user?.id);
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        try {
+          // Wait a moment for the database triggers to complete
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Check if user exists in our users table
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (userError || !userData) {
+            console.error('User data fetch error:', userError);
+            // Handle new user scenario
+            const { error: insertError } = await supabase
+              .from('users')
+              .insert([
+                {
+                  id: session.user.id,
+                  email: session.user.email,
+                  first_name: session.user.user_metadata.full_name?.split(' ')[0] || '',
+                  last_name: session.user.user_metadata.full_name?.split(' ').slice(1).join(' ') || '',
+                  status: 'Free Tier',
+                  subscription_type: 'free',
+                  user_name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || ''
+                }
+              ]);
+
+            if (insertError) {
+              console.error('Error inserting user:', insertError);
+              throw new Error('Failed to create user account');
+            }
+          }
+
+          // Navigate after successful auth
+          if (productId) {
+            navigate('/billing');
+          } else {
+            navigate('/dashboard');
+          }
+        } catch (error) {
+          console.error('Error handling auth change:', error);
+          toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "There was an error setting up your account. Please try again.",
+          });
+        }
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [navigate, productId, toast]);
+
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
@@ -26,10 +87,6 @@ const Auth = () => {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
         },
       });
 
