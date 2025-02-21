@@ -1,6 +1,7 @@
 
-import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import Stripe from "https://esm.sh/stripe@13.3.0";
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
   apiVersion: '2023-10-16',
@@ -12,7 +13,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-Deno.serve(async (req) => {
+serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -58,7 +59,15 @@ Deno.serve(async (req) => {
         const price = await stripe.prices.retrieve(session.line_items?.data[0]?.price?.id || '');
         const product = await stripe.products.retrieve(price.product as string);
 
-        // Call the new database function to handle the purchase
+        console.log('Processing purchase for user:', session.metadata.userId);
+        console.log('Product details:', {
+          name: product.name,
+          priceId: price.id,
+          customerId: session.customer,
+          paymentId: paymentIntent.id
+        });
+
+        // Call the database function to handle the purchase
         const { error } = await supabase.rpc('handle_stripe_purchase', {
           _user_id: session.metadata.userId,
           _customer_id: session.customer as string,
@@ -72,6 +81,7 @@ Deno.serve(async (req) => {
           throw error;
         }
 
+        console.log('Successfully processed purchase');
         break;
       }
     }
