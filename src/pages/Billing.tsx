@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreditCard, ArrowUpRight } from "lucide-react";
@@ -49,14 +48,15 @@ const Billing = () => {
     }
   }, [toast]);
 
-  const { data: userData, isLoading: userLoading } = useQuery({
-    queryKey: ["user", session?.user?.id],
+  const { data: userCredits, isLoading: userLoading } = useQuery({
+    queryKey: ["user-calculated-credits"],
     queryFn: async () => {
+      if (!session?.user?.id) return null;
       const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", session?.user?.id)
-        .single();
+        .from("users_with_calculated_credits")
+        .select("remaining_credits, total_credits")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
 
       if (error) throw error;
       return data;
@@ -134,19 +134,6 @@ const Billing = () => {
     return null;
   }
 
-  const totalCredits = (userData?.permanent_credits || 0) + (userData?.subscription_credits || 0);
-
-  const sortedProducts = [...(products || [])].sort((a, b) => {
-    const displayOrder = {
-      'starter': 1,
-      'growth': 2,
-      'professional': 3
-    };
-    const aOrder = displayOrder[a.name.toLowerCase().split(' ')[0]] || 999;
-    const bOrder = displayOrder[b.name.toLowerCase().split(' ')[0]] || 999;
-    return aOrder - bOrder;
-  });
-
   return (
     <div className="container py-24">
       <div className="max-w-4xl mx-auto">
@@ -158,20 +145,16 @@ const Billing = () => {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalCredits} runs</div>
+            <div className="text-2xl font-bold">{userCredits?.total_credits || 0} runs</div>
             <div className="text-sm text-muted-foreground space-y-1 mt-2">
-              <p>Permanent Credits: {userData?.permanent_credits || 0}</p>
-              <p>Monthly Subscription Credits: {userData?.subscription_credits || 0}</p>
-              {userData?.subscription_renewal_date && (
-                <p>Subscription Renews: {new Date(userData.subscription_renewal_date).toLocaleDateString()}</p>
-              )}
+              <p>Available Credits: {userCredits?.remaining_credits || 0}</p>
             </div>
           </CardContent>
         </Card>
 
         <h2 className="text-xl font-semibold mb-4">Available Plans</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
-          {sortedProducts.map((product) => (
+          {products && products.map((product) => (
             <Card key={product.id} className="flex flex-col">
               <CardHeader>
                 <CardTitle>{product.name}</CardTitle>

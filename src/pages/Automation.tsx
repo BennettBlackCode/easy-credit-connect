@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -69,7 +68,12 @@ const Automation = () => {
   });
 
   const remainingCredits = userCredits?.remaining_credits ?? 0;
-  const totalCredits = userCredits?.total_credits ?? 0;
+
+  useEffect(() => {
+    if (remainingCredits <= 0) {
+      setShowCreditsDialog(true);
+    }
+  }, [remainingCredits]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -98,7 +102,6 @@ const Automation = () => {
       return;
     }
 
-    // Check remaining credits instead of total credits
     if (!remainingCredits || remainingCredits <= 0) {
       setShowCreditsDialog(true);
       return;
@@ -165,7 +168,7 @@ const Automation = () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Run Automation</h1>
           <div className="bg-white/5 px-4 py-2 rounded-lg">
-            <span className="text-sm text-gray-400">Remaining Runs: </span>
+            <span className="text-sm text-gray-400">Available Credits: </span>
             <span className="text-primary font-semibold">{remainingCredits}</span>
           </div>
         </div>
