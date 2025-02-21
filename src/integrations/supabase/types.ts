@@ -274,22 +274,6 @@ export type Database = {
           user_id: string | null
           user_name: string | null
         }
-        Insert: {
-          email?: string | null
-          remaining_credits?: never
-          status?: string | null
-          total_credits?: never
-          user_id?: string | null
-          user_name?: string | null
-        }
-        Update: {
-          email?: string | null
-          remaining_credits?: never
-          status?: string | null
-          total_credits?: never
-          user_id?: string | null
-          user_name?: string | null
-        }
         Relationships: []
       }
       users_with_credits: {
