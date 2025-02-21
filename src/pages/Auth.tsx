@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,8 +37,66 @@ const Auth = () => {
         throw error;
       }
 
-      if (!data) {
-        throw new Error('No data returned from Google sign in');
+      // After successful Google sign in, initialize user credits
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session?.user) {
+        // Check if user already exists in the users table
+        const { data: existingUser } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (!existingUser) {
+          // Insert new user into users table if they don't exist
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert([
+              {
+                id: session.user.id,
+                email: session.user.email,
+                first_name: session.user.user_metadata.full_name?.split(' ')[0] || '',
+                last_name: session.user.user_metadata.full_name?.split(' ').slice(1).join(' ') || '',
+                status: 'Free Tier',
+                subscription_type: 'free',
+                permanent_credits: 0,
+                subscription_credits: 0
+              }
+            ]);
+
+          if (insertError) {
+            console.error('Error creating new user:', insertError);
+            throw new Error('Failed to initialize user account');
+          }
+
+          // Add initial credit transaction
+          const { error: transactionError } = await supabase
+            .from('credit_transactions')
+            .insert([
+              {
+                user_id: session.user.id,
+                credit_amount: 0,
+                transaction_type: 'initial',
+                description: 'Account creation',
+                status: 'completed'
+              }
+            ]);
+
+          if (transactionError) {
+            console.error('Error creating initial transaction:', transactionError);
+            throw new Error('Failed to initialize user credits');
+          }
+        }
+
+        // Navigate to the appropriate page
+        if (productId) {
+          navigate("/billing");
+        } else {
+          navigate("/dashboard");
+        }
       }
 
     } catch (error: any) {
@@ -47,6 +106,7 @@ const Auth = () => {
         title: "Google Sign In Failed",
         description: error.message || "Failed to sign in with Google. Please try again.",
       });
+    } finally {
       setIsLoading(false);
     }
   };
