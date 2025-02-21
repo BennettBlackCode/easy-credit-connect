@@ -48,14 +48,6 @@ serve(async (req) => {
       stripe_price_id: product.stripe_price_id
     });
 
-    // Verify price in Stripe to determine if it's recurring
-    const stripePrice = await stripe.prices.retrieve(product.stripe_price_id);
-    console.log('Stripe price details:', {
-      id: stripePrice.id,
-      type: stripePrice.type,
-      recurring: stripePrice.recurring
-    });
-
     // Get user details
     const { data: user, error: userError } = await supabaseClient
       .from('users')
@@ -91,7 +83,12 @@ serve(async (req) => {
       }
     }
 
-    // Create Checkout Session with correct mode based on price type
+    // Fetch the price details from Stripe to determine if it's recurring
+    const stripePrice = await stripe.prices.retrieve(product.stripe_price_id);
+    console.log('Price type:', stripePrice.type);
+    console.log('Price recurring:', stripePrice.recurring);
+
+    // Create Checkout Session with mode based on price type
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       line_items: [
@@ -100,7 +97,7 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: stripePrice.recurring ? 'subscription' : 'payment',
+      mode: stripePrice.type === 'recurring' ? 'subscription' : 'payment',
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
       metadata: {
@@ -111,10 +108,9 @@ serve(async (req) => {
       allow_promotion_codes: true,
     });
 
-    console.log('Checkout session created successfully:', {
+    console.log('Checkout session created:', {
       sessionId: session.id,
-      url: session.url,
-      mode: stripePrice.recurring ? 'subscription' : 'payment'
+      mode: stripePrice.type === 'recurring' ? 'subscription' : 'payment'
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
