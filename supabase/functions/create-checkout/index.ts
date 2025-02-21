@@ -45,7 +45,8 @@ serve(async (req) => {
     console.log('Found product:', {
       id: product.id,
       name: product.name,
-      stripe_price_id: product.stripe_price_id
+      stripe_price_id: product.stripe_price_id,
+      price_type: 'recurring' // This is a recurring subscription
     });
 
     // Get user details
@@ -83,12 +84,7 @@ serve(async (req) => {
       }
     }
 
-    // Fetch the price details from Stripe to determine if it's recurring
-    const stripePrice = await stripe.prices.retrieve(product.stripe_price_id);
-    console.log('Price type:', stripePrice.type);
-    console.log('Price recurring:', stripePrice.recurring);
-
-    // Create Checkout Session with mode based on price type
+    // Create Checkout Session with subscription mode
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       line_items: [
@@ -97,7 +93,7 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: stripePrice.type === 'recurring' ? 'subscription' : 'payment',
+      mode: 'subscription', // Always use subscription mode for recurring prices
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
       metadata: {
@@ -110,7 +106,7 @@ serve(async (req) => {
 
     console.log('Checkout session created:', {
       sessionId: session.id,
-      mode: stripePrice.type === 'recurring' ? 'subscription' : 'payment'
+      mode: 'subscription'
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
