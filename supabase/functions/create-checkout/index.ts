@@ -60,39 +60,8 @@ serve(async (req) => {
 
     console.log('Found user:', { userId, email: user.email, customerId: user.stripe_customer_id });
 
-    let customerId = user.stripe_customer_id;
-
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: {
-          supabase_user_id: userId,
-        },
-      });
-      customerId = customer.id;
-
-      // Update user with Stripe customer ID
-      const { error: updateError } = await supabaseClient
-        .from('users')
-        .update({ stripe_customer_id: customerId })
-        .eq('id', userId);
-
-      if (updateError) {
-        console.error('Error updating user with customer ID:', updateError);
-        throw updateError;
-      }
-    }
-
     // Create Checkout Session
-    console.log('Creating checkout session with:', {
-      customerId,
-      priceId: product.stripe_price_id,
-      productId,
-      userId,
-    });
-
     const session = await stripe.checkout.sessions.create({
-      customer: customerId,
       line_items: [
         {
           price: product.stripe_price_id,
@@ -102,10 +71,12 @@ serve(async (req) => {
       mode: 'payment',
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
+      customer_email: user.email, // Use email instead of customer ID
       metadata: {
         product_id: productId,
         user_id: userId,
       },
+      client_reference_id: userId,
     });
 
     console.log('Checkout session created:', session.id);
