@@ -13,26 +13,24 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { productId, userId } = await req.json();
-    console.log('Received request with productId:', productId, 'userId:', userId);
+    console.log('Creating checkout session for:', { productId, userId });
 
     if (!productId || !userId) {
-      throw new Error('Missing productId or userId');
+      throw new Error('Missing required fields: productId or userId');
     }
 
-    // Get Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    // Get the product details
+    // Get product details from Supabase
     const { data: product, error: productError } = await supabaseClient
       .from('stripe_products')
       .select('*')
@@ -40,25 +38,47 @@ serve(async (req) => {
       .single();
 
     if (productError || !product) {
-      console.error('Product error:', productError);
+      console.error('Product lookup error:', productError);
       throw new Error('Product not found');
     }
 
-    console.log('Found product:', product);
+    console.log('Found product:', {
+      id: product.id,
+      name: product.name,
+      priceId: product.stripe_price_id
+    });
+
+    // Verify price exists in Stripe
+    try {
+      const stripePrice = await stripe.prices.retrieve(product.stripe_price_id);
+      console.log('Verified Stripe price:', {
+        id: stripePrice.id,
+        active: stripePrice.active,
+        currency: stripePrice.currency,
+        unit_amount: stripePrice.unit_amount
+      });
+    } catch (error) {
+      console.error('Error verifying Stripe price:', error);
+      throw new Error('Invalid price ID in database');
+    }
 
     // Get user details
     const { data: user, error: userError } = await supabaseClient
       .from('users')
-      .select('stripe_customer_id, email')
+      .select('email')
       .eq('id', userId)
       .single();
 
     if (userError || !user) {
-      console.error('User error:', userError);
+      console.error('User lookup error:', userError);
       throw new Error('User not found');
     }
 
-    console.log('Found user:', { userId, email: user.email, customerId: user.stripe_customer_id });
+    console.log('Creating checkout session for user:', {
+      email: user.email,
+      productId,
+      priceId: product.stripe_price_id
+    });
 
     // Create Checkout Session
     const session = await stripe.checkout.sessions.create({
@@ -71,7 +91,7 @@ serve(async (req) => {
       mode: 'payment',
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
-      customer_email: user.email, // Use email instead of customer ID
+      customer_email: user.email,
       metadata: {
         product_id: productId,
         user_id: userId,
@@ -79,14 +99,17 @@ serve(async (req) => {
       client_reference_id: userId,
     });
 
-    console.log('Checkout session created:', session.id);
+    console.log('Checkout session created successfully:', {
+      sessionId: session.id,
+      url: session.url
+    });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
   } catch (err) {
-    console.error('Error creating checkout session:', err);
+    console.error('Checkout session creation failed:', err);
     return new Response(JSON.stringify({ error: err.message }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
