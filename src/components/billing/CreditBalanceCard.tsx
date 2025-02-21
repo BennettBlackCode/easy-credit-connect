@@ -15,7 +15,7 @@ export const CreditBalanceCard = ({
         <CardContent className="p-6">
           <div className="space-y-1">
             <p className="text-gray-400 text-sm">Available Credits</p>
-            <p className="text-4xl font-bold text-white">{remainingCredits} runs left</p>
+            <p className="font-bold text-white text-3xl">{remainingCredits} runs left</p>
             <p className="text-sm text-gray-400">
               Total Credits Purchased: {totalCredits}
             </p>
@@ -28,7 +28,7 @@ export const CreditBalanceCard = ({
         <CardContent className="p-6">
           <div className="space-y-1">
             <p className="text-gray-400 text-sm">Current Plan</p>
-            <p className="text-4xl font-bold text-white my-[12px]">
+            <p className="font-bold text-white my-[12px] text-3xl">
               {status}
             </p>
           </div>
