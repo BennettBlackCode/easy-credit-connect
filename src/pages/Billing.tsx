@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreditCard, ArrowUpRight } from "lucide-react";
@@ -70,10 +71,10 @@ const Billing = () => {
 
   // Fetch recent transactions
   const { data: transactions, isLoading: transactionsLoading } = useQuery({
-    queryKey: ["transactions", session?.user?.id],
+    queryKey: ["credit_transactions", session?.user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("transactions")
+        .from("credit_transactions")
         .select("*")
         .eq("user_id", session?.user?.id)
         .order("created_at", { ascending: false });
@@ -184,7 +185,8 @@ const Billing = () => {
           {sortedProducts.map((product) => {
             const isUnlimited = product.name.toLowerCase().includes('professional');
             const displayName = isUnlimited ? "Unlimited" : product.name;
-            const displayPrice = isUnlimited ? "Custom" : `$${(product.price_amount / 100).toFixed(2)}`;
+            const displayPrice = isUnlimited ? "Contact Us" : `$${(product.price_amount / 100).toFixed(2)}`;
+            const displayCredits = isUnlimited ? "Unlimited Runs" : `${product.credits_amount} ${product.credits_amount === 1 ? 'run' : 'runs'}`;
             const displayButton = isUnlimited ? "Contact Us" : "Purchase";
 
             return (
@@ -200,7 +202,7 @@ const Billing = () => {
                     {displayPrice}
                   </div>
                   <p className="text-sm text-muted-foreground mb-4">
-                    {isUnlimited ? "Unlimited runs" : `${product.credits} ${product.credits === 1 ? 'run' : 'runs'}`}
+                    {displayCredits}
                   </p>
                   {isUnlimited ? (
                     <Button asChild className="w-full">
@@ -249,8 +251,8 @@ const Billing = () => {
                       <TableCell>
                         {new Date(transaction.created_at).toLocaleDateString()}
                       </TableCell>
-                      <TableCell>{transaction.type}</TableCell>
-                      <TableCell>{transaction.amount}</TableCell>
+                      <TableCell>{transaction.transaction_type}</TableCell>
+                      <TableCell>{transaction.credit_amount}</TableCell>
                       <TableCell>{transaction.status}</TableCell>
                     </TableRow>
                   ))
