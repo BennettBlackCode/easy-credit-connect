@@ -69,33 +69,6 @@ const Billing = () => {
     };
   }, [session?.user?.id, queryClient]);
 
-  const resetCredits = async () => {
-    if (!session?.user?.id) return;
-    
-    try {
-      const { error } = await supabase.rpc('reset_user_credits', {
-        target_user_id: session.user.id
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Credits reset",
-        description: "Your credits have been reset to 0.",
-      });
-
-      queryClient.invalidateQueries({ queryKey: ["user-calculated-credits"] });
-      queryClient.invalidateQueries({ queryKey: ["credit_transactions"] });
-    } catch (error) {
-      console.error('Error resetting credits:', error);
-      toast({
-        title: "Error",
-        description: "Failed to reset credits. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handlePurchase = async (productId: string) => {
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
@@ -145,7 +118,6 @@ const Billing = () => {
         <CreditBalanceCard
           remainingCredits={userCredits?.remaining_credits || 0}
           totalCredits={userCredits?.total_credits || 0}
-          onResetCredits={resetCredits}
         />
 
         <h2 className="text-xl font-semibold mb-4">Available Plans</h2>
