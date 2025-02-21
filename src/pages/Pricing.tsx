@@ -1,8 +1,20 @@
 
 import { ArrowUpRight, Check, CreditCard, Mail } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 const Pricing = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleClick = () => {
+    toast({
+      title: "Redirecting to authentication...",
+      duration: 2000,
+    });
+    navigate('/auth');
+  };
+
   const plans = [{
     id: "3588c408-881f-4258-9cc9-fad1479d8d42",
     name: "Starter Pack",
@@ -81,13 +93,13 @@ const Pricing = () => {
                 </div>
 
                 {plan.showButton && (
-                  <Link 
-                    to="/auth"
+                  <button 
+                    onClick={handleClick}
                     className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-full bg-primary text-black hover:bg-primary/90 transition-all duration-200"
                   >
                     Get Started
                     <ArrowUpRight className="h-5 w-5" />
-                  </Link>
+                  </button>
                 )}
               </div>
             </div>
