@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -24,13 +25,12 @@ const formSchema = z.object({
 });
 
 const Auth = () => {
-  const [searchParams] = useSearchParams();
-  const productId = searchParams.get('productId');
-  const mode = searchParams.get('mode');
   const [isLoading, setIsLoading] = useState(false);
-  const [isLogin, setIsLogin] = useState(mode === 'login');
+  const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const productId = searchParams.get('productId');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -40,9 +40,53 @@ const Auth = () => {
     },
   });
 
-  const handleSuccessfulAuth = (user: any) => {
+  const handleAuthSuccess = async (userId: string) => {
     if (productId) {
-      navigate("/billing");
+      try {
+        // Get current session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session?.access_token) {
+          throw new Error('No active session');
+        }
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              productId,
+              userId,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to create checkout session');
+        }
+
+        const data = await response.json();
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        } else {
+          throw new Error('No checkout URL received');
+        }
+      } catch (error: any) {
+        console.error('Error creating checkout session:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || "Could not create checkout session. Please try again.",
+        });
+        // Redirect to dashboard as fallback
+        navigate("/dashboard");
+      }
     } else {
       navigate("/dashboard");
     }
@@ -59,6 +103,7 @@ const Auth = () => {
         
         if (error) throw error;
 
+        // Check if email is confirmed
         if (data?.user && !data.user.email_confirmed_at) {
           toast({
             title: "Email not confirmed",
@@ -68,18 +113,19 @@ const Auth = () => {
           return;
         }
 
-        handleSuccessfulAuth(data.user);
+        await handleAuthSuccess(data.user.id);
       } else {
         const { error, data } = await supabase.auth.signUp({
           email: values.email,
           password: values.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
+            emailRedirectTo: `${window.location.origin}`,
           },
         });
         
         if (error) throw error;
 
+        // Check if email confirmation was sent
         if (data?.user?.identities?.length === 0) {
           toast({
             variant: "destructive",
@@ -91,13 +137,9 @@ const Auth = () => {
         }
 
         toast({
-          title: "Account created successfully!",
-          description: "Please check your email to verify your account. You'll be redirected to continue.",
+          title: "Verification email sent!",
+          description: "Please check your email (including spam folder) for the confirmation link. You must verify your email before signing in.",
         });
-
-        if (data.user) {
-          handleSuccessfulAuth(data.user);
-        }
       }
     } catch (error: any) {
       toast({
@@ -113,7 +155,7 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     try {
       const redirectTo = productId 
-        ? `${window.location.origin}/billing`
+        ? `${window.location.origin}/auth?productId=${productId}`
         : `${window.location.origin}/dashboard`;
 
       const { data, error } = await supabase.auth.signInWithOAuth({

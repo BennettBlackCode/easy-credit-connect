@@ -40,21 +40,6 @@ const UsageChart = ({ data, timeRange }: UsageChartProps) => {
     }
   };
 
-  const getBarSize = () => {
-    switch (timeRange) {
-      case "day":
-        return 16;
-      case "week":
-        return 24;
-      case "month":
-        return 16;
-      case "year":
-        return 32;
-      default:
-        return 24;
-    }
-  };
-
   return (
     <div className="w-full h-[250px] sm:h-[300px] mt-4">
       <ResponsiveContainer width="100%" height="100%">
@@ -64,20 +49,17 @@ const UsageChart = ({ data, timeRange }: UsageChartProps) => {
             top: 5, 
             right: 10, 
             left: 0, 
-            bottom: 25 // Increased bottom margin for better visibility
+            bottom: 5 
           }}
-          barSize={getBarSize()}
+          barSize={32}
         >
           <XAxis 
             dataKey="date" 
             stroke="#888888"
             tickFormatter={getXAxisFormatter()}
             tick={{ fontSize: 12 }}
-            tickMargin={12} // Increased tick margin for better readability
-            height={40} // Added fixed height
+            tickMargin={8}
             interval="preserveStartEnd"
-            angle={-45} // Angled labels for better visibility
-            textAnchor="end" // Align angled text properly
           />
           <YAxis 
             stroke="#888888"
@@ -85,7 +67,7 @@ const UsageChart = ({ data, timeRange }: UsageChartProps) => {
             domain={[0, 'auto']}
             tick={{ fontSize: 12 }}
             tickMargin={8}
-            width={35} // Increased width for Y axis
+            width={30}
           />
           <Tooltip
             contentStyle={{
@@ -112,3 +94,4 @@ const UsageChart = ({ data, timeRange }: UsageChartProps) => {
 };
 
 export default UsageChart;
+

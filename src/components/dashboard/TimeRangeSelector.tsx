@@ -99,15 +99,15 @@ const TimeRangeSelector = ({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row justify-end items-end sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
-      <div className="flex bg-white/5 rounded-lg p-0.5 w-full sm:w-auto">
+    <div className="flex justify-end items-center space-x-4">
+      <div className="flex bg-white/5 rounded-lg p-1">
         {ranges.map((range) => (
           <Button
             key={range}
             onClick={() => handleRangeChange(range)}
             variant="ghost"
             className={cn(
-              "px-2 py-1.5 text-sm capitalize flex-1 sm:flex-none min-w-0 sm:min-w-[65px]",
+              "px-4 py-2 text-sm capitalize",
               selectedRange === range && "bg-white/10"
             )}
           >
@@ -115,18 +115,18 @@ const TimeRangeSelector = ({
           </Button>
         ))}
       </div>
-      <div className="flex items-center space-x-0.5 bg-white/5 rounded-lg p-0.5 self-end">
+      <div className="flex items-center space-x-2 bg-white/5 rounded-lg p-1">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => handleNavigate("prev")}
-          className="h-7 w-7"
+          className="h-9 w-9"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7">
+            <Button variant="ghost" size="icon" className="h-9 w-9">
               <CalendarIcon className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
@@ -145,7 +145,7 @@ const TimeRangeSelector = ({
             variant="ghost"
             size="icon"
             onClick={handleReset}
-            className="h-7 w-7"
+            className="h-9 w-9"
             title="Reset to today"
           >
             <CalendarClock className="h-4 w-4" />
@@ -155,7 +155,7 @@ const TimeRangeSelector = ({
           variant="ghost"
           size="icon"
           onClick={() => handleNavigate("next")}
-          className="h-7 w-7"
+          className="h-9 w-9"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
