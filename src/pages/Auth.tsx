@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,7 +10,6 @@ import { EmailAuthForm } from "@/components/auth/EmailAuthForm";
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const productId = searchParams.get('productId');
-  const mode = searchParams.get('mode');
   const [isLoading, setIsLoading] = useState(false);
   const [isLogin, setIsLogin] = useState(mode === 'login');
   const [showNameDialog, setShowNameDialog] = useState(false);
