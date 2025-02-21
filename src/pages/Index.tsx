@@ -2,7 +2,6 @@ import { ArrowRight, Check, CreditCard, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { AnimatedTitle } from "@/components/ui/animated-hero";
-
 const Index = () => {
   const features = [{
     title: "48 Blog Posts Ready To Post",
@@ -17,7 +16,6 @@ const Index = () => {
     title: "KW Research, SERP Research, GBP Optimization",
     description: "Get keyword data complete with CPC, KD, and search volume, along with a list of the top 100 local competitors nearby, and a Google Business Profile optimization checklist"
   }];
-
   const plans = [{
     name: "Starter Pack",
     price: 30,
@@ -29,7 +27,6 @@ const Index = () => {
     description: "Most popular for growing businesses",
     features: ["15 runs", "No commitment", "Priority support", "Advanced analytics"]
   }];
-
   return <div className="min-h-screen overflow-hidden bg-[#030303]">
       {/* Hero Section */}
       <div className="relative">
@@ -39,7 +36,7 @@ const Index = () => {
           <div className="max-w-5xl mx-auto">
             <div className="text-center space-y-8 mb-16">
               <div className="inline-block">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary/10 text-primary border border-primary/20 mb-8">Released 02.21.25 | Beta Version 2.0</span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary/10 text-primary border border-primary/20 mb-8">Released 02.21.25 | Beta Version 1.1</span>
               </div>
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8 leading-[1.1]">
                 <span className="block bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent mb-2">
@@ -147,8 +144,7 @@ const Index = () => {
 
           {/* Main Plans */}
           <div className="grid md:grid-cols-2 gap-8 mb-8">
-            {plans.map((plan, index) => (
-              <div key={index} className="group p-8 rounded-2xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white/[0.05] to-transparent border border-white/[0.05] backdrop-blur-sm">
+            {plans.map((plan, index) => <div key={index} className="group p-8 rounded-2xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white/[0.05] to-transparent border border-white/[0.05] backdrop-blur-sm">
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
@@ -161,24 +157,18 @@ const Index = () => {
                   </div>
 
                   <ul className="space-y-4">
-                    {plan.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-start gap-3">
+                    {plan.features.map((feature, idx) => <li key={idx} className="flex items-start gap-3">
                         <Check className="h-6 w-6 text-primary flex-shrink-0" />
                         <span className="text-gray-300">{feature}</span>
-                      </li>
-                    ))}
+                      </li>)}
                   </ul>
 
-                  <Link 
-                    to="/auth" 
-                    className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-2xl bg-primary text-black hover:bg-primary/90 transition-all duration-200"
-                  >
+                  <Link to="/auth" className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-2xl bg-primary text-black hover:bg-primary/90 transition-all duration-200">
                     Get Started
                     <ArrowRight className="h-5 w-5" />
                   </Link>
                 </div>
-              </div>
-            ))}
+              </div>)}
           </div>
 
           {/* Enterprise Plan */}
@@ -188,21 +178,14 @@ const Index = () => {
                 <h3 className="text-2xl font-bold text-white">Enterprise</h3>
                 <p className="text-gray-400">For agencies and large businesses with custom requirements. Includes unlimited runs, dedicated support, and custom integrations.</p>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {["Unlimited runs", "Custom integrations", "24/7 Premium support", "API access", "Dedicated account manager"].map((feature, idx) => (
-                    <li key={idx} className="flex items-center gap-2">
+                  {["Unlimited runs", "Custom integrations", "24/7 Premium support", "API access", "Dedicated account manager"].map((feature, idx) => <li key={idx} className="flex items-center gap-2">
                       <Check className="h-5 w-5 text-primary flex-shrink-0" />
                       <span className="text-gray-300 text-sm">{feature}</span>
-                    </li>
-                  ))}
+                    </li>)}
                 </ul>
               </div>
               <div className="flex-shrink-0">
-                <a 
-                  href="https://boldslate.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-all duration-200 border border-white/10"
-                >
+                <a href="https://boldslate.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-all duration-200 border border-white/10">
                   Contact Us
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </a>
@@ -230,5 +213,4 @@ const Index = () => {
       </div>
     </div>;
 };
-
 export default Index;
