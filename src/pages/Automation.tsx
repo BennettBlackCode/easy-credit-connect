@@ -162,6 +162,11 @@ const Automation = () => {
     }
   };
 
+  const handleDialogClose = () => {
+    setShowCreditsDialog(false);
+    navigate("/dashboard");
+  };
+
   return (
     <div className="min-h-screen bg-[#030303] text-white pt-24">
       <div className="max-w-2xl mx-auto px-8">
@@ -328,7 +333,7 @@ const Automation = () => {
         </div>
       </div>
 
-      <Dialog open={showCreditsDialog} onOpenChange={setShowCreditsDialog}>
+      <Dialog open={showCreditsDialog} onOpenChange={handleDialogClose}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Insufficient Credits</DialogTitle>
