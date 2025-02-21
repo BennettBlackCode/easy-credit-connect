@@ -118,6 +118,7 @@ const Billing = () => {
         <CreditBalanceCard
           remainingCredits={userCredits?.remaining_credits || 0}
           totalCredits={userCredits?.total_credits || 0}
+          status={userCredits?.status || "Free Tier"}
         />
 
         <h2 className="text-xl font-semibold mb-4">Available Plans</h2>
