@@ -2,9 +2,6 @@ import { ArrowRight, Check, CreditCard, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { AnimatedTitle } from "@/components/ui/animated-hero";
-import { Counter } from "@/components/ui/counter-animation";
-import { motion } from "framer-motion";
-
 const Index = () => {
   const features = [{
     title: "48 Blog Posts Ready To Post",
@@ -19,7 +16,6 @@ const Index = () => {
     title: "KW Research, SERP Research, GBP Optimization",
     description: "Get keyword data complete with CPC, KD, and search volume, along with a list of the top 100 local competitors nearby, and a Google Business Profile optimization checklist"
   }];
-
   const plans = [{
     name: "Starter Pack",
     price: 30,
@@ -31,27 +27,7 @@ const Index = () => {
     description: "Most popular for growing businesses",
     features: ["15 runs", "No commitment", "Priority support", "Advanced analytics"]
   }];
-
-  const stats = [{
-    value: "48+",
-    label: "Blog Posts",
-    description: "Ready to publish"
-  }, {
-    value: "360",
-    label: "GBP Posts",
-    description: "Pre-formatted"
-  }, {
-    value: "1000+",
-    label: "Backlinks",
-    description: "High quality"
-  }, {
-    value: "100",
-    label: "Automated",
-    description: "% efficiency"
-  }];
-
-  return (
-    <div className="min-h-screen overflow-hidden bg-[#030303]">
+  return <div className="min-h-screen overflow-hidden bg-[#030303]">
       {/* Hero Section */}
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-30" />
@@ -99,26 +75,24 @@ const Index = () => {
 
             {/* Stats Section */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto mt-24">
-              {stats.map((stat, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="relative group p-6 rounded-2xl bg-gradient-to-br from-white/[0.05] to-transparent border border-white/[0.05] backdrop-blur-sm hover:bg-white/[0.1] transition-all duration-300"
-                >
-                  <div className="text-center space-y-3">
-                    <div className="text-4xl font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
-                      <Counter value={stat.value} />
-                    </div>
-                    <div>
-                      <div className="text-primary font-medium">{stat.label}</div>
-                      <div className="text-gray-400 text-sm">{stat.description}</div>
-                    </div>
+              {[{
+              value: "48+",
+              label: "Blog Posts"
+            }, {
+              value: "360",
+              label: "GBP Posts"
+            }, {
+              value: "1000+",
+              label: "Backlinks"
+            }, {
+              value: "100%",
+              label: "Automated"
+            }].map((stat, index) => <div key={index} className="text-center space-y-2">
+                  <div className="text-3xl font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
+                    {stat.value}
                   </div>
-                </motion.div>
-              ))}
+                  <div className="text-gray-400 text-sm">{stat.label}</div>
+                </div>)}
             </div>
           </div>
         </div>
@@ -237,8 +211,6 @@ const Index = () => {
           </Link>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
