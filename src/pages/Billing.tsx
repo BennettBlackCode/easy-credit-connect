@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreditCard, ArrowUpRight } from "lucide-react";
@@ -190,9 +189,6 @@ const Billing = () => {
                       ${(product.price_amount / 100).toFixed(2)}
                     </div>
                   )}
-                  <div className="text-sm text-muted-foreground mb-4">
-                    {isUnlimited ? "Unlimited Runs" : `${product.credits_amount} ${product.credits_amount === 1 ? 'run' : 'runs'}`}
-                  </div>
                   {isUnlimited ? (
                     <Button asChild className="w-full">
                       <a
