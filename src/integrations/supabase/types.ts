@@ -314,6 +314,12 @@ export type Database = {
         }
         Returns: undefined
       }
+      delete_user_completely: {
+        Args: {
+          _user_id: string
+        }
+        Returns: undefined
+      }
       get_user_credits: {
         Args: {
           p_user_id: string
