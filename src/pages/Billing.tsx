@@ -1,7 +1,8 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreditCard, ArrowUpRight } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -20,6 +21,7 @@ const Billing = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { session, isLoading: authLoading } = useAuth();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -47,6 +49,33 @@ const Billing = () => {
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [toast]);
+
+  // Set up real-time subscription for credit updates
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    const channel = supabase
+      .channel('credit-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'credit_transactions',
+          filter: `user_id=eq.${session.user.id}`,
+        },
+        () => {
+          // Invalidate queries to refresh data
+          queryClient.invalidateQueries({ queryKey: ["user-calculated-credits"] });
+          queryClient.invalidateQueries({ queryKey: ["credit_transactions"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session?.user?.id, queryClient]);
 
   const { data: userCredits, isLoading: userLoading } = useQuery({
     queryKey: ["user-calculated-credits"],
