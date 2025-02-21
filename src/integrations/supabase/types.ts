@@ -225,7 +225,9 @@ export type Database = {
         Row: {
           created_at: string | null
           email: string | null
+          first_name: string | null
           id: string
+          last_name: string | null
           permanent_credits: number | null
           remaining_runs: number | null
           status: string | null
@@ -238,7 +240,9 @@ export type Database = {
         Insert: {
           created_at?: string | null
           email?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           permanent_credits?: number | null
           remaining_runs?: number | null
           status?: string | null
@@ -251,7 +255,9 @@ export type Database = {
         Update: {
           created_at?: string | null
           email?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           permanent_credits?: number | null
           remaining_runs?: number | null
           status?: string | null
@@ -271,7 +277,6 @@ export type Database = {
           remaining_credits: number | null
           status: string | null
           total_credits: number | null
-          updated_at: string | null
           user_id: string | null
           user_name: string | null
         }
@@ -309,6 +314,18 @@ export type Database = {
         }
         Returns: undefined
       }
+      delete_user_and_allow_email_reuse: {
+        Args: {
+          _user_id: string
+        }
+        Returns: undefined
+      }
+      delete_user_completely: {
+        Args: {
+          _user_id: string
+        }
+        Returns: undefined
+      }
       get_user_credits: {
         Args: {
           p_user_id: string
@@ -317,6 +334,23 @@ export type Database = {
           total_credits: number
           remaining_credits: number
         }[]
+      }
+      handle_stripe_purchase: {
+        Args: {
+          _user_id: string
+          _customer_id: string
+          _product_name: string
+          _stripe_price_id: string
+          _payment_id: string
+        }
+        Returns: undefined
+      }
+      handle_subscription_purchase: {
+        Args: {
+          user_id: string
+          product_name: string
+        }
+        Returns: undefined
       }
       increment_user_credits: {
         Args: {
@@ -331,6 +365,19 @@ export type Database = {
           email: string
         }
         Returns: boolean
+      }
+      reset_user_credits: {
+        Args: {
+          target_user_id: string
+        }
+        Returns: undefined
+      }
+      update_user_status_and_credits: {
+        Args: {
+          target_user_id: string
+          new_status: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
