@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom"; // Add useSearchParams
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -43,12 +43,19 @@ const Auth = () => {
   const handleAuthSuccess = async (userId: string) => {
     if (productId) {
       try {
+        // Get current session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session?.access_token) {
+          throw new Error('No active session');
+        }
+
         const response = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout`,
           {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Authorization': `Bearer ${session.access_token}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -58,22 +65,31 @@ const Auth = () => {
           }
         );
 
-        const { url } = await response.json();
-        if (url) {
-          window.location.href = url;
-          return;
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to create checkout session');
         }
-      } catch (error) {
+
+        const data = await response.json();
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        } else {
+          throw new Error('No checkout URL received');
+        }
+      } catch (error: any) {
         console.error('Error creating checkout session:', error);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Could not create checkout session. Please try again.",
+          description: error.message || "Could not create checkout session. Please try again.",
         });
+        // Redirect to dashboard as fallback
+        navigate("/dashboard");
       }
+    } else {
+      navigate("/dashboard");
     }
-    
-    navigate("/dashboard");
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -138,10 +154,14 @@ const Auth = () => {
 
   const handleGoogleSignIn = async () => {
     try {
+      const redirectTo = productId 
+        ? `${window.location.origin}/auth?productId=${productId}`
+        : `${window.location.origin}/dashboard`;
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
