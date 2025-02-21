@@ -1,66 +1,43 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
 
 serve(async (req) => {
   try {
-    // Get the authorization header
-    const authorization = req.headers.get('Authorization')
-    if (!authorization) {
-      throw new Error('No authorization header')
-    }
-
-    // Create a Supabase client with the auth header
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authorization },
-        },
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get the authenticated user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseClient.auth.getUser()
+    const { userId } = await req.json()
 
-    if (userError || !user) {
-      throw new Error('Error getting user')
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ error: 'User ID is required' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      )
     }
 
-    // Call the delete_user_completely function
-    const { error: deleteError } = await supabaseClient
-      .rpc('delete_user_completely', {
-        _user_id: user.id
-      })
-
-    if (deleteError) {
-      throw new Error(`Error deleting user data: ${deleteError.message}`)
-    }
-
-    // Delete the auth user
-    const { error: authDeleteError } = await supabaseClient.auth.admin.deleteUser(
-      user.id
+    // Call the RPC function to delete user data
+    const { error: rpcError } = await supabaseClient.rpc(
+      'delete_user_and_allow_email_reuse',
+      { _user_id: userId }
     )
 
-    if (authDeleteError) {
-      throw new Error(`Error deleting auth user: ${authDeleteError.message}`)
+    if (rpcError) {
+      console.error('Error in delete_user_and_allow_email_reuse:', rpcError)
+      throw rpcError
     }
 
-    return new Response(JSON.stringify({ message: 'User deleted successfully' }), {
-      headers: { 'Content-Type': 'application/json' },
-      status: 200,
-    })
-  } catch (error) {
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: { 'Content-Type': 'application/json' },
-        status: 400,
-      }
+      JSON.stringify({ message: 'User deleted successfully' }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    )
+  } catch (error) {
+    console.error('Error in delete-user function:', error)
+    return new Response(
+      JSON.stringify({ error: 'Failed to delete user' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     )
   }
 })

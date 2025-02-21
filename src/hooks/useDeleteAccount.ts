@@ -24,17 +24,14 @@ export const useDeleteAccount = () => {
     try {
       setIsDeleting(true);
 
-      // First sign out the user to clear their session
-      await supabase.auth.signOut();
-
-      // Then delete their account data
-      const { error } = await supabase.rpc('delete_user_and_allow_email_reuse', {
-        _user_id: session.user.id
+      // Call edge function to delete user
+      const { error } = await supabase.functions.invoke('delete-user', {
+        body: { userId: session.user.id }
       });
 
       if (error) {
         console.error('Delete account error:', error);
-        throw new Error('Failed to delete account data. Please try again or contact support.');
+        throw new Error('Failed to delete account. Please try again or contact support.');
       }
 
       toast({
@@ -42,7 +39,8 @@ export const useDeleteAccount = () => {
         description: "Your account has been successfully deleted. You can sign up again with the same email if you wish.",
       });
 
-      // Redirect to home page
+      // Sign out and redirect to home page
+      await supabase.auth.signOut();
       navigate('/');
     } catch (error: any) {
       toast({
