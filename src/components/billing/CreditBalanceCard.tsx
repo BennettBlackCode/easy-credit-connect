@@ -1,18 +1,15 @@
 
 import { CreditCard } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 
 interface CreditBalanceCardProps {
   remainingCredits: number;
   totalCredits: number;
-  onResetCredits: () => void;
 }
 
 export const CreditBalanceCard = ({
   remainingCredits,
   totalCredits,
-  onResetCredits,
 }: CreditBalanceCardProps) => {
   return (
     <Card className="mb-8">
@@ -25,14 +22,6 @@ export const CreditBalanceCard = ({
         <div className="text-sm text-muted-foreground space-y-1 mt-2">
           <p>Total Credits Purchased: {totalCredits || 0}</p>
           <p>Cost per automation: 1 credit</p>
-          <Button 
-            variant="destructive" 
-            size="sm" 
-            onClick={onResetCredits}
-            className="mt-2"
-          >
-            Reset Credits
-          </Button>
         </div>
       </CardContent>
     </Card>
