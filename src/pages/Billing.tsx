@@ -122,6 +122,34 @@ const Billing = () => {
     },
   });
 
+  const resetCredits = async () => {
+    if (!session?.user?.id) return;
+    
+    try {
+      const { error } = await supabase.rpc('reset_user_credits', {
+        target_user_id: session.user.id
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Credits reset",
+        description: "Your credits have been reset to 0.",
+      });
+
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["user-calculated-credits"] });
+      queryClient.invalidateQueries({ queryKey: ["credit_transactions"] });
+    } catch (error) {
+      console.error('Error resetting credits:', error);
+      toast({
+        title: "Error",
+        description: "Failed to reset credits. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handlePurchase = async (productId: string) => {
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
@@ -177,6 +205,14 @@ const Billing = () => {
             <div className="text-2xl font-bold">{userCredits?.remaining_credits || 0} runs</div>
             <div className="text-sm text-muted-foreground space-y-1 mt-2">
               <p>Available Credits: {userCredits?.total_credits || 0}</p>
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={resetCredits}
+                className="mt-2"
+              >
+                Reset Credits
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -278,3 +314,4 @@ const Billing = () => {
 };
 
 export default Billing;
+

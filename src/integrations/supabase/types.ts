@@ -350,6 +350,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      reset_user_credits: {
+        Args: {
+          target_user_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
