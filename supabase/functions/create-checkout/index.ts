@@ -42,13 +42,6 @@ serve(async (req) => {
       throw new Error('Product not found');
     }
 
-    console.log('Found product:', {
-      id: product.id,
-      name: product.name,
-      stripe_price_id: product.stripe_price_id,
-      price_type: 'recurring' // This is a recurring subscription
-    });
-
     // Get user details
     const { data: user, error: userError } = await supabaseClient
       .from('users')
@@ -84,7 +77,7 @@ serve(async (req) => {
       }
     }
 
-    // Create Checkout Session with subscription mode
+    // Create Checkout Session with payment mode
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       line_items: [
@@ -93,7 +86,7 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: 'subscription', // Always use subscription mode for recurring prices
+      mode: 'payment', // Use payment mode for one-time purchases
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
       metadata: {
@@ -106,7 +99,7 @@ serve(async (req) => {
 
     console.log('Checkout session created:', {
       sessionId: session.id,
-      mode: 'subscription'
+      mode: 'payment'
     });
 
     return new Response(JSON.stringify({ url: session.url }), {

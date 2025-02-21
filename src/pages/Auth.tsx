@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,11 +20,12 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
+      console.log('Starting Google sign in process');
       
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error: signInError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}/auth`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -33,71 +33,7 @@ const Auth = () => {
         },
       });
 
-      if (error) {
-        throw error;
-      }
-
-      // After successful Google sign in, initialize user credits
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session?.user) {
-        // Check if user already exists in the users table
-        const { data: existingUser } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (!existingUser) {
-          // Insert new user into users table if they don't exist
-          const { error: insertError } = await supabase
-            .from('users')
-            .insert([
-              {
-                id: session.user.id,
-                email: session.user.email,
-                first_name: session.user.user_metadata.full_name?.split(' ')[0] || '',
-                last_name: session.user.user_metadata.full_name?.split(' ').slice(1).join(' ') || '',
-                status: 'Free Tier',
-                subscription_type: 'free',
-                permanent_credits: 0,
-                subscription_credits: 0
-              }
-            ]);
-
-          if (insertError) {
-            console.error('Error creating new user:', insertError);
-            throw new Error('Failed to initialize user account');
-          }
-
-          // Add initial credit transaction
-          const { error: transactionError } = await supabase
-            .from('credit_transactions')
-            .insert([
-              {
-                user_id: session.user.id,
-                credit_amount: 0,
-                transaction_type: 'initial',
-                description: 'Account creation',
-                status: 'completed'
-              }
-            ]);
-
-          if (transactionError) {
-            console.error('Error creating initial transaction:', transactionError);
-            throw new Error('Failed to initialize user credits');
-          }
-        }
-
-        // Navigate to the appropriate page
-        if (productId) {
-          navigate("/billing");
-        } else {
-          navigate("/dashboard");
-        }
-      }
+      if (signInError) throw signInError;
 
     } catch (error: any) {
       console.error('Google sign in error:', error);
