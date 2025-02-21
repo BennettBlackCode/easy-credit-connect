@@ -79,6 +79,13 @@ const Automation = () => {
     }
   }, [remainingCredits]);
 
+  const handleDialogChange = (open: boolean) => {
+    setShowCreditsDialog(open);
+    if (!open) {
+      navigate("/dashboard");
+    }
+  };
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -341,7 +348,7 @@ const Automation = () => {
         </div>
       </div>
 
-      <Dialog open={showCreditsDialog} onOpenChange={setShowCreditsDialog}>
+      <Dialog open={showCreditsDialog} onOpenChange={handleDialogChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Insufficient Credits</DialogTitle>
