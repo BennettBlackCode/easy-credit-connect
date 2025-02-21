@@ -35,16 +35,9 @@ serve(async (req) => {
           throw new Error('No client_reference_id found in session');
         }
 
-        // Get the product details from the line items
-        const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-        if (!lineItems.data.length) {
-          throw new Error('No line items found in session');
-        }
-
-        const priceId = lineItems.data[0].price?.id;
-        if (!priceId) {
-          throw new Error('No price ID found in line items');
-        }
+        // Get the subscription details
+        const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+        const priceId = subscription.items.data[0].price.id;
 
         // Get product details from our database
         const { data: productData, error: productError } = await supabaseClient
@@ -68,7 +61,7 @@ serve(async (req) => {
             _customer_id: session.customer as string,
             _product_name: productData.name,
             _stripe_price_id: priceId,
-            _payment_id: session.payment_intent as string
+            _payment_id: session.subscription
           }
         );
 
