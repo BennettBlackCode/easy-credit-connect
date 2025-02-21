@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -18,15 +18,38 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSuccessfulAuth = async (user: any) => {
-    if (!isLogin && !user.app_metadata.provider) {
-      setShowNameDialog(true);
-    } else {
-      if (productId) {
-        navigate("/billing");
-      } else {
-        navigate("/dashboard");
+  useEffect(() => {
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event, session);
+      if (event === 'SIGNED_IN' && session?.user) {
+        console.log('User signed in:', session.user);
+        handleSuccessfulAuth(session.user);
       }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleSuccessfulAuth = async (user: any) => {
+    console.log('Handling successful auth for user:', user);
+    try {
+      if (!isLogin && !user.app_metadata.provider) {
+        setShowNameDialog(true);
+      } else {
+        const destination = productId ? "/billing" : "/dashboard";
+        console.log('Redirecting to:', destination);
+        navigate(destination);
+      }
+    } catch (error) {
+      console.error('Error in handleSuccessfulAuth:', error);
+      toast({
+        title: "Authentication Error",
+        description: "There was an error completing your authentication. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -82,6 +105,7 @@ const Auth = () => {
         }
       }
     } catch (error: any) {
+      console.error('Auth error:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -94,9 +118,12 @@ const Auth = () => {
 
   const handleGoogleSignIn = async () => {
     try {
+      console.log('Starting Google sign in process');
       const redirectTo = productId 
         ? `${window.location.origin}/billing`
         : `${window.location.origin}/dashboard`;
+      
+      console.log('Redirect URL:', redirectTo);
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -105,9 +132,8 @@ const Auth = () => {
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
-            hd: '*',
             // This ensures we get email provider as well
-            scopes: 'email profile',
+            scope: 'email profile',
           },
         },
       });
@@ -115,11 +141,14 @@ const Auth = () => {
       if (error) throw error;
       
       setIsLoading(true);
+      console.log('Google sign in initiated:', data);
+      
       toast({
         title: "Redirecting to Google...",
         description: "Please wait while we redirect you to Google sign in.",
       });
     } catch (error: any) {
+      console.error('Google sign in error:', error);
       toast({
         variant: "destructive",
         title: "Google Sign In Failed",
