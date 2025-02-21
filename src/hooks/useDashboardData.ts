@@ -8,12 +8,12 @@ export const useDashboardData = () => {
   const { session } = useAuth();
 
   const { data: userData } = useQuery({
-    queryKey: ["user-dashboard", session?.user?.id],
+    queryKey: ["user-calculated-credits", session?.user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("users")
-        .select("permanent_credits, subscription_credits, subscription_type, user_name, remaining_runs")
-        .eq("id", session?.user?.id)
+        .from("users_with_calculated_credits")
+        .select("remaining_credits, total_credits, user_name")
+        .eq("user_id", session?.user?.id)
         .single();
 
       if (error) throw error;

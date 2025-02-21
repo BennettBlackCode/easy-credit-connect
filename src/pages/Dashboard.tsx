@@ -19,7 +19,7 @@ const Dashboard = () => {
         )}
         <div className="space-y-6">
           <StatsCards 
-            remainingRuns={userData?.remaining_runs || 0}
+            remainingRuns={userData?.remaining_credits || 0}
             periodRuns={periodRuns || 0}
           />
           <UsageSection />
