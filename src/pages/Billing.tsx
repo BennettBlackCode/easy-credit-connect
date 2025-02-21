@@ -145,9 +145,9 @@ const Billing = () => {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{userCredits?.total_credits || 0} runs</div>
+            <div className="text-2xl font-bold">{userCredits?.remaining_credits || 0} runs</div>
             <div className="text-sm text-muted-foreground space-y-1 mt-2">
-              <p>Available Credits: {userCredits?.remaining_credits || 0}</p>
+              <p>Available Credits: {userCredits?.total_credits || 0}</p>
             </div>
           </CardContent>
         </Card>
