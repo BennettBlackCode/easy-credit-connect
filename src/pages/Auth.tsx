@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,15 +17,37 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSuccessfulAuth = async (user: any) => {
-    if (!isLogin && !user.app_metadata.provider) {
-      setShowNameDialog(true);
-    } else {
-      if (productId) {
-        navigate("/billing");
-      } else {
-        navigate("/dashboard");
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+
+      if (error) {
+        throw error;
       }
+
+      if (!data) {
+        throw new Error('No data returned from Google sign in');
+      }
+
+    } catch (error: any) {
+      console.error('Google sign in error:', error);
+      toast({
+        variant: "destructive",
+        title: "Google Sign In Failed",
+        description: error.message || "Failed to sign in with Google. Please try again.",
+      });
+      setIsLoading(false);
     }
   };
 
@@ -92,37 +113,15 @@ const Auth = () => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    try {
-      const redirectTo = productId 
-        ? `${window.location.origin}/billing`
-        : `${window.location.origin}/dashboard`;
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        },
-      });
-      
-      if (error) throw error;
-      
-      setIsLoading(true);
-      toast({
-        title: "Redirecting to Google...",
-        description: "Please wait while we redirect you to Google sign in.",
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Google Sign In Failed",
-        description: error.message,
-      });
-      setIsLoading(false);
+  const handleSuccessfulAuth = async (user: any) => {
+    if (!isLogin && !user.app_metadata.provider) {
+      setShowNameDialog(true);
+    } else {
+      if (productId) {
+        navigate("/billing");
+      } else {
+        navigate("/dashboard");
+      }
     }
   };
 

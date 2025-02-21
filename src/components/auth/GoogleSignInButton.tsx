@@ -12,7 +12,7 @@ export function GoogleSignInButton({ isLoading, onSignIn }: GoogleSignInButtonPr
     <Button
       type="button"
       variant="outline"
-      className="w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border-white/10 text-white"
+      className="w-full flex items-center justify-center gap-2 bg-white hover:bg-white/90 border-gray-300 text-gray-900"
       onClick={onSignIn}
       disabled={isLoading}
     >
@@ -38,7 +38,7 @@ export function GoogleSignInButton({ isLoading, onSignIn }: GoogleSignInButtonPr
           />
         </svg>
       )}
-      Continue with Google
+      Sign in with Google
     </Button>
   );
 }
