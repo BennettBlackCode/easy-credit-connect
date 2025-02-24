@@ -25,8 +25,15 @@ serve(async (req) => {
       throw new Error('Missing required parameters');
     }
 
+    // Create a customer first
+    const customer = await stripe.customers.create({
+      metadata: {
+        supabase_id: userId
+      }
+    });
+
     const session = await stripe.checkout.sessions.create({
-      client_reference_id: userId,
+      customer: customer.id, // This will handle the email collection
       metadata: {
         product_id: productId,
         user_id: userId
@@ -49,8 +56,7 @@ serve(async (req) => {
       mode: 'subscription',
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
-      allow_promotion_codes: true,
-      billing_address_collection: 'never'  // This will prevent the email field from showing up
+      allow_promotion_codes: true
     });
 
     console.log('Checkout session created:', session.id);
