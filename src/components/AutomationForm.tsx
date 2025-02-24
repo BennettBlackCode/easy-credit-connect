@@ -97,13 +97,25 @@ const AutomationForm = ({ onSubmit, isSubmitting = false, remainingCredits = 0 }
       await onSubmit(values);
     } else {
       try {
-        // Create the automation log with all required fields
+        // Ensure all required fields are present and non-optional
         const automationData = {
-          ...values,
+          agency_email: values.agency_email,
+          city: values.city,
+          company_name: values.company_name,
+          country: values.country,
+          domain: values.domain,
+          email: values.email,
+          industry: values.industry,
+          last_name: values.last_name,
+          phone_number: values.phone_number,
+          postal_code: values.postal_code,
+          state: values.state,
+          street_address: values.street_address,
+          web_url: values.web_url,
           user_id: session.user.id,
           created_at: new Date().toISOString(),
-          google_drive: null,
-          status: 'pending'
+          google_drive: null as string | null,
+          status: 'pending' as const
         };
 
         const { error } = await supabase
