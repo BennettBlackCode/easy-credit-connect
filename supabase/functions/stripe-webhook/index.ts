@@ -7,13 +7,19 @@ const Stripe = stripe.default;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
 };
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: {
+        ...corsHeaders,
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Max-Age': '86400',
+      } 
+    });
   }
 
   try {
@@ -26,11 +32,22 @@ serve(async (req) => {
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
 
     if (!signature || !webhookSecret) {
-      throw new Error('Missing signature or webhook secret');
+      console.error('Missing signature or webhook secret');
+      return new Response(
+        JSON.stringify({ error: 'Missing required Stripe signature' }), 
+        { 
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     // Get the raw body
     const body = await req.text();
+    
+    console.log('Received webhook body:', body);
+    console.log('Stripe signature:', signature);
+    
     const stripeClient = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
       apiVersion: '2023-10-16',
       httpClient: Stripe.createFetchHttpClient(),
@@ -45,8 +62,16 @@ serve(async (req) => {
         const session = event.data.object as Stripe.Checkout.Session;
         console.log('Processing completed checkout session:', session.id);
 
+        // Get line items
+        const lineItems = await stripeClient.checkout.sessions.listLineItems(session.id);
+        console.log('Line items:', lineItems);
+
+        // Get promotion code if present
+        const promotionCode = session.total_details?.breakdown?.discounts?.[0]?.discount?.promotion_code;
+        console.log('Promotion code:', promotionCode);
+
         // Call the handle_stripe_event database function
-        const { error: dbError } = await supabase.rpc('handle_stripe_event', {
+        const { data, error: dbError } = await supabase.rpc('handle_stripe_event', {
           event: {
             id: event.id,
             type: event.type,
@@ -54,8 +79,8 @@ serve(async (req) => {
             data: {
               object: {
                 ...session,
-                line_items: await stripeClient.checkout.sessions.listLineItems(session.id),
-                promotion_code: session.total_details?.breakdown?.discounts?.[0]?.discount?.promotion_code || null
+                line_items: lineItems,
+                promotion_code: promotionCode
               }
             }
           }
@@ -66,6 +91,7 @@ serve(async (req) => {
           throw dbError;
         }
 
+        console.log('Successfully processed checkout session:', data);
         break;
       }
 
@@ -105,6 +131,7 @@ serve(async (req) => {
           throw dbError;
         }
 
+        console.log('Successfully processed subscription event');
         break;
       }
 
@@ -117,10 +144,13 @@ serve(async (req) => {
       status: 200,
     });
   } catch (err) {
-    console.error('Error:', err);
-    return new Response(JSON.stringify({ error: err.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    });
+    console.error('Error processing webhook:', err);
+    return new Response(
+      JSON.stringify({ error: err.message }), 
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: err.statusCode || 400,
+      }
+    );
   }
 });
