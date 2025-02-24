@@ -43,28 +43,43 @@ serve(async (req) => {
       throw new Error('Product not found');
     }
 
-    // Get user details directly from users table
-    const { data: user, error: userError } = await supabaseClient
-      .from('users')
-      .select('email')
-      .eq('id', userId)
-      .single();
-
-    if (userError || !user) {
-      console.error('User lookup error:', userError);
-      throw new Error('User not found');
-    }
-
-    // Create or retrieve Stripe customer
-    const { data: userData } = await supabaseClient
+    // Get user details and stripe customer ID in a single query
+    const { data: userData, error: userError } = await supabaseClient
       .from('users')
       .select('stripe_customer_id, email')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
-    let stripeCustomerId = userData?.stripe_customer_id;
+    if (userError) {
+      console.error('User lookup error:', userError);
+      throw new Error('Error looking up user');
+    }
+
+    if (!userData) {
+      // If user doesn't exist in public.users table, get their email from auth.users
+      const { data: { user }, error: authError } = await supabaseClient.auth.admin.getUserById(userId);
+      
+      if (authError || !user?.email) {
+        throw new Error('User not found');
+      }
+
+      // Create new user record
+      const { error: insertError } = await supabaseClient
+        .from('users')
+        .insert([{ id: userId, email: user.email }]);
+
+      if (insertError) {
+        throw new Error('Failed to create user record');
+      }
+
+      userData = { email: user.email, stripe_customer_id: null };
+    }
+
+    // Create or retrieve Stripe customer
+    let stripeCustomerId = userData.stripe_customer_id;
 
     if (!stripeCustomerId) {
+      console.log('Creating new Stripe customer for:', userData.email);
       const customer = await stripe.customers.create({
         email: userData.email,
         metadata: {
@@ -79,6 +94,8 @@ serve(async (req) => {
         .update({ stripe_customer_id: stripeCustomerId })
         .eq('id', userId);
     }
+
+    console.log('Creating checkout session with price:', product.stripe_price_id);
 
     // Create Checkout Session
     const session = await stripe.checkout.sessions.create({
