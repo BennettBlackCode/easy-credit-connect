@@ -97,7 +97,7 @@ serve(async (req) => {
 
     console.log('Creating checkout session with price:', product.stripe_price_id);
 
-    // Create Checkout Session
+    // Create Checkout Session with subscription mode
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       line_items: [
@@ -106,7 +106,7 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: 'payment',
+      mode: 'subscription', // Changed from 'payment' to 'subscription'
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
       metadata: {
