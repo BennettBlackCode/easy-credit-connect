@@ -50,6 +50,7 @@ serve(async (req) => {
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
       allow_promotion_codes: true,
+      collect_email: false  // This will prevent the email field from showing up
     });
 
     console.log('Checkout session created:', session.id);
