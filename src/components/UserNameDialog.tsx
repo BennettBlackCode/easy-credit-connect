@@ -55,15 +55,26 @@ export function UserNameDialog({ open, onOpenChange }: UserNameDialogProps) {
       
       if (!user) throw new Error("No user found");
 
-      const { error } = await supabase
+      // First update or create the user profile
+      const { error: profileError } = await supabase
         .from('users')
-        .update({
+        .upsert({
+          id: user.id,
+          email: user.email,
+          subscription_type: 'free'
+        });
+
+      if (profileError) throw profileError;
+
+      // Update user metadata through auth.updateUser
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: {
           first_name: values.firstName,
           last_name: values.lastName,
-        })
-        .eq('id', user.id);
+        }
+      });
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
       toast({
         title: "Profile updated",

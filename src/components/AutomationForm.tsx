@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -96,12 +97,18 @@ const AutomationForm = ({ onSubmit, isSubmitting = false, remainingCredits = 0 }
       await onSubmit(values);
     } else {
       try {
+        // Create the automation log with all required fields
+        const automationData = {
+          ...values,
+          user_id: session.user.id,
+          created_at: new Date().toISOString(),
+          google_drive: null,
+          status: 'pending'
+        };
+
         const { error } = await supabase
           .from("automation_logs")
-          .insert({
-            ...values,
-            user_id: session.user.id,
-          });
+          .insert(automationData);
   
         if (error) throw error;
   
