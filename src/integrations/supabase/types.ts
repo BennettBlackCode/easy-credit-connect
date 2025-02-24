@@ -231,6 +231,8 @@ export type Database = {
           description: string | null
           expires_at: string | null
           id: string
+          promotion_code: string | null
+          stripe_session_id: string | null
           transaction_type: string | null
           user_id: string | null
         }
@@ -240,6 +242,8 @@ export type Database = {
           description?: string | null
           expires_at?: string | null
           id?: string
+          promotion_code?: string | null
+          stripe_session_id?: string | null
           transaction_type?: string | null
           user_id?: string | null
         }
@@ -249,6 +253,8 @@ export type Database = {
           description?: string | null
           expires_at?: string | null
           id?: string
+          promotion_code?: string | null
+          stripe_session_id?: string | null
           transaction_type?: string | null
           user_id?: string | null
         }
@@ -677,9 +683,9 @@ export type Database = {
         | {
             Args: {
               _user_id: string
-              _stripe_price_id: string
-              _payment_id: string
-              _event_description: string
+              _product_name: string
+              _stripe_session_id: string
+              _promotion_code?: string
             }
             Returns: undefined
           }
