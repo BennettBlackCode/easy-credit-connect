@@ -12,7 +12,19 @@ export const useBillingData = () => {
       if (!session?.user?.id) return null;
       const { data, error } = await supabase
         .from("user_summary")
-        .select("*")
+        .select(`
+          total_credits,
+          remaining_credits,
+          email,
+          subscription_type,
+          product_name,
+          credits_included,
+          price_amount,
+          product_active,
+          user_id,
+          status,
+          current_product_name
+        `)
         .eq("user_id", session.user.id)
         .maybeSingle();
 
