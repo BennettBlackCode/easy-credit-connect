@@ -13,6 +13,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -43,41 +44,40 @@ serve(async (req) => {
     }
 
     // Get user details
-    const { data: user, error: userError } = await supabaseClient
-      .from('users')
-      .select('email, status, stripe_customer_id')
-      .eq('id', userId)
-      .single();
+    const { data: { user }, error: userError } = await supabaseClient.auth.admin.getUserById(userId);
 
     if (userError || !user) {
       console.error('User lookup error:', userError);
       throw new Error('User not found');
     }
 
-    let stripeCustomerId = user.stripe_customer_id;
+    // Create or retrieve Stripe customer
+    let stripeCustomerId;
+    const { data: userData } = await supabaseClient
+      .from('users')
+      .select('stripe_customer_id')
+      .eq('id', userId)
+      .single();
 
-    // If user doesn't have a Stripe customer ID, create one
-    if (!stripeCustomerId) {
+    if (userData?.stripe_customer_id) {
+      stripeCustomerId = userData.stripe_customer_id;
+    } else {
       const customer = await stripe.customers.create({
         email: user.email,
         metadata: {
-          supabase_id: userId
+          supabase_user_id: userId
         }
       });
       stripeCustomerId = customer.id;
 
       // Update user with new Stripe customer ID
-      const { error: updateError } = await supabaseClient
+      await supabaseClient
         .from('users')
         .update({ stripe_customer_id: stripeCustomerId })
         .eq('id', userId);
-
-      if (updateError) {
-        console.error('Error updating user with Stripe customer ID:', updateError);
-      }
     }
 
-    // Create Checkout Session with subscription mode
+    // Create Checkout Session
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       line_items: [
@@ -86,7 +86,7 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: 'subscription', // Changed from 'payment' to 'subscription'
+      mode: 'payment',
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
       metadata: {
@@ -99,7 +99,7 @@ serve(async (req) => {
 
     console.log('Checkout session created:', {
       sessionId: session.id,
-      mode: 'subscription' // Updated log to match new mode
+      customerId: stripeCustomerId
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
