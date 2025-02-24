@@ -1,11 +1,12 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import AutomationForm from "@/components/AutomationForm";
-import type { FormValues } from "@/components/AutomationForm";
+import AutomationForm, { FormValues } from "@/components/AutomationForm";
 
 const Automation = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,14 +51,9 @@ const Automation = () => {
 
     setIsSubmitting(true);
     try {
-      const { companyName, industry, webUrl, agencyEmail } = values;
-
       const { data, error } = await supabase.functions.invoke('run-automation', {
         body: {
-          companyName,
-          industry,
-          webUrl,
-          agencyEmail,
+          ...values,
           userId: session?.user?.id,
         },
       });

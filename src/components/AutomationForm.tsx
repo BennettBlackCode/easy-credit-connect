@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -16,9 +16,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import type { Database } from "@/integrations/supabase/types";
-
-type Automation = Database["public"]["Tables"]["automations"]["Insert"];
 
 const formSchema = z.object({
   company_name: z.string().min(1, "Company name is required"),
@@ -36,10 +33,15 @@ const formSchema = z.object({
   postal_code: z.string().min(1, "Postal code is required"),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+export type FormValues = z.infer<typeof formSchema>;
 
-const AutomationForm = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+interface AutomationFormProps {
+  onSubmit?: (values: FormValues) => Promise<void>;
+  isSubmitting?: boolean;
+  remainingCredits?: number;
+}
+
+const AutomationForm = ({ onSubmit, isSubmitting = false, remainingCredits = 0 }: AutomationFormProps) => {
   const { session } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -63,7 +65,7 @@ const AutomationForm = () => {
     },
   });
 
-  const onSubmit = async (values: FormValues) => {
+  const handleSubmit = async (values: FormValues) => {
     if (!session?.user?.id) {
       toast({
         title: "Error",
@@ -75,19 +77,13 @@ const AutomationForm = () => {
     }
 
     // Check available credits
-    const { data: userData, error: userError } = await supabase
-      .from("users")
-      .select("remaining_runs, permanent_credits, subscription_credits")
-      .eq("id", session.user.id)
+    const { data: userData } = await supabase
+      .from("user_summary")
+      .select("remaining_credits")
+      .eq("user_id", session.user.id)
       .single();
 
-    if (userError) throw userError;
-
-    const totalCredits = (userData?.remaining_runs || 0) + 
-                        (userData?.permanent_credits || 0) + 
-                        (userData?.subscription_credits || 0);
-
-    if (totalCredits < 1) {
+    if (!userData || userData.remaining_credits < 1) {
       toast({
         title: "Insufficient Credits",
         description: "You need at least 1 credit to run this automation",
@@ -96,69 +92,39 @@ const AutomationForm = () => {
       return;
     }
 
-    setIsSubmitting(true);
-
-    try {
-      // Begin transaction
-      const insertData: Automation = {
-        company_name: values.company_name,
-        phone_number: values.phone_number,
-        last_name: values.last_name,
-        industry: values.industry,
-        domain: values.domain,
-        web_url: values.web_url,
-        agency_email: values.agency_email,
-        email: values.email,
-        street_address: values.street_address,
-        city: values.city,
-        state: values.state,
-        country: values.country,
-        postal_code: values.postal_code,
-        user_id: session.user.id,
-      };
-
-      const { error: automationError } = await supabase
-        .from("automations")
-        .insert(insertData);
-
-      if (automationError) throw automationError;
-
-      // Call webhook
-      const webhookUrl = "https://boldslate.app.n8n.cloud/webhook/685d206b-107d-4b95-a7b4-9d07133417e7";
-      const response = await fetch(webhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(insertData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to trigger automation webhook");
+    if (onSubmit) {
+      await onSubmit(values);
+    } else {
+      try {
+        const { error } = await supabase
+          .from("automation_logs")
+          .insert({
+            ...values,
+            user_id: session.user.id,
+          });
+  
+        if (error) throw error;
+  
+        toast({
+          title: "Success",
+          description: "Automation started successfully",
+        });
+  
+        form.reset();
+      } catch (error: any) {
+        console.error("Error:", error);
+        toast({
+          title: "Error",
+          description: "Failed to run automation. Please try again.",
+          variant: "destructive",
+        });
       }
-
-      toast({
-        title: "Success",
-        description: "Automation started successfully",
-      });
-
-      // Reset form
-      form.reset();
-    } catch (error: any) {
-      console.error("Error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to run automation. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="company_name"

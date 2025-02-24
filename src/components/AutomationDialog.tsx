@@ -11,12 +11,12 @@ const AutomationDialog = () => {
   const { session } = useAuth();
 
   const { data: userData } = useQuery({
-    queryKey: ["user", session?.user?.id],
+    queryKey: ["user-summary", session?.user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("users")
-        .select("remaining_runs, permanent_credits, subscription_credits")
-        .eq("id", session?.user?.id)
+        .from("user_summary")
+        .select("*")
+        .eq("user_id", session?.user?.id)
         .single();
 
       if (error) throw error;
@@ -25,9 +25,7 @@ const AutomationDialog = () => {
     enabled: !!session?.user?.id,
   });
 
-  const totalCredits = (userData?.remaining_runs || 0) + 
-                      (userData?.permanent_credits || 0) + 
-                      (userData?.subscription_credits || 0);
+  const totalCredits = userData?.remaining_credits || 0;
 
   return (
     <Dialog>
