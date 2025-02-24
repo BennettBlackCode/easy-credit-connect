@@ -219,13 +219,6 @@ export type Database = {
             foreignKeyName: "automation_logs_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "user_summary"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "automation_logs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
