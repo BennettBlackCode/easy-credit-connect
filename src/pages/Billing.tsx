@@ -47,7 +47,6 @@ const Billing = () => {
   useEffect(() => {
     if (!session?.user?.id) return;
 
-    // Create a real-time subscription for credit transaction changes
     const channel = supabase
       .channel('credit-updates')
       .on(
@@ -60,8 +59,7 @@ const Billing = () => {
         },
         (payload) => {
           console.log('Credit transaction update:', payload);
-          // Invalidate both queries to refresh the data
-          queryClient.invalidateQueries({ queryKey: ["user-calculated-credits"] });
+          queryClient.invalidateQueries({ queryKey: ["user-summary"] });
           queryClient.invalidateQueries({ queryKey: ["credit_transactions"] });
         }
       )
@@ -89,29 +87,14 @@ const Billing = () => {
         body: { productId, userId: session.user.id },
       });
 
-      if (error) {
-        console.error('Function error:', error);
-        toast({
-          title: "Error",
-          description: "There was an error processing your payment. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
+      if (error) throw error;
 
       if (!data?.url) {
-        console.error('No URL in response:', data);
-        toast({
-          title: "Error",
-          description: "Unable to initialize checkout. Please try again.",
-          variant: "destructive",
-        });
-        return;
+        throw new Error('No checkout URL returned');
       }
 
-      // Redirect to Stripe checkout
       window.location.href = data.url;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating checkout session:', error);
       toast({
         title: "Error",
@@ -143,14 +126,14 @@ const Billing = () => {
         <CreditBalanceCard
           remainingCredits={userCredits?.remaining_credits || 0}
           totalCredits={userCredits?.total_credits || 0}
-          status={userCredits?.product_name || "Free Tier"}
+          status={userCredits?.current_product_name || "Free Tier"}
         />
 
         <h2 className="text-xl font-semibold mb-4">Available Plans</h2>
         <PricingCards
           products={products || []}
           onPurchase={handlePurchase}
-          currentPlan={userCredits?.product_name || "Free Tier"}
+          currentPlan={userCredits?.current_product_name}
         />
 
         <h2 className="text-xl font-semibold mb-4">Transaction History</h2>

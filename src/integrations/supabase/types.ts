@@ -530,6 +530,7 @@ export type Database = {
       frontend_users: {
         Row: {
           automation_runs: number | null
+          current_product_name: string | null
           email: string | null
           end_date: string | null
           last_credit_transaction: string | null
@@ -540,7 +541,9 @@ export type Database = {
           subscription_plan:
             | Database["public"]["Enums"]["subscription_type"]
             | null
-          subscription_type: string | null
+          subscription_type:
+            | Database["public"]["Enums"]["subscription_type"]
+            | null
           total_credits: number | null
           user_id: string | null
           user_name: string | null
