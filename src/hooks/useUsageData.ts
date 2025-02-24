@@ -9,7 +9,6 @@ import {
   eachHourOfInterval,
   eachDayOfInterval,
   eachMonthOfInterval,
-  format,
 } from "date-fns";
 
 export const useUsageData = (
@@ -24,7 +23,7 @@ export const useUsageData = (
       if (!session?.user?.id) return [];
 
       const { data: runs, error } = await supabase
-        .from("automations")
+        .from("automation_logs")
         .select("created_at")
         .eq("user_id", session.user.id)
         .gte("created_at", dateRange.start.toISOString())

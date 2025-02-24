@@ -11,10 +11,10 @@ export const useDashboardData = () => {
     queryKey: ["user-calculated-credits", session?.user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("users_with_calculated_credits")
+        .from("frontend_users")
         .select("remaining_credits, total_credits, user_name")
         .eq("user_id", session?.user?.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
@@ -27,7 +27,7 @@ export const useDashboardData = () => {
     queryFn: async () => {
       const startDate = startOfMonth(new Date());
       const { count, error } = await supabase
-        .from("automations")
+        .from("automation_logs")
         .select("*", { count: 'exact', head: true })
         .eq("user_id", session?.user?.id)
         .gte("created_at", startDate.toISOString());
@@ -42,7 +42,7 @@ export const useDashboardData = () => {
     queryKey: ["recent-automations", session?.user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("automations")
+        .from("automation_logs")
         .select("id, created_at, company_name, google_drive")
         .eq("user_id", session?.user?.id)
         .order("created_at", { ascending: false });

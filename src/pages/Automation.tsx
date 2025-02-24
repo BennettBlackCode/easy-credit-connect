@@ -143,7 +143,7 @@ const Automation = () => {
         web_url: `https://${values.domain}`,
       };
 
-      const { error } = await supabase.from("automations").insert(automationData);
+      const { error } = await supabase.from("automation_logs").insert(automationData);
 
       if (error) throw error;
 
