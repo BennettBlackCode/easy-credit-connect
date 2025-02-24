@@ -143,14 +143,14 @@ const Billing = () => {
         <CreditBalanceCard
           remainingCredits={userCredits?.remaining_credits || 0}
           totalCredits={userCredits?.total_credits || 0}
-          status={userCredits?.status || "Free Tier"}
+          status={userCredits?.product_name || "Free Tier"}
         />
 
         <h2 className="text-xl font-semibold mb-4">Available Plans</h2>
         <PricingCards
           products={products || []}
           onPurchase={handlePurchase}
-          currentPlan={userCredits?.status || "Free Tier"}
+          currentPlan={userCredits?.product_name || "Free Tier"}
         />
 
         <h2 className="text-xl font-semibold mb-4">Transaction History</h2>
