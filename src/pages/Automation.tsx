@@ -21,7 +21,7 @@ const Automation = () => {
       if (!session?.user?.id) return null;
       const { data, error } = await supabase
         .from("frontend_users")
-        .select("*")
+        .select("remaining_credits, total_credits")
         .eq("user_id", session.user.id)
         .maybeSingle();
 
@@ -31,8 +31,6 @@ const Automation = () => {
     enabled: !!session?.user?.id,
   });
 
-  const remainingCredits = userData?.remaining_credits || 0;
-
   useEffect(() => {
     if (!session) {
       navigate("/auth");
@@ -40,7 +38,7 @@ const Automation = () => {
   }, [session, navigate]);
 
   const onSubmit = async (values: FormValues) => {
-    if (remainingCredits <= 0) {
+    if (!userData?.remaining_credits || userData.remaining_credits <= 0) {
       toast({
         title: "Insufficient credits",
         description: "You don't have enough credits to run this automation. Please purchase more credits.",
@@ -51,33 +49,58 @@ const Automation = () => {
 
     setIsSubmitting(true);
     try {
-      const { data, error } = await supabase.functions.invoke('run-automation', {
+      // First create the automation log
+      const { data: automationLog, error: logError } = await supabase
+        .from("automation_logs")
+        .insert([{
+          user_id: session?.user?.id,
+          company_name: values.company_name,
+          phone_number: values.phone_number,
+          last_name: values.last_name,
+          industry: values.industry,
+          domain: values.domain,
+          web_url: values.web_url,
+          agency_email: values.agency_email,
+          email: values.email,
+          street_address: values.street_address,
+          city: values.city,
+          state: values.state,
+          country: values.country,
+          postal_code: values.postal_code,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+        }])
+        .select()
+        .single();
+
+      if (logError) {
+        throw logError;
+      }
+
+      // Then call the automation function
+      const { error: functionError } = await supabase.functions.invoke('run-automation', {
         body: {
-          ...values,
+          automationId: automationLog.id,
           userId: session?.user?.id,
         },
       });
 
-      if (error) {
-        console.error("Function Invoke Error:", error);
-        toast({
-          title: "Error",
-          description: "Failed to run automation. Please try again.",
-          variant: "destructive",
-        });
-      } else {
-        console.log("Function Invoke Data:", data);
-        toast({
-          title: "Automation started",
-          description: "Your automation has been started successfully.",
-        });
-        navigate("/dashboard");
+      if (functionError) {
+        throw functionError;
       }
-    } catch (error) {
-      console.error("Unexpected Error:", error);
+
       toast({
-        title: "Unexpected Error",
-        description: "An unexpected error occurred. Please try again.",
+        title: "Automation started",
+        description: "Your automation has been started successfully.",
+      });
+      
+      // Redirect to dashboard after successful submission
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Automation Error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to run automation. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -89,11 +112,16 @@ const Automation = () => {
   return (
     <div className="container py-24">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Run Automation</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Run Automation</h1>
+          <div className="text-sm">
+            Available Credits: <span className="font-bold">{userData?.remaining_credits || 0}</span>
+          </div>
+        </div>
         <AutomationForm
           onSubmit={onSubmit}
           isSubmitting={isSubmitting}
-          remainingCredits={remainingCredits}
+          remainingCredits={userData?.remaining_credits || 0}
         />
       </div>
     </div>
