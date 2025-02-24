@@ -219,6 +219,13 @@ export type Database = {
             foreignKeyName: "automation_logs_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "user_summary"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "automation_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -252,15 +259,7 @@ export type Database = {
           transaction_type?: string | null
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "credit_transactions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_summary"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       cron_job_logs: {
         Row: {
@@ -524,15 +523,7 @@ export type Database = {
           stripe_customer_id?: string | null
           subscription_type?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "users_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "user_summary"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
@@ -554,34 +545,17 @@ export type Database = {
           user_id: string | null
           user_name: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "users_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "user_summary"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       user_summary: {
         Row: {
-          billing_cycle: string | null
-          confirmation_date: string | null
-          confirmed: boolean | null
           credits_included: number | null
           email: string | null
-          last_credit_amount: number | null
-          last_credit_date: string | null
-          last_credit_description: string | null
-          last_transaction_type: string | null
           price_amount: number | null
           product_active: boolean | null
           product_name: string | null
-          product_status: string | null
           remaining_credits: number | null
-          signup_date: string | null
-          signup_method: string | null
+          status: string | null
           subscription_type: string | null
           total_credits: number | null
           user_id: string | null
