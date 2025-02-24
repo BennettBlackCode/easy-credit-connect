@@ -862,6 +862,18 @@ export type Database = {
         }
         Returns: undefined
       }
+      reset_user_credits_to_zero: {
+        Args: {
+          _user_id: string
+        }
+        Returns: {
+          user_id: string
+          previous_total_credits: number
+          previous_remaining_credits: number
+          new_total_credits: number
+          new_remaining_credits: number
+        }[]
+      }
       reset_user_to_free_tier: {
         Args: {
           target_user_id: string
