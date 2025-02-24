@@ -22,8 +22,7 @@ export const useBillingData = () => {
           price_amount,
           product_active,
           user_id,
-          status,
-          current_product_name
+          status
         `)
         .eq("user_id", session.user.id)
         .maybeSingle();
