@@ -14,7 +14,6 @@ interface Transaction {
   created_at: string;
   transaction_type: string;
   credit_amount: number;
-  status: string;
 }
 
 interface TransactionHistoryProps {
@@ -31,7 +30,6 @@ export const TransactionHistory = ({ transactions }: TransactionHistoryProps) =>
               <TableHead>Date</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Amount</TableHead>
-              <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -43,12 +41,11 @@ export const TransactionHistory = ({ transactions }: TransactionHistoryProps) =>
                   </TableCell>
                   <TableCell>{transaction.transaction_type}</TableCell>
                   <TableCell>{transaction.credit_amount}</TableCell>
-                  <TableCell>{transaction.status}</TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="text-center">
+                <TableCell colSpan={3} className="text-center">
                   No transactions yet
                 </TableCell>
               </TableRow>

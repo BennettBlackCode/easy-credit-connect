@@ -42,34 +42,6 @@ export type Database = {
             referencedRelation: "affiliates"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "affiliate_referrals_referred_user_id_fkey"
-            columns: ["referred_user_id"]
-            isOneToOne: true
-            referencedRelation: "frontend_user_summary"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "affiliate_referrals_referred_user_id_fkey"
-            columns: ["referred_user_id"]
-            isOneToOne: true
-            referencedRelation: "frontend_user_summary"
-            referencedColumns: ["linked_user_id"]
-          },
-          {
-            foreignKeyName: "affiliate_referrals_referred_user_id_fkey"
-            columns: ["referred_user_id"]
-            isOneToOne: true
-            referencedRelation: "user_credit_summary"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "affiliate_referrals_referred_user_id_fkey"
-            columns: ["referred_user_id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       affiliates: {
@@ -94,36 +66,7 @@ export type Database = {
           id?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "affiliates_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "frontend_user_summary"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "affiliates_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "frontend_user_summary"
-            referencedColumns: ["linked_user_id"]
-          },
-          {
-            foreignKeyName: "affiliates_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_credit_summary"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "affiliates_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       audit_logs: {
         Row: {
@@ -264,101 +207,58 @@ export type Database = {
           user_id?: string | null
           web_url?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "automation_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "frontend_users"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "automation_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       credit_transactions: {
         Row: {
-          admin_actor: string | null
-          amount: number
           created_at: string | null
+          credit_amount: number | null
+          description: string | null
           expires_at: string | null
           id: string
-          metadata: Json | null
-          reference_id: string | null
-          transaction_id: number
-          type: Database["public"]["Enums"]["credit_transaction_type"] | null
+          transaction_type: string | null
           user_id: string | null
         }
         Insert: {
-          admin_actor?: string | null
-          amount: number
           created_at?: string | null
+          credit_amount?: number | null
+          description?: string | null
           expires_at?: string | null
           id?: string
-          metadata?: Json | null
-          reference_id?: string | null
-          transaction_id?: number
-          type?: Database["public"]["Enums"]["credit_transaction_type"] | null
+          transaction_type?: string | null
           user_id?: string | null
         }
         Update: {
-          admin_actor?: string | null
-          amount?: number
           created_at?: string | null
+          credit_amount?: number | null
+          description?: string | null
           expires_at?: string | null
           id?: string
-          metadata?: Json | null
-          reference_id?: string | null
-          transaction_id?: number
-          type?: Database["public"]["Enums"]["credit_transaction_type"] | null
+          transaction_type?: string | null
           user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "credit_transactions_admin_actor_fkey"
-            columns: ["admin_actor"]
-            isOneToOne: false
-            referencedRelation: "frontend_user_summary"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "credit_transactions_admin_actor_fkey"
-            columns: ["admin_actor"]
-            isOneToOne: false
-            referencedRelation: "frontend_user_summary"
-            referencedColumns: ["linked_user_id"]
-          },
-          {
-            foreignKeyName: "credit_transactions_admin_actor_fkey"
-            columns: ["admin_actor"]
-            isOneToOne: false
-            referencedRelation: "user_credit_summary"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "credit_transactions_admin_actor_fkey"
-            columns: ["admin_actor"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "credit_transactions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "frontend_user_summary"
+            referencedRelation: "user_summary"
             referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "credit_transactions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "frontend_user_summary"
-            referencedColumns: ["linked_user_id"]
-          },
-          {
-            foreignKeyName: "credit_transactions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_credit_summary"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "credit_transactions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
           },
         ]
       }
@@ -447,36 +347,7 @@ export type Database = {
           type?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "frontend_user_summary"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "frontend_user_summary"
-            referencedColumns: ["linked_user_id"]
-          },
-          {
-            foreignKeyName: "notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_credit_summary"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       stripe_event_errors: {
         Row: {
@@ -617,64 +488,7 @@ export type Database = {
           type?: Database["public"]["Enums"]["subscription_type"]
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "subscriptions_modified_by_fkey"
-            columns: ["modified_by"]
-            isOneToOne: false
-            referencedRelation: "frontend_user_summary"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "subscriptions_modified_by_fkey"
-            columns: ["modified_by"]
-            isOneToOne: false
-            referencedRelation: "frontend_user_summary"
-            referencedColumns: ["linked_user_id"]
-          },
-          {
-            foreignKeyName: "subscriptions_modified_by_fkey"
-            columns: ["modified_by"]
-            isOneToOne: false
-            referencedRelation: "user_credit_summary"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "subscriptions_modified_by_fkey"
-            columns: ["modified_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "subscriptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "frontend_user_summary"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "subscriptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "frontend_user_summary"
-            referencedColumns: ["linked_user_id"]
-          },
-          {
-            foreignKeyName: "subscriptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_credit_summary"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "subscriptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_credit_balance_updates: {
         Row: {
@@ -693,141 +507,82 @@ export type Database = {
       }
       users: {
         Row: {
-          address: Json | null
-          bio: string | null
-          created_at: string | null
-          deleted_by: string | null
-          email: string
-          encrypted_email: string | null
-          first_name: string | null
+          email: string | null
           id: string
-          last_name: string | null
-          profile_picture: string | null
-          role: Database["public"]["Enums"]["user_role"] | null
-          social_media_links: Json | null
           stripe_customer_id: string | null
-          updated_at: string | null
+          subscription_type: string | null
         }
         Insert: {
-          address?: Json | null
-          bio?: string | null
-          created_at?: string | null
-          deleted_by?: string | null
-          email: string
-          encrypted_email?: string | null
-          first_name?: string | null
-          id?: string
-          last_name?: string | null
-          profile_picture?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
-          social_media_links?: Json | null
+          email?: string | null
+          id: string
           stripe_customer_id?: string | null
-          updated_at?: string | null
+          subscription_type?: string | null
         }
         Update: {
-          address?: Json | null
-          bio?: string | null
-          created_at?: string | null
-          deleted_by?: string | null
-          email?: string
-          encrypted_email?: string | null
-          first_name?: string | null
+          email?: string | null
           id?: string
-          last_name?: string | null
-          profile_picture?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
-          social_media_links?: Json | null
           stripe_customer_id?: string | null
-          updated_at?: string | null
+          subscription_type?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "users_deleted_by_fkey"
-            columns: ["deleted_by"]
-            isOneToOne: false
-            referencedRelation: "frontend_user_summary"
+            foreignKeyName: "users_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "user_summary"
             referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "users_deleted_by_fkey"
-            columns: ["deleted_by"]
-            isOneToOne: false
-            referencedRelation: "frontend_user_summary"
-            referencedColumns: ["linked_user_id"]
-          },
-          {
-            foreignKeyName: "users_deleted_by_fkey"
-            columns: ["deleted_by"]
-            isOneToOne: false
-            referencedRelation: "user_credit_summary"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "users_deleted_by_fkey"
-            columns: ["deleted_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
           },
         ]
       }
     }
     Views: {
-      frontend_user_summary: {
+      frontend_users: {
         Row: {
-          credits_amount: number | null
+          automation_runs: number | null
           email: string | null
-          linked_user_id: string | null
-          period_runs: number | null
-          price_amount: number | null
+          end_date: string | null
+          last_credit_transaction: string | null
+          product_name: string | null
           remaining_credits: number | null
-          remaining_runs: number | null
-          status: string | null
+          start_date: string | null
+          subscription_active: boolean | null
+          subscription_plan:
+            | Database["public"]["Enums"]["subscription_type"]
+            | null
+          subscription_type: string | null
           total_credits: number | null
           user_id: string | null
-        }
-        Relationships: []
-      }
-      user_credit_balances: {
-        Row: {
-          current_balance: number | null
-          user_id: string | null
+          user_name: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "credit_transactions_user_id_fkey"
+            foreignKeyName: "users_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "frontend_user_summary"
+            isOneToOne: true
+            referencedRelation: "user_summary"
             referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "credit_transactions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "frontend_user_summary"
-            referencedColumns: ["linked_user_id"]
-          },
-          {
-            foreignKeyName: "credit_transactions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_credit_summary"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "credit_transactions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
           },
         ]
       }
-      user_credit_summary: {
+      user_summary: {
         Row: {
-          available_credits: number | null
+          billing_cycle: string | null
+          confirmation_date: string | null
+          confirmed: boolean | null
+          credits_included: number | null
           email: string | null
+          last_credit_amount: number | null
+          last_credit_date: string | null
+          last_credit_description: string | null
+          last_transaction_type: string | null
+          price_amount: number | null
+          product_active: boolean | null
+          product_name: string | null
+          product_status: string | null
+          remaining_credits: number | null
+          signup_date: string | null
+          signup_method: string | null
+          subscription_type: string | null
           total_credits: number | null
           user_id: string | null
         }
@@ -835,26 +590,6 @@ export type Database = {
       }
     }
     Functions: {
-      add_credits: {
-        Args: {
-          target_user_id: string
-          _amount: number
-          _type: string
-          _reference_id?: string
-        }
-        Returns: {
-          admin_actor: string | null
-          amount: number
-          created_at: string | null
-          expires_at: string | null
-          id: string
-          metadata: Json | null
-          reference_id: string | null
-          transaction_id: number
-          type: Database["public"]["Enums"]["credit_transaction_type"] | null
-          user_id: string | null
-        }
-      }
       admin_grant_credits: {
         Args: {
           _user_id: string
@@ -876,26 +611,6 @@ export type Database = {
           _new_type: string
         }
         Returns: undefined
-      }
-      deduct_credits: {
-        Args: {
-          target_user_id: string
-          _amount: number
-          _type: string
-          _reference_id?: string
-        }
-        Returns: {
-          admin_actor: string | null
-          amount: number
-          created_at: string | null
-          expires_at: string | null
-          id: string
-          metadata: Json | null
-          reference_id: string | null
-          transaction_id: number
-          type: Database["public"]["Enums"]["credit_transaction_type"] | null
-          user_id: string | null
-        }
       }
       delete_user: {
         Args: {
@@ -924,17 +639,49 @@ export type Database = {
           remaining_credits: number
         }[]
       }
-      get_user_summary: {
-        Args: {
-          _user_id: string
-        }
-        Returns: Json
-      }
+      get_user_summary:
+        | {
+            Args: Record<PropertyKey, never>
+            Returns: {
+              user_id: string
+              auth_email: string
+              email_confirmed_at: string
+              signup_date: string
+              signup_method: string
+              user_email: string
+              subscription_type: string
+              total_credits: number
+              remaining_credits: number
+              credit_tx_id: string
+              credit_amount: number
+              transaction_type: string
+              credit_description: string
+              credit_assigned_at: string
+              product_name: string
+              credits_included: number
+              product_active: boolean
+              price_amount: number
+              billing_cycle: string
+              product_status: string
+            }[]
+          }
+        | {
+            Args: {
+              _user_id: string
+            }
+            Returns: Json
+          }
       giveaway_credits: {
         Args: {
           _user_id: string
           _amount: number
           _giveaway_name: string
+        }
+        Returns: undefined
+      }
+      grant_free_tier: {
+        Args: {
+          user_id: string
         }
         Returns: undefined
       }
@@ -1086,21 +833,31 @@ export type Database = {
         }
         Returns: {
           user_id: string
-          subscription_status: string
-          current_credits: number
+          new_balance: number
         }[]
       }
-      manual_update_subscription: {
-        Args: {
-          _user_id: string
-          _new_type: string
-          _admin_id: string
-        }
-        Returns: {
-          user_id: string
-          subscription_type: string
-        }[]
-      }
+      manual_update_subscription:
+        | {
+            Args: {
+              _user_id: string
+              _new_type: string
+            }
+            Returns: {
+              user_id: string
+              subscription_type: string
+            }[]
+          }
+        | {
+            Args: {
+              _user_id: string
+              _new_type: string
+              _admin_id: string
+            }
+            Returns: {
+              user_id: string
+              subscription_type: string
+            }[]
+          }
       process_payment: {
         Args: {
           event: Json
@@ -1154,11 +911,22 @@ export type Database = {
         }
         Returns: undefined
       }
+      update_user_stripe_id: {
+        Args: {
+          p_user_id: string
+          p_stripe_customer_id: string
+        }
+        Returns: undefined
+      }
       verify_stripe_event: {
         Args: {
           event: Json
         }
         Returns: boolean
+      }
+      wipe_expired_credits: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {
@@ -1168,6 +936,7 @@ export type Database = {
         | "delete"
         | "login"
         | "logout"
+        | "user_creation_failed"
         | "credit_added"
         | "credit_deducted"
         | "subscription_changed"

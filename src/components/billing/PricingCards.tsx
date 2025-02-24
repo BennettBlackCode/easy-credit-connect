@@ -7,8 +7,8 @@ interface Product {
   id: string;
   name: string;
   description: string | null;
-  price_amount: number;
-  credits_amount: number;
+  unit_amount: number;
+  credits_included: number;
 }
 
 interface PricingCardsProps {
@@ -41,10 +41,10 @@ export const PricingCards = ({ products, onPurchase, currentPlan = "Free Tier" }
             </p>
             <div className="flex flex-col gap-2 mb-4">
               <div className="text-2xl font-bold">
-                ${(product.price_amount / 100).toFixed(2)}
+                ${(product.unit_amount / 100).toFixed(2)}
               </div>
               <div className="text-sm text-muted-foreground">
-                Includes {product.credits_amount} credits
+                Includes {product.credits_included} credits
               </div>
             </div>
             <div className="mt-auto">

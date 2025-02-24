@@ -7,12 +7,12 @@ export const useBillingData = () => {
   const { session } = useAuth();
 
   const { data: userCredits, isLoading: userLoading } = useQuery({
-    queryKey: ["user-calculated-credits"],
+    queryKey: ["user-credit-summary"],
     queryFn: async () => {
       if (!session?.user?.id) return null;
       const { data, error } = await supabase
-        .from("users_with_calculated_credits")
-        .select("remaining_credits, total_credits, status")
+        .from("user_credit_summary")
+        .select("available_credits, total_credits")
         .eq("user_id", session.user.id)
         .maybeSingle();
 
@@ -42,9 +42,9 @@ export const useBillingData = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stripe_products")
-        .select("*, credits_amount")
-        .eq("active", true)
-        .order("price_amount", { ascending: true });
+        .select("*, credits_included")
+        .eq("is_active", true)
+        .order("unit_amount", { ascending: true });
 
       if (error) throw error;
       return data;
