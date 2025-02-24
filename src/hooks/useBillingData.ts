@@ -13,12 +13,11 @@ export const useBillingData = () => {
       const { data, error } = await supabase
         .from("frontend_users")
         .select(`
-          total_credits,
           remaining_credits,
+          total_credits,
           email,
           subscription_type,
           product_name,
-          credits_included,
           subscription_active,
           user_id
         `)
