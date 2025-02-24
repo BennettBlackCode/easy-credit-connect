@@ -1,38 +1,34 @@
-import { Card, CardContent } from "@/components/ui/card";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+
 interface CreditBalanceCardProps {
   remainingCredits: number;
   totalCredits: number;
-  status?: string;
+  status: string;
 }
-export const CreditBalanceCard = ({
-  remainingCredits,
-  totalCredits,
-  status = "Starter Pack"
-}: CreditBalanceCardProps) => {
-  return <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-      {/* Credits Balance Card */}
-      <Card className="bg-black/40 backdrop-blur-sm border border-white/10">
-        <CardContent className="p-6">
-          <div className="space-y-1">
-            <p className="text-gray-400 text-sm">Available Credits</p>
-            <p className="font-bold text-white text-3xl">{remainingCredits} runs left</p>
-            <p className="text-sm text-gray-400">
-              Total Credits Purchased: {totalCredits}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Current Plan Card */}
-      <Card className="bg-black/40 backdrop-blur-sm border border-white/10">
-        <CardContent className="p-6">
-          <div className="space-y-1">
-            <p className="text-gray-400 text-sm">Current Plan</p>
-            <p className="font-bold text-white text-3xl my-[14px]">
-              {status}
-            </p>
+export const CreditBalanceCard = ({ remainingCredits, totalCredits, status }: CreditBalanceCardProps) => {
+  const progressValue = totalCredits > 0 ? (remainingCredits / totalCredits) * 100 : 0;
+
+  return (
+    <Card className="mb-8">
+      <CardHeader>
+        <CardTitle>Credit Balance</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-col space-y-4">
+          <div className="flex justify-between items-center">
+            <span className="text-2xl font-bold">{remainingCredits} credits</span>
+            <span className="text-sm text-muted-foreground">Current Plan: {status}</span>
           </div>
-        </CardContent>
-      </Card>
-    </div>;
+          <Progress value={progressValue} className="h-2" />
+          <div className="flex justify-between text-sm text-muted-foreground">
+            <span>Used: {totalCredits - remainingCredits} credits</span>
+            <span>Total: {totalCredits} credits</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 };

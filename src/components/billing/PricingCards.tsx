@@ -18,6 +18,11 @@ interface PricingCardsProps {
 }
 
 export const PricingCards = ({ products, onPurchase, currentPlan = "Free Tier" }: PricingCardsProps) => {
+  // Filter products to only show Starter Pack and Growth Pack
+  const filteredProducts = products.filter(product => 
+    ["Starter Pack", "Growth Pack"].includes(product.name)
+  );
+
   const getButtonText = (productName: string) => {
     if (currentPlan === productName) {
       return "Refill";
@@ -30,7 +35,7 @@ export const PricingCards = ({ products, onPurchase, currentPlan = "Free Tier" }
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
-      {products && products.map((product) => (
+      {filteredProducts.map((product) => (
         <Card key={product.id} className="flex flex-col">
           <CardHeader>
             <CardTitle>{product.name}</CardTitle>
@@ -62,7 +67,7 @@ export const PricingCards = ({ products, onPurchase, currentPlan = "Free Tier" }
       
       <Card className="flex flex-col">
         <CardHeader>
-          <CardTitle>Unlimited</CardTitle>
+          <CardTitle>Enterprise</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col flex-1">
           <p className="text-sm text-muted-foreground mb-4">
