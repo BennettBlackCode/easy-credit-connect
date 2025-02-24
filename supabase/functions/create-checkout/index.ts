@@ -50,8 +50,6 @@ serve(async (req) => {
       success_url: `${req.headers.get('origin')}/billing?success=true`,
       cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
       allow_promotion_codes: true,
-      customer_email: null, // This explicitly tells Stripe not to collect email
-      customer_creation: 'always',
     });
 
     console.log('Checkout session created:', session.id);
