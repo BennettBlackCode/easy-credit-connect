@@ -1,10 +1,9 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
-import Stripe from "https://esm.sh/stripe@12.1.1?target=deno";
+import Stripe from "https://esm.sh/stripe@13.6.0?target=deno";
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-  apiVersion: '2023-10-16',
   httpClient: Stripe.createFetchHttpClient(),
 });
 
@@ -19,11 +18,11 @@ serve(async (req) => {
   }
 
   try {
-    const body = await req.text();
     const signature = req.headers.get('stripe-signature');
-
+    const body = await req.text();
+    
     if (!signature) {
-      throw new Error('No Stripe signature found');
+      throw new Error('No stripe signature found');
     }
 
     console.log('Webhook received - Signature:', signature);
@@ -55,9 +54,11 @@ serve(async (req) => {
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
+      const userId = session.metadata.user_id;
+      
       console.log('Processing session:', {
         id: session.id,
-        userId: session.client_reference_id,
+        userId: userId,
         metadata: session.metadata
       });
 
@@ -65,7 +66,7 @@ serve(async (req) => {
       const { data: product, error: productError } = await supabase
         .from('stripe_products')
         .select('*')
-        .eq('id', session.metadata?.product_id)
+        .eq('id', session.metadata.product_id)
         .single();
 
       if (productError || !product) {
@@ -79,7 +80,7 @@ serve(async (req) => {
       const { error: creditError } = await supabase.rpc(
         'increment_user_credits',
         {
-          user_id: session.client_reference_id,
+          user_id: userId,
           amount: product.credits_included
         }
       );
@@ -90,22 +91,19 @@ serve(async (req) => {
       }
 
       console.log('Credits added:', {
-        userId: session.client_reference_id,
+        userId: userId,
         amount: product.credits_included
       });
 
       // Log the transaction
       await supabase
-        .from('audit_logs')
+        .from('credit_transactions')
         .insert({
-          user_id: session.client_reference_id,
-          action_type: 'credit_purchase',
-          details: {
-            session_id: session.id,
-            product_id: product.id,
-            credits_added: product.credits_included,
-            amount_paid: session.amount_total
-          }
+          user_id: userId,
+          credit_amount: product.credits_included,
+          transaction_type: 'stripe_purchase',
+          description: `Purchase of ${product.name}`,
+          stripe_session_id: session.id
         });
 
       console.log('Transaction logged successfully');
