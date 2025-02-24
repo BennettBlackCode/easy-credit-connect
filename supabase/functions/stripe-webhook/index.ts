@@ -1,6 +1,12 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import Stripe from "https://esm.sh/stripe@12.1.1?target=deno";
+
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+  apiVersion: '2023-10-16',
+  httpClient: Stripe.createFetchHttpClient(),
+});
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,43 +20,62 @@ serve(async (req) => {
 
   try {
     const body = await req.text();
-    console.log('Received webhook body:', body);
+    const signature = req.headers.get('stripe-signature');
 
-    const event = JSON.parse(body);
-    console.log('Event type:', event.type);
+    if (!signature) {
+      throw new Error('No Stripe signature found');
+    }
+
+    console.log('Webhook received - Signature:', signature);
+
+    // Verify the event
+    let event;
+    try {
+      event = stripe.webhooks.constructEvent(
+        body,
+        signature,
+        Deno.env.get('STRIPE_WEBHOOK_SECRET') || ''
+      );
+      console.log('Event verified:', event.type);
+    } catch (err) {
+      console.error('Webhook signature verification failed:', err.message);
+      return new Response(
+        JSON.stringify({ error: 'Webhook signature verification failed' }), 
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') || '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+    );
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
       console.log('Processing session:', {
         id: session.id,
         userId: session.client_reference_id,
-        productId: session.metadata?.product_id
+        metadata: session.metadata
       });
 
-      const supabase = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-      );
-
-      // First get the product details
+      // Get product details
       const { data: product, error: productError } = await supabase
         .from('stripe_products')
         .select('*')
         .eq('id', session.metadata?.product_id)
         .single();
 
-      if (productError) {
-        console.error('Error fetching product:', productError);
-        throw new Error(`Product fetch error: ${productError.message}`);
-      }
-
-      if (!product) {
+      if (productError || !product) {
+        console.error('Product fetch error:', productError);
         throw new Error('Product not found');
       }
 
       console.log('Found product:', product);
 
-      // Call increment_user_credits directly
+      // Add credits
       const { error: creditError } = await supabase.rpc(
         'increment_user_credits',
         {
@@ -60,18 +85,17 @@ serve(async (req) => {
       );
 
       if (creditError) {
-        console.error('Error incrementing credits:', creditError);
-        throw new Error(`Credit increment error: ${creditError.message}`);
+        console.error('Credit increment error:', creditError);
+        throw new Error(`Failed to add credits: ${creditError.message}`);
       }
 
-      // Log successful credit addition
-      console.log('Credits added successfully:', {
+      console.log('Credits added:', {
         userId: session.client_reference_id,
-        creditsAdded: product.credits_included
+        amount: product.credits_included
       });
 
-      // Add an audit log entry
-      const { error: auditError } = await supabase
+      // Log the transaction
+      await supabase
         .from('audit_logs')
         .insert({
           user_id: session.client_reference_id,
@@ -84,32 +108,21 @@ serve(async (req) => {
           }
         });
 
-      if (auditError) {
-        console.error('Error creating audit log:', auditError);
-      }
+      console.log('Transaction logged successfully');
     }
 
-    // Always return a 200 response to acknowledge receipt
-    return new Response(
-      JSON.stringify({ received: true }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
-      }
-    );
+    return new Response(JSON.stringify({ received: true }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200
+    });
 
   } catch (err) {
     console.error('Webhook error:', err);
-    
-    // Even on error, return 200 so Stripe doesn't retry
     return new Response(
-      JSON.stringify({
-        error: err.message,
-        received: true
-      }),
+      JSON.stringify({ error: err.message }), 
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
+        status: 400
       }
     );
   }
