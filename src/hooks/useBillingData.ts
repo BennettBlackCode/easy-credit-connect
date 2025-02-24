@@ -7,11 +7,11 @@ export const useBillingData = () => {
   const { session } = useAuth();
 
   const { data: userCredits, isLoading: userLoading } = useQuery({
-    queryKey: ["user-summary", session?.user?.id],
+    queryKey: ["frontend-users", session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) return null;
       const { data, error } = await supabase
-        .from("user_summary")
+        .from("frontend_users")
         .select(`
           total_credits,
           remaining_credits,
@@ -19,10 +19,8 @@ export const useBillingData = () => {
           subscription_type,
           product_name,
           credits_included,
-          price_amount,
-          product_active,
-          user_id,
-          status
+          subscription_active,
+          user_id
         `)
         .eq("user_id", session.user.id)
         .maybeSingle();

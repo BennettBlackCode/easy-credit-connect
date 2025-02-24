@@ -10,6 +10,7 @@ interface CreditBalanceCardProps {
 
 export const CreditBalanceCard = ({ remainingCredits, totalCredits, status }: CreditBalanceCardProps) => {
   const progressValue = totalCredits > 0 ? (remainingCredits / totalCredits) * 100 : 0;
+  const usedCredits = totalCredits - remainingCredits;
 
   return (
     <Card className="mb-8">
@@ -19,13 +20,13 @@ export const CreditBalanceCard = ({ remainingCredits, totalCredits, status }: Cr
       <CardContent>
         <div className="flex flex-col space-y-4">
           <div className="flex justify-between items-center">
-            <span className="text-2xl font-bold">{remainingCredits} credits</span>
+            <span className="text-2xl font-bold">{remainingCredits.toLocaleString()} credits</span>
             <span className="text-sm text-muted-foreground">Current Plan: {status}</span>
           </div>
           <Progress value={progressValue} className="h-2" />
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Used: {totalCredits - remainingCredits} credits</span>
-            <span>Total: {totalCredits} credits</span>
+            <span>Used: {usedCredits.toLocaleString()} credits</span>
+            <span>Total: {totalCredits.toLocaleString()} credits</span>
           </div>
         </div>
       </CardContent>

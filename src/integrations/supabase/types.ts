@@ -874,6 +874,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      update_subscription_type_on_upgrade: {
+        Args: {
+          _user_id: string
+          _new_subscription_type: string
+        }
+        Returns: {
+          user_id: string
+          new_subscription_type: string
+        }[]
+      }
       update_user_status_and_credits: {
         Args: {
           target_user_id: string

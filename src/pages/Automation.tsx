@@ -16,11 +16,11 @@ const Automation = () => {
   const queryClient = useQueryClient();
 
   const { data: userData } = useQuery({
-    queryKey: ["user-summary", session?.user?.id],
+    queryKey: ["frontend-users", session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) return null;
       const { data, error } = await supabase
-        .from("user_summary")
+        .from("frontend_users")
         .select("*")
         .eq("user_id", session.user.id)
         .maybeSingle();
@@ -82,7 +82,7 @@ const Automation = () => {
       });
     } finally {
       setIsSubmitting(false);
-      queryClient.invalidateQueries({ queryKey: ["user-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["frontend-users"] });
     }
   };
 
