@@ -43,8 +43,12 @@ serve(async (req) => {
       throw new Error('Product not found');
     }
 
-    // Get user details
-    const { data: { user }, error: userError } = await supabaseClient.auth.admin.getUserById(userId);
+    // Get user details directly from users table
+    const { data: user, error: userError } = await supabaseClient
+      .from('users')
+      .select('email')
+      .eq('id', userId)
+      .single();
 
     if (userError || !user) {
       console.error('User lookup error:', userError);
@@ -52,18 +56,17 @@ serve(async (req) => {
     }
 
     // Create or retrieve Stripe customer
-    let stripeCustomerId;
     const { data: userData } = await supabaseClient
       .from('users')
-      .select('stripe_customer_id')
+      .select('stripe_customer_id, email')
       .eq('id', userId)
       .single();
 
-    if (userData?.stripe_customer_id) {
-      stripeCustomerId = userData.stripe_customer_id;
-    } else {
+    let stripeCustomerId = userData?.stripe_customer_id;
+
+    if (!stripeCustomerId) {
       const customer = await stripe.customers.create({
-        email: user.email,
+        email: userData.email,
         metadata: {
           supabase_user_id: userId
         }
@@ -99,7 +102,10 @@ serve(async (req) => {
 
     console.log('Checkout session created:', {
       sessionId: session.id,
-      customerId: stripeCustomerId
+      customerId: stripeCustomerId,
+      productId: productId,
+      stripeProductId: product.stripe_product_id,
+      stripePriceId: product.stripe_price_id
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
