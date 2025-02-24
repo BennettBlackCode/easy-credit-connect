@@ -1,11 +1,9 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
-import Stripe from "https://esm.sh/stripe@13.6.0?target=deno";
 
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-  httpClient: Stripe.createFetchHttpClient(),
-});
+const stripe = await import("https://esm.sh/stripe@13.6.0?target=deno");
+const Stripe = stripe.default;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,114 +11,145 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: {
+        ...corsHeaders,
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Max-Age': '86400',
+      } 
+    });
   }
 
   try {
-    const signature = req.headers.get('stripe-signature');
-    const body = await req.text();
-    
-    if (!signature) {
-      throw new Error('No stripe signature found');
-    }
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
 
-    console.log('Webhook received - Signature:', signature);
+    const signature = req.headers.get("stripe-signature");
+    const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
 
-    // Verify the event
-    let event;
-    try {
-      event = stripe.webhooks.constructEvent(
-        body,
-        signature,
-        Deno.env.get('STRIPE_WEBHOOK_SECRET') || ''
-      );
-      console.log('Event verified:', event.type);
-    } catch (err) {
-      console.error('Webhook signature verification failed:', err.message);
+    if (!signature || !webhookSecret) {
+      console.error('Missing signature or webhook secret');
       return new Response(
-        JSON.stringify({ error: 'Webhook signature verification failed' }), 
+        JSON.stringify({ error: 'Missing required Stripe signature' }), 
         { 
-          status: 400,
+          status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') || '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
-    );
+    // Get the raw body
+    const body = await req.text();
+    
+    console.log('Received webhook body:', body);
+    console.log('Stripe signature:', signature);
+    
+    const stripeClient = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
+      apiVersion: '2023-10-16',
+      httpClient: Stripe.createFetchHttpClient(),
+    });
 
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object;
-      const userId = session.metadata.user_id;
-      
-      console.log('Processing session:', {
-        id: session.id,
-        userId: userId,
-        metadata: session.metadata
-      });
+    // Verify the webhook signature
+    const event = stripeClient.webhooks.constructEvent(body, signature, webhookSecret);
+    console.log('Received Stripe webhook event:', event.type);
 
-      // Get product details
-      const { data: product, error: productError } = await supabase
-        .from('stripe_products')
-        .select('*')
-        .eq('id', session.metadata.product_id)
-        .single();
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session;
+        console.log('Processing completed checkout session:', session.id);
 
-      if (productError || !product) {
-        console.error('Product fetch error:', productError);
-        throw new Error('Product not found');
-      }
+        // Get line items
+        const lineItems = await stripeClient.checkout.sessions.listLineItems(session.id);
+        console.log('Line items:', lineItems);
 
-      console.log('Found product:', product);
+        // Get promotion code if present
+        const promotionCode = session.total_details?.breakdown?.discounts?.[0]?.discount?.promotion_code;
+        console.log('Promotion code:', promotionCode);
 
-      // Add credits
-      const { error: creditError } = await supabase.rpc(
-        'increment_user_credits',
-        {
-          user_id: userId,
-          amount: product.credits_included
-        }
-      );
-
-      if (creditError) {
-        console.error('Credit increment error:', creditError);
-        throw new Error(`Failed to add credits: ${creditError.message}`);
-      }
-
-      console.log('Credits added:', {
-        userId: userId,
-        amount: product.credits_included
-      });
-
-      // Log the transaction
-      await supabase
-        .from('credit_transactions')
-        .insert({
-          user_id: userId,
-          credit_amount: product.credits_included,
-          transaction_type: 'stripe_purchase',
-          description: `Purchase of ${product.name}`,
-          stripe_session_id: session.id
+        // Call the handle_stripe_event database function
+        const { data, error: dbError } = await supabase.rpc('handle_stripe_event', {
+          event: {
+            id: event.id,
+            type: event.type,
+            client_reference_id: session.client_reference_id,
+            data: {
+              object: {
+                ...session,
+                line_items: lineItems,
+                promotion_code: promotionCode
+              }
+            }
+          }
         });
 
-      console.log('Transaction logged successfully');
+        if (dbError) {
+          console.error('Database error:', dbError);
+          throw dbError;
+        }
+
+        console.log('Successfully processed checkout session:', data);
+        break;
+      }
+
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated':
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+        console.log(`Processing subscription ${event.type}:`, subscription.id);
+
+        // Get the customer ID and lookup the user
+        const customerId = subscription.customer as string;
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('id')
+          .eq('stripe_customer_id', customerId)
+          .single();
+
+        if (userError || !userData) {
+          console.error('Error finding user:', userError);
+          throw new Error(`No user found for customer ${customerId}`);
+        }
+
+        // Handle the subscription event
+        const { error: dbError } = await supabase.rpc('handle_stripe_event', {
+          event: {
+            id: event.id,
+            type: event.type,
+            client_reference_id: userData.id,
+            data: {
+              object: subscription
+            }
+          }
+        });
+
+        if (dbError) {
+          console.error('Database error:', dbError);
+          throw dbError;
+        }
+
+        console.log('Successfully processed subscription event');
+        break;
+      }
+
+      default:
+        console.log(`Unhandled event type: ${event.type}`);
     }
 
     return new Response(JSON.stringify({ received: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200
+      status: 200,
     });
-
   } catch (err) {
-    console.error('Webhook error:', err);
+    console.error('Error processing webhook:', err);
     return new Response(
       JSON.stringify({ error: err.message }), 
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
+        status: err.statusCode || 400,
       }
     );
   }
