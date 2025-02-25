@@ -24,7 +24,7 @@ const MobileNavigation = ({
 }: MobileNavigationProps) => {
   return (
     <div
-      className={`md:hidden fixed inset-x-0 top-20 transition-all duration-300 ${
+      className={`md:hidden fixed inset-x-0 top-16 transition-all duration-300 ${
         isOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
       }`}
     >
@@ -87,13 +87,14 @@ const MobileNavigation = ({
               >
                 Pricing
               </button>
-              <button
-                onClick={handleGetStarted}
+              <Link
+                to="/auth"
                 className="flex items-center justify-center gap-2 w-full px-6 py-2.5 rounded-full text-white bg-primary hover:bg-primary/90 transition-colors duration-200"
+                onClick={() => setIsOpen(false)}
               >
                 Log In
                 <ArrowUpRight className="h-4 w-4" />
-              </button>
+              </Link>
             </>
           )}
         </div>
