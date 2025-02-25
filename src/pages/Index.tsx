@@ -36,7 +36,7 @@ const Index = () => {
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-30" />
         
-        <div className="relative pt-32 lg:pt-40 pb-20 px-4 sm:px-6 lg:px-8">
+        <div className="relative pt-36 lg:pt-44 pb-24 px-4 sm:px-6 lg:px-8">
           <div className="max-w-5xl mx-auto">
             <div className="text-center space-y-8 mb-16">
               <div className="inline-block">
@@ -47,20 +47,20 @@ const Index = () => {
                 <AnimatedTitle />
                 <span className="block mt-2 bg-gradient-to-b from-white via-white to-white/70 bg-clip-text text-transparent">In One Click</span>
               </h1>
-              <p className="text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto leading-relaxed">Built for marketing agencies to deliver SEO campaigns in record time. Sign up today and try it out for free.</p>
+              <p className="text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto leading-relaxed">Built for marketing agencies to deliver SEO campaigns in record time.</p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <Link to="/auth" className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-2xl text-black bg-primary hover:bg-primary/90 transition-all duration-200 shadow-[0_0_30px_rgba(46,213,115,0.4)]">
+                <Link to="/auth?isLogin=false" className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-2xl text-white bg-primary hover:bg-primary/90 transition-all duration-200 shadow-[0_0_30px_rgba(46,213,115,0.4)]">
                   Try It For Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
-                <a href="#pricing" className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-2xl text-white bg-white/5 hover:bg-white/10 transition-all duration-200 border border-white/10">
+                <a href="#pricing" onClick={(e) => { e.preventDefault(); document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' }); }} className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-2xl text-white bg-white/5 hover:bg-white/10 transition-all duration-200 border border-white/10" aria-label="View pricing plans">
                   Pricing
                 </a>
               </div>
             </div>
 
             {/* Video Section with Scroll Animation */}
-            <div className="flex flex-col overflow-hidden -mt-20">
+            <div className="flex flex-col overflow-hidden -mt-6">
               <ContainerScroll titleComponent={<div className="h-4" />}>
                 <div className="relative w-full h-full rounded-2xl overflow-hidden">
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -76,7 +76,7 @@ const Index = () => {
             </div>
 
             {/* Features Section */}
-            <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 relative">
+            <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 relative -mt-44">
               <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-30" />
               <div className="max-w-7xl mx-auto relative">
                 <div className="text-center mb-16">
@@ -107,7 +107,7 @@ const Index = () => {
             </section>
 
             {/* Pricing Section */}
-            <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 relative">
+            <section id="pricing" className="py-28 px-4 sm:px-6 lg:px-8 relative">
               <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-30" />
               <div className="max-w-7xl mx-auto relative">
                 <div className="text-center mb-16">
@@ -140,7 +140,7 @@ const Index = () => {
                             </li>)}
                         </ul>
 
-                        <Link to={`/auth?productId=${plan.id}`} className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-2xl bg-primary text-black hover:bg-primary/90 transition-all duration-200">
+                        <Link to={`/auth?isLogin=false&productId=${plan.id}`} className="flex items-center justify-center w-full gap-2 px-6 py-4 text-lg font-medium rounded-2xl bg-primary text-white hover:bg-primary/90 transition-all duration-200">
                           Get Started
                           <ArrowRight className="h-5 w-5" />
                         </Link>
@@ -173,7 +173,7 @@ const Index = () => {
             </section>
 
             {/* CTA Section */}
-            <div className="py-24 px-4 sm:px-6 lg:px-8 relative">
+            <div className="py-12 mt-12 px-4 sm:px-6 lg:px-8 relative">
               <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-30" />
               <div className="max-w-4xl mx-auto text-center space-y-8 relative">
                 <h2 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
@@ -182,7 +182,7 @@ const Index = () => {
                 <p className="text-xl text-gray-400">
                   Join the future of SEO automation today.
                 </p>
-                <Link to="/auth" className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-2xl text-black bg-primary hover:bg-primary/90 transition-all duration-200 shadow-[0_0_30px_rgba(46,213,115,0.4)]">
+                <Link to="/auth?isLogin=false" className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-2xl text-white bg-primary hover:bg-primary/90 transition-all duration-200 shadow-[0_0_30px_rgba(46,213,115,0.4)]">
                   Get Started Free
                   <ArrowRight className="ml-2 h-5 w-4" />
                 </Link>
