@@ -1,152 +1,231 @@
-
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
+import { createClient } from '@supabase/supabase-js';
 import { createHmac } from 'https://deno.land/std@0.177.0/node/crypto.ts';
 
-// Supabase client factory
-const getSupabaseClient = () => {
-  return createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  );
+// Type definitions
+type StripeEvent = {
+  type: string;
+  data: {
+    object: any;
+  };
 };
 
-// Function to verify webhook signature
+type ProductMapping = {
+  [productId: string]: {
+    credits: number;
+    subscriptionType: string;
+  };
+};
+
+// Configuration constants
+const PRODUCT_MAPPING: ProductMapping = {
+  'prod_RoTpOJdCDaZOm6': { credits: 3, subscriptionType: 'starter_pack' },
+  'prod_RoTrgUuzCYgC8J': { credits: 15, subscriptionType: 'growth_pack' },
+};
+
+// Rate limiting setup
+const RATE_LIMIT_WINDOW = 60000; // 1 minute in milliseconds
+const MAX_REQUESTS_PER_WINDOW = 30;
+const ipRequestCounts = new Map<string, { count: number; resetTime: number }>();
+
+// Supabase client factory with connection pooling
+let supabaseClient: any = null;
+const getSupabaseClient = () => {
+  if (!supabaseClient) {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing Supabase credentials in environment variables');
+    }
+    
+    supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
+  }
+  return supabaseClient;
+};
+
+// Function to verify webhook signature with constant-time comparison
 const verifyWebhookSignature = (payload: string, signature: string, secret: string, timestamp: string) => {
   const signedPayload = `${timestamp}.${payload}`;
   const expectedSig = createHmac('sha256', secret)
     .update(signedPayload)
     .digest('hex');
-  return signature === expectedSig;
+    
+  // Constant-time comparison to prevent timing attacks
+  if (expectedSig.length !== signature.length) {
+    return false;
+  }
+  
+  let result = 0;
+  for (let i = 0; i < expectedSig.length; i++) {
+    result |= expectedSig.charCodeAt(i) ^ signature.charCodeAt(i);
+  }
+  
+  return result === 0;
 };
 
-// Handler function
+// Apply rate limiting
+const checkRateLimit = (ip: string): boolean => {
+  const now = Date.now();
+  const record = ipRequestCounts.get(ip);
+  
+  if (!record) {
+    ipRequestCounts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+  
+  if (now > record.resetTime) {
+    record.count = 1;
+    record.resetTime = now + RATE_LIMIT_WINDOW;
+    return true;
+  }
+  
+  if (record.count >= MAX_REQUESTS_PER_WINDOW) {
+    return false;
+  }
+  
+  record.count += 1;
+  return true;
+};
+
+// Process checkout session in a transactional manner
+const processCheckoutSession = async (supabase: any, session: any) => {
+  const userId = session.metadata?.user_id;
+  const productId = session.metadata?.product_id;
+  
+  if (!userId || !productId) {
+    throw new Error(`Missing required metadata: user_id=${userId}, product_id=${productId}`);
+  }
+  
+  // Validate user exists first
+  const { data: userData, error: userError } = await supabase
+    .from('users')
+    .select('id')
+    .eq('id', userId)
+    .single();
+    
+  if (userError || !userData) {
+    throw new Error(`Invalid user_id (${userId}): ${userError?.message || 'User not found'}`);
+  }
+  
+  // Validate product mapping
+  const productConfig = PRODUCT_MAPPING[productId];
+  if (!productConfig) {
+    throw new Error(`Unknown product ID: ${productId}`);
+  }
+  
+  const { credits, subscriptionType } = productConfig;
+  
+  // Begin transaction
+  const { error: txError } = await supabase.rpc('process_stripe_purchase', {
+    p_user_id: userId,
+    p_credit_amount: credits,
+    p_transaction_type: 'purchase',
+    p_description: `Purchased ${subscriptionType} (${productId})`,
+    p_subscription_type: subscriptionType
+  });
+  
+  if (txError) {
+    throw new Error(`Transaction failed: ${txError.message}`);
+  }
+  
+  return { userId, productId, credits, subscriptionType };
+};
+
+// Main handler function
 const handler = async (req: Request): Promise<Response> => {
+  const requestId = crypto.randomUUID();
+  const startTime = Date.now();
+  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
+  
+  console.log(`[${requestId}] Request received from ${clientIp}`);
+  
   try {
-    // Only allow POST requests
+    // Check rate limits
+    if (!checkRateLimit(clientIp)) {
+      console.warn(`[${requestId}] Rate limit exceeded for IP: ${clientIp}`);
+      return new Response(JSON.stringify({ error: 'Too many requests' }), {
+        status: 429,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Retry-After': '60'
+        },
+      });
+    }
+    
+    // Validate request method
     if (req.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
         status: 405,
         headers: { 'Content-Type': 'application/json' },
       });
     }
-
-    // Read request body and signature
+    
+    // Read and validate request
     const body = await req.text();
+    if (!body) {
+      throw new Error('Empty request body');
+    }
+    
     const sigHeader = req.headers.get('stripe-signature');
-    console.log('Webhook received', {
-      bodyLength: body.length,
-      signature: sigHeader ? 'present' : 'missing',
-    });
-
     if (!sigHeader) {
       throw new Error('Missing stripe-signature header');
     }
-
+    
+    // Validate environment variables
     const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
     if (!webhookSecret) {
       throw new Error('STRIPE_WEBHOOK_SECRET not configured');
     }
-
+    
     // Parse signature header
-    const [tsPart, sigPart] = sigHeader.split(',');
-    const timestamp = tsPart.replace('t=', '');
-    const signature = sigPart.replace('v1=', '');
-
+    const components = sigHeader.split(',');
+    const timestampComponent = components.find(part => part.startsWith('t='));
+    const signatureComponent = components.find(part => part.startsWith('v1='));
+    
+    if (!timestampComponent || !signatureComponent) {
+      throw new Error('Invalid signature format');
+    }
+    
+    const timestamp = timestampComponent.replace('t=', '');
+    const signature = signatureComponent.replace('v1=', '');
+    
     // Verify signature
     if (!verifyWebhookSignature(body, signature, webhookSecret, timestamp)) {
+      console.warn(`[${requestId}] Signature verification failed`);
       throw new Error('Invalid signature');
     }
-
-    // Parse event
-    const event = JSON.parse(body);
-    console.log('Event verified:', event.type);
-
+    
+    // Parse event with validation
+    let event: StripeEvent;
+    try {
+      event = JSON.parse(body);
+      if (!event.type || !event.data || !event.data.object) {
+        throw new Error('Malformed event structure');
+      }
+    } catch (e) {
+      throw new Error(`Invalid JSON: ${e.message}`);
+    }
+    
+    console.log(`[${requestId}] Event verified: ${event.type}`);
+    
+    // Initialize database connection
     const supabase = getSupabaseClient();
-
+    
+    // Process the event
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object;
-        const userId = session.metadata?.user_id;
-        const productId = session.metadata?.product_id;
-
-        if (!userId || !productId) {
-          console.error('Missing metadata:', { userId, productId });
-          throw new Error('Missing user_id or product_id in session metadata');
-        }
-
-        // Fetch product details including credits_included
-        const { data: product, error: productError } = await supabase
-          .from('stripe_products')
-          .select('name, credits_included')
-          .eq('id', productId)
-          .single();
-
-        if (productError || !product || product.credits_included === null) {
-          console.error('Product fetch error:', productError?.message);
-          throw new Error(`Product not found or no credits defined: ${productError?.message || 'No data'}`);
-        }
-
-        const creditsToAdd = product.credits_included;
-        const subscriptionType = product.name.toLowerCase(); // e.g., "starter pack" -> "starter pack"
-
-        console.log('Processing checkout.session.completed:', {
-          userId,
-          productId,
-          creditsToAdd,
-          subscriptionType,
-        });
-
-        // Insert credit transaction
-        const { error: txError } = await supabase
-          .from('credit_transactions')
-          .insert({
-            user_id: userId,
-            credit_amount: creditsToAdd,
-            transaction_type: 'purchase',
-            description: `Bought ${product.name}`,
-            created_at: new Date().toISOString(),
-            stripe_session_id: session.id, // Log the session ID for reference
-          });
-
-        if (txError) {
-          console.error('Credit transaction error:', txError.message);
-          throw new Error(`Failed to add credits: ${txError.message}`);
-        }
-
-        // Update user's subscription_type
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({ subscription_type: subscriptionType })
-          .eq('id', userId);
-
-        if (updateError) {
-          console.error('User update error:', updateError.message);
-          throw new Error(`Failed to update subscription: ${updateError.message}`);
-        }
-
-        // Optionally update or insert into subscriptions table
-        const { error: subError } = await supabase
-          .from('subscriptions')
-          .upsert({
-            user_id: userId,
-            type: subscriptionType,
-            is_active: true,
-            start_date: new Date().toISOString(),
-            stripe_subscription_id: session.subscription || null,
-          }, { onConflict: 'user_id' });
-
-        if (subError) {
-          console.error('Subscription upsert error:', subError.message);
-          throw new Error(`Failed to update subscription record: ${subError.message}`);
-        }
-
-        console.log('Checkout session completed successfully for user:', userId);
+        const result = await processCheckoutSession(supabase, session);
+        console.log(`[${requestId}] Checkout completed for user ${result.userId}, added ${result.credits} credits`);
         break;
       }
-      // Optional product/price syncing
+      
       case 'product.created':
       case 'product.updated': {
         const product = event.data.object;
+        // Log the product ID to consider adding to PRODUCT_MAPPING if needed
+        console.log(`[${requestId}] Product ${event.type}: ${product.id} (${product.name})`);
+        
         const { error } = await supabase
           .from('stripe_products')
           .upsert({
@@ -155,14 +234,14 @@ const handler = async (req: Request): Promise<Response> => {
             active: product.active,
             description: product.description,
             updated_at: new Date().toISOString(),
-          });
+          }, { onConflict: 'id' });
+          
         if (error) {
-          console.error(`Product sync error (${event.type}):`, error.message);
           throw new Error(`Failed to sync product: ${error.message}`);
         }
-        console.log(`Product ${event.type}:`, product.id);
         break;
       }
+      
       case 'price.created':
       case 'price.updated': {
         const price = event.data.object;
@@ -177,30 +256,51 @@ const handler = async (req: Request): Promise<Response> => {
             type: price.type,
             recurring_interval: price.recurring?.interval || null,
             updated_at: new Date().toISOString(),
-          });
+          }, { onConflict: 'id' });
+          
         if (error) {
-          console.error(`Price sync error (${event.type}):`, error.message);
           throw new Error(`Failed to sync price: ${error.message}`);
         }
-        console.log(`Price ${event.type}:`, price.id);
+        console.log(`[${requestId}] Price ${event.type}: ${price.id}`);
         break;
       }
+      
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        console.log(`[${requestId}] Unhandled event type: ${event.type}`);
     }
-
-    return new Response(JSON.stringify({ message: 'Webhook processed successfully' }), {
+    
+    const processingTime = Date.now() - startTime;
+    console.log(`[${requestId}] Request completed in ${processingTime}ms`);
+    
+    return new Response(JSON.stringify({ 
+      success: true, 
+      message: 'Webhook processed successfully',
+      requestId 
+    }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
+    
   } catch (err) {
-    console.error('Webhook handler error:', (err as Error).message);
-    return new Response(JSON.stringify({ error: (err as Error).message }), {
+    const errorMessage = (err as Error).message;
+    const processingTime = Date.now() - startTime;
+    
+    console.error(`[${requestId}] Error (${processingTime}ms): ${errorMessage}`);
+    
+    // Don't reveal sensitive error details
+    const publicErrorMessage = errorMessage.includes('Invalid signature') || 
+                               errorMessage.includes('Missing stripe-signature') ?
+                               errorMessage : 'An error occurred processing the webhook';
+    
+    return new Response(JSON.stringify({ 
+      error: publicErrorMessage,
+      requestId 
+    }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 };
 
-// Serve with Deno.serve
+// Start the server
 Deno.serve(handler);
