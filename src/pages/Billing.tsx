@@ -119,7 +119,7 @@ const Billing = () => {
   }
 
   return (
-    <div className="container py-24">
+    <div className="container py-32">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Billing & Credits</h1>
 
