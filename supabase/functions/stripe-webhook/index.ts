@@ -19,9 +19,9 @@ type ProductMapping = {
 
 // Configuration constants
 const PRODUCT_MAPPING: ProductMapping = {
-  '3f400036-bc93-4ca3-81ac-3d195f97e7c6': { credits: 3, subscriptionType: 'starter_pack' },
-  // Add more UUIDs from your stripe_products table as needed, e.g.:
-  // 'another-uuid-from-supabase': { credits: 15, subscriptionType: 'growth_pack' },
+  '3f400036-bc93-4ca3-81ac-3d195f97e7c6': { credits: 3, subscriptionType: 'starter' }, // Adjusted to match enum
+  // Add more product IDs from your Stripe setup as needed, e.g.:
+  // 'another-uuid-from-supabase': { credits: 15, subscriptionType: 'growth' },
 };
 
 const stripeClient = stripe.Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
@@ -86,46 +86,46 @@ const checkRateLimit = (ip: string): boolean => {
   return true;
 };
 
-// Process checkout session in a transactional manner
+// Process checkout session for new subscriptions
 const processCheckoutSession = async (supabase: any, session: any) => {
   const userId = session.metadata?.user_id;
   const productId = session.metadata?.product_id;
-  
+  const stripeSubscriptionId = session.subscription || session.id; // Fallback to session ID if no subscription ID
+
   if (!userId || !productId) {
     throw new Error(`Missing required metadata: user_id=${userId}, product_id=${productId}`);
   }
-  
+
   const { data: userData, error: userError } = await supabase
     .from('users')
     .select('id')
     .eq('id', userId)
     .single();
-    
+
   if (userError || !userData) {
     throw new Error(`Invalid user_id (${userId}): ${userError?.message || 'User not found'}`);
   }
-  
+
   const productConfig = PRODUCT_MAPPING[productId];
   if (!productConfig) {
     throw new Error(`Unknown product ID: ${productId}`);
   }
-  
+
   const { credits, subscriptionType } = productConfig;
-  
-  console.log(`Calling process_stripe_purchase: user_id=${userId}, credits=${credits}, type=purchase, description=${session.id}, subscription_type=${subscriptionType}`);
-  
-  const { error: txError } = await supabase.rpc('process_stripe_purchase', {
+
+  const { error: txError } = await supabase.rpc('handle_stripe_purchase', {
     p_user_id: userId,
     p_credit_amount: credits,
     p_transaction_type: 'purchase',
     p_description: session.id,
-    p_subscription_type: subscriptionType
+    p_subscription_type: subscriptionType,
+    p_stripe_subscription_id: stripeSubscriptionId
   });
-  
+
   if (txError) {
     throw new Error(`Transaction failed: ${txError.message}`);
   }
-  
+
   return { userId, productId, credits, subscriptionType };
 };
 
@@ -158,12 +158,13 @@ const processInvoicePaid = async (supabase: any, invoice: any) => {
 
   const { credits, subscriptionType } = productConfig;
 
-  const { error: txError } = await supabase.rpc('process_stripe_purchase', {
+  const { error: txError } = await supabase.rpc('handle_stripe_purchase', {
     p_user_id: userId,
     p_credit_amount: credits,
     p_transaction_type: 'subscription_renewal',
-    p_description: subscriptionId, // Pass the subscription ID
-    p_subscription_type: subscriptionType
+    p_description: subscriptionId,
+    p_subscription_type: subscriptionType,
+    p_stripe_subscription_id: subscriptionId
   });
 
   if (txError) {
