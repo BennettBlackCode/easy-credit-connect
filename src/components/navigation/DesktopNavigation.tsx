@@ -70,13 +70,13 @@ const DesktopNavigation = ({
             >
               Pricing
             </button>
-            <button
-              onClick={handleGetStarted}
+            <Link
+              to="/auth"
               className="flex items-center gap-2 px-6 py-2.5 rounded-full text-white bg-primary hover:bg-primary/90 transition-colors duration-200"
             >
               Log In
               <ArrowUpRight className="h-4 w-4" />
-            </button>
+            </Link>
           </>
         )}
       </div>
