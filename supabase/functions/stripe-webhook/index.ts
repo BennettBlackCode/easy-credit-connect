@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { createHmac } from 'https://deno.land/std@0.177.0/node/crypto.ts';
+import * as stripe from 'https://esm.sh/stripe';
 
 // Type definitions
 type StripeEvent = {
@@ -18,9 +19,12 @@ type ProductMapping = {
 
 // Configuration constants
 const PRODUCT_MAPPING: ProductMapping = {
-  'prod_RoTpOJdCDaZOm6': { credits: 3, subscriptionType: 'starter_pack' },
-  'prod_RoTrgUuzCYgC8J': { credits: 15, subscriptionType: 'growth_pack' },
+  '3f400036-bc93-4ca3-81ac-3d195f97e7c6': { credits: 3, subscriptionType: 'starter_pack' },
+  // Add more UUIDs from your stripe_products table as needed, e.g.:
+  // 'another-uuid-from-supabase': { credits: 15, subscriptionType: 'growth_pack' },
 };
+
+const stripeClient = stripe.Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
 // Rate limiting setup
 const RATE_LIMIT_WINDOW = 60000; // 1 minute in milliseconds
@@ -50,11 +54,6 @@ const verifyWebhookSignature = (payload: string, signature: string, secret: stri
     .update(signedPayload)
     .digest('hex');
     
-  // Constant-time comparison to prevent timing attacks
-  if (expectedSig.length !== signature.length) {
-    return false;
-  }
-  
   let result = 0;
   for (let i = 0; i < expectedSig.length; i++) {
     result |= expectedSig.charCodeAt(i) ^ signature.charCodeAt(i);
@@ -96,7 +95,6 @@ const processCheckoutSession = async (supabase: any, session: any) => {
     throw new Error(`Missing required metadata: user_id=${userId}, product_id=${productId}`);
   }
   
-  // Validate user exists first
   const { data: userData, error: userError } = await supabase
     .from('users')
     .select('id')
@@ -107,7 +105,6 @@ const processCheckoutSession = async (supabase: any, session: any) => {
     throw new Error(`Invalid user_id (${userId}): ${userError?.message || 'User not found'}`);
   }
   
-  // Validate product mapping
   const productConfig = PRODUCT_MAPPING[productId];
   if (!productConfig) {
     throw new Error(`Unknown product ID: ${productId}`);
@@ -115,12 +112,13 @@ const processCheckoutSession = async (supabase: any, session: any) => {
   
   const { credits, subscriptionType } = productConfig;
   
-  // Begin transaction
+  console.log(`Calling process_stripe_purchase: user_id=${userId}, credits=${credits}, type=purchase, description=${session.id}, subscription_type=${subscriptionType}`);
+  
   const { error: txError } = await supabase.rpc('process_stripe_purchase', {
     p_user_id: userId,
     p_credit_amount: credits,
     p_transaction_type: 'purchase',
-    p_description: `Purchased ${subscriptionType} (${productId})`,
+    p_description: session.id,
     p_subscription_type: subscriptionType
   });
   
@@ -128,6 +126,50 @@ const processCheckoutSession = async (supabase: any, session: any) => {
     throw new Error(`Transaction failed: ${txError.message}`);
   }
   
+  return { userId, productId, credits, subscriptionType };
+};
+
+// Process invoice.paid for subscription renewals
+const processInvoicePaid = async (supabase: any, invoice: any) => {
+  const subscriptionId = invoice.subscription;
+
+  const subscription = await stripeClient.subscriptions.retrieve(subscriptionId);
+  const userId = subscription.metadata.user_id;
+  const productId = subscription.metadata.product_id;
+
+  if (!userId || !productId) {
+    throw new Error(`Missing metadata in subscription: user_id=${userId}, product_id=${productId}`);
+  }
+
+  const { data: userData, error: userError } = await supabase
+    .from('users')
+    .select('id')
+    .eq('id', userId)
+    .single();
+
+  if (userError || !userData) {
+    throw new Error(`Invalid user_id (${userId}): ${userError?.message || 'User not found'}`);
+  }
+
+  const productConfig = PRODUCT_MAPPING[productId];
+  if (!productConfig) {
+    throw new Error(`Unknown product ID: ${productId}`);
+  }
+
+  const { credits, subscriptionType } = productConfig;
+
+  const { error: txError } = await supabase.rpc('process_stripe_purchase', {
+    p_user_id: userId,
+    p_credit_amount: credits,
+    p_transaction_type: 'subscription_renewal',
+    p_description: subscriptionId, // Pass the subscription ID
+    p_subscription_type: subscriptionType
+  });
+
+  if (txError) {
+    throw new Error(`Renewal transaction failed: ${txError.message}`);
+  }
+
   return { userId, productId, credits, subscriptionType };
 };
 
@@ -140,7 +182,6 @@ const handler = async (req: Request): Promise<Response> => {
   console.log(`[${requestId}] Request received from ${clientIp}`);
   
   try {
-    // Check rate limits
     if (!checkRateLimit(clientIp)) {
       console.warn(`[${requestId}] Rate limit exceeded for IP: ${clientIp}`);
       return new Response(JSON.stringify({ error: 'Too many requests' }), {
@@ -152,7 +193,6 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
     
-    // Validate request method
     if (req.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
         status: 405,
@@ -160,7 +200,6 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
     
-    // Read and validate request
     const body = await req.text();
     if (!body) {
       throw new Error('Empty request body');
@@ -171,13 +210,11 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Missing stripe-signature header');
     }
     
-    // Validate environment variables
     const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
     if (!webhookSecret) {
       throw new Error('STRIPE_WEBHOOK_SECRET not configured');
     }
     
-    // Parse signature header
     const components = sigHeader.split(',');
     const timestampComponent = components.find(part => part.startsWith('t='));
     const signatureComponent = components.find(part => part.startsWith('v1='));
@@ -189,13 +226,11 @@ const handler = async (req: Request): Promise<Response> => {
     const timestamp = timestampComponent.replace('t=', '');
     const signature = signatureComponent.replace('v1=', '');
     
-    // Verify signature
     if (!verifyWebhookSignature(body, signature, webhookSecret, timestamp)) {
       console.warn(`[${requestId}] Signature verification failed`);
       throw new Error('Invalid signature');
     }
     
-    // Parse event with validation
     let event: StripeEvent;
     try {
       event = JSON.parse(body);
@@ -208,10 +243,8 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log(`[${requestId}] Event verified: ${event.type}`);
     
-    // Initialize database connection
     const supabase = getSupabaseClient();
     
-    // Process the event
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object;
@@ -219,11 +252,15 @@ const handler = async (req: Request): Promise<Response> => {
         console.log(`[${requestId}] Checkout completed for user ${result.userId}, added ${result.credits} credits`);
         break;
       }
-      
+      case 'invoice.paid': {
+        const invoice = event.data.object;
+        const result = await processInvoicePaid(supabase, invoice);
+        console.log(`[${requestId}] Subscription renewed for user ${result.userId}, added ${result.credits} credits`);
+        break;
+      }
       case 'product.created':
       case 'product.updated': {
         const product = event.data.object;
-        // Log the product ID to consider adding to PRODUCT_MAPPING if needed
         console.log(`[${requestId}] Product ${event.type}: ${product.id} (${product.name})`);
         
         const { error } = await supabase
@@ -241,7 +278,6 @@ const handler = async (req: Request): Promise<Response> => {
         }
         break;
       }
-      
       case 'price.created':
       case 'price.updated': {
         const price = event.data.object;
@@ -264,7 +300,6 @@ const handler = async (req: Request): Promise<Response> => {
         console.log(`[${requestId}] Price ${event.type}: ${price.id}`);
         break;
       }
-      
       default:
         console.log(`[${requestId}] Unhandled event type: ${event.type}`);
     }
@@ -280,14 +315,12 @@ const handler = async (req: Request): Promise<Response> => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
-    
   } catch (err) {
     const errorMessage = (err as Error).message;
     const processingTime = Date.now() - startTime;
     
     console.error(`[${requestId}] Error (${processingTime}ms): ${errorMessage}`);
     
-    // Don't reveal sensitive error details
     const publicErrorMessage = errorMessage.includes('Invalid signature') || 
                                errorMessage.includes('Missing stripe-signature') ?
                                errorMessage : 'An error occurred processing the webhook';
