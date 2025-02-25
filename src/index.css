@@ -38,6 +38,30 @@
   }
 }
 
+/* Navigation blur effect */
+.nav-blur {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);  
+  background-color: rgba(119, 119, 119, 0.2);
+  border: 1px solid rgba(63, 63, 63, 0.481);
+  border-radius: 1rem;
+  margin: 1rem auto;
+  width: calc(80% - 15rem);
+  box-shadow: 0 8px 32px rgba(46, 213, 115, 0.1);
+  transition: all 0.3s ease-in-out;
+}
+
+@media (max-width: 768px) {
+  .nav-blur {
+    width: auto;
+  }
+}
+
 .glass-card {
   @apply bg-black/40 backdrop-blur-sm border border-primary/20 shadow-lg;
 }
@@ -92,3 +116,4 @@
 .glow-gradient-parent {
   z-index: 1;
 }
+
