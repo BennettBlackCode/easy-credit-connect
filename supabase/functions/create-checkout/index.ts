@@ -1,19 +1,36 @@
 
-import Stripe from 'https://esm.sh/stripe@13.6.0?target=deno';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
-  apiVersion: '2023-10-16'
-});
-
+// CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Content-Type': 'application/json'
 };
 
-const handler = async (req: Request) => {
+// Function to create a checkout session using fetch
+const createCheckoutSession = async (params: Record<string, string>) => {
+  const url = 'https://api.stripe.com/v1/checkout/sessions';
+  const headers = {
+    'Authorization': `Bearer ${Deno.env.get('STRIPE_SECRET_KEY')}`,
+    'Content-Type': 'application/x-www-form-urlencoded',
+  };
+  const body = new URLSearchParams(params).toString();
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body,
+  });
+  if (!response.ok) {
+    throw new Error(`Stripe API error: ${await response.text()}`);
+  }
+  return await response.json();
+};
+
+// Handler function
+const handler = async (req: Request): Promise<Response> => {
   try {
+    // Handle CORS preflight
     if (req.method === 'OPTIONS') {
       return new Response(null, { 
         status: 200, 
@@ -21,6 +38,7 @@ const handler = async (req: Request) => {
       });
     }
 
+    // Only allow POST requests
     if (req.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
         status: 405,
@@ -28,6 +46,7 @@ const handler = async (req: Request) => {
       });
     }
 
+    // Parse request body
     const body = await req.text();
     const { productId, userId } = JSON.parse(body);
 
@@ -38,12 +57,13 @@ const handler = async (req: Request) => {
       });
     }
 
+    // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Get product details
+    // Get product details from Supabase
     const { data: product, error: productError } = await supabaseClient
       .from('stripe_products')
       .select('stripe_price_id, name')
@@ -57,7 +77,7 @@ const handler = async (req: Request) => {
       });
     }
 
-    // Get user's email
+    // Get user's email from Supabase
     const { data: userData, error: userError } = await supabaseClient
       .from('users')
       .select('email')
@@ -68,28 +88,32 @@ const handler = async (req: Request) => {
       throw new Error('User not found or email missing');
     }
 
-    // Create Stripe checkout session
-    const session = await stripe.checkout.sessions.create({
-      customer_email: userData.email,
-      line_items: [{ price: product.stripe_price_id, quantity: 1 }],
-      mode: 'subscription',
-      success_url: `${req.headers.get('origin')}/billing?success=true&product=${productId}`,
-      cancel_url: `${req.headers.get('origin')}/billing?canceled=true`,
-      metadata: { user_id: userId, product_id: productId },
-      allow_promotion_codes: true
-    });
+    // Create Stripe checkout session using fetch
+    const params: Record<string, string> = {
+      'customer_email': userData.email,
+      'mode': 'subscription',
+      'success_url': `${req.headers.get('origin')}/billing?success=true&product=${productId}`,
+      'cancel_url': `${req.headers.get('origin')}/billing?canceled=true`,
+      'allow_promotion_codes': 'true',
+      'line_items[0][price]': product.stripe_price_id,
+      'line_items[0][quantity]': '1',
+      'metadata[user_id]': userId,
+      'metadata[product_id]': productId,
+    };
+    const session = await createCheckoutSession(params);
 
     return new Response(JSON.stringify({ url: session.url }), {
       status: 200,
       headers: corsHeaders
     });
   } catch (err) {
-    console.error('Checkout error:', err.message);
-    return new Response(JSON.stringify({ error: err.message }), {
+    console.error('Checkout error:', (err as Error).message);
+    return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 400,
       headers: corsHeaders
     });
   }
 };
 
+// Serve with Deno.serve
 Deno.serve(handler);
