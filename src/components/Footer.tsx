@@ -37,7 +37,8 @@ const Footer = () => {
   const navigation = [
     { name: "Features", href: "/#features", onClick: () => scrollToSection("features") },
     { name: "Pricing", href: "/#pricing", onClick: () => scrollToSection("pricing") },
-    { name: "Log In", href: "/auth" }
+    { name: "FAQ", href: "/faq", onClick: () => navigate("/faq") },
+    { name: "Log In", href: "/auth", onClick: () => navigate("/auth") }
   ];
 
   return (
