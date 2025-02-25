@@ -38,7 +38,7 @@ export function GoogleSignInButton({ isLoading, onSignIn }: GoogleSignInButtonPr
           />
         </svg>
       )}
-      Sign in with Google
+      Continue with Google
     </Button>
   );
 }
