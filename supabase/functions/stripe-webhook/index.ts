@@ -1,156 +1,176 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import Stripe from 'https://esm.sh/stripe@13.6.0?target=deno';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 
-const stripe = await import("https://esm.sh/stripe@13.6.0?target=deno");
-const Stripe = stripe.default;
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
+  apiVersion: '2023-10-16',
+  maxNetworkRetries: 3,
+  timeout: 30 * 1000,
+});
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
+const getSupabaseClient = () => {
+  return createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  );
 };
 
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { 
-      headers: {
-        ...corsHeaders,
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Max-Age': '86400',
-      } 
-    });
-  }
+interface DenoRequest extends Request {
+  method: string;
+  headers: Headers;
+  text(): Promise<string>;
+}
 
+const handler = async (req: DenoRequest): Promise<Response> => {
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    );
-
-    const signature = req.headers.get("stripe-signature");
-    const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
-
-    if (!signature || !webhookSecret) {
-      console.error('Missing signature or webhook secret');
-      return new Response(
-        JSON.stringify({ error: 'Missing required Stripe signature' }), 
-        { 
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+    if (req.method !== 'POST') {
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
-    // Get the raw body
     const body = await req.text();
-    
-    console.log('Received webhook body:', body);
-    console.log('Stripe signature:', signature);
-    
-    const stripeClient = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-      apiVersion: '2023-10-16',
-      httpClient: Stripe.createFetchHttpClient(),
+    const sig = req.headers.get('stripe-signature');
+    console.log('Webhook received', {
+      bodyLength: body.length,
+      signature: sig ? 'present' : 'missing',
     });
 
-    // Verify the webhook signature
-    const event = stripeClient.webhooks.constructEvent(body, signature, webhookSecret);
-    console.log('Received Stripe webhook event:', event.type);
+    if (!sig) {
+      throw new Error('Missing stripe-signature header');
+    }
+
+    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+    if (!webhookSecret) {
+      throw new Error('STRIPE_WEBHOOK_SECRET not configured');
+    }
+
+    let event: Stripe.Event;
+    try {
+      event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
+    } catch (err) {
+      console.error('Webhook verification failed:', (err as Error).message);
+      return new Response(JSON.stringify({ error: `Webhook verification failed: ${(err as Error).message}` }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('Event verified:', event.type);
+    const supabase = getSupabaseClient();
 
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        console.log('Processing completed checkout session:', session.id);
+        const userId = session.metadata?.user_id;
+        const productId = session.metadata?.product_id;
 
-        // Get line items
-        const lineItems = await stripeClient.checkout.sessions.listLineItems(session.id);
-        console.log('Line items:', lineItems);
-
-        // Get promotion code if present
-        const promotionCode = session.total_details?.breakdown?.discounts?.[0]?.discount?.promotion_code;
-        console.log('Promotion code:', promotionCode);
-
-        // Call the handle_stripe_event database function
-        const { data, error: dbError } = await supabase.rpc('handle_stripe_event', {
-          event: {
-            id: event.id,
-            type: event.type,
-            client_reference_id: session.client_reference_id,
-            data: {
-              object: {
-                ...session,
-                line_items: lineItems,
-                promotion_code: promotionCode
-              }
-            }
-          }
-        });
-
-        if (dbError) {
-          console.error('Database error:', dbError);
-          throw dbError;
+        if (!userId || !productId) {
+          console.error('Missing metadata:', { userId, productId });
+          throw new Error('Missing user_id or product_id in session metadata');
         }
 
-        console.log('Successfully processed checkout session:', data);
-        break;
-      }
-
-      case 'customer.subscription.created':
-      case 'customer.subscription.updated':
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
-        console.log(`Processing subscription ${event.type}:`, subscription.id);
-
-        // Get the customer ID and lookup the user
-        const customerId = subscription.customer as string;
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('id')
-          .eq('stripe_customer_id', customerId)
+        const { data: product, error: productError } = await supabase
+          .from('stripe_products')
+          .select('name')
+          .eq('id', productId)
           .single();
 
-        if (userError || !userData) {
-          console.error('Error finding user:', userError);
-          throw new Error(`No user found for customer ${customerId}`);
+        if (productError || !product) {
+          console.error('Product fetch error:', productError?.message);
+          throw new Error(`Product not found: ${productError?.message || 'No data'}`);
         }
 
-        // Handle the subscription event
-        const { error: dbError } = await supabase.rpc('handle_stripe_event', {
-          event: {
-            id: event.id,
-            type: event.type,
-            client_reference_id: userData.id,
-            data: {
-              object: subscription
-            }
-          }
-        });
+        const creditsToAdd = product.name === 'Growth Pack' ? 100 : product.name === 'Starter Pack' ? 50 : 0;
+        console.log('Processing checkout.session.completed:', { userId, productId, creditsToAdd });
 
-        if (dbError) {
-          console.error('Database error:', dbError);
-          throw dbError;
+        const { error: txError } = await supabase
+          .from('credit_transactions')
+          .insert({
+            user_id: userId,
+            credit_amount: creditsToAdd,
+            transaction_type: 'purchase',
+            description: `Bought ${product.name}`,
+            created_at: new Date().toISOString(),
+          });
+
+        if (txError) {
+          console.error('Credit transaction error:', txError.message);
+          throw new Error(`Failed to add credits: ${txError.message}`);
         }
 
-        console.log('Successfully processed subscription event');
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({ subscription_type: product.name.toLowerCase() })
+          .eq('id', userId);
+
+        if (updateError) {
+          console.error('User update error:', updateError.message);
+          throw new Error(`Failed to update subscription: ${updateError.message}`);
+        }
+
+        console.log('Checkout session completed successfully for user:', userId);
         break;
       }
+      case 'product.created':
+      case 'product.updated': {
+        const product = event.data.object as Stripe.Product;
+        const { error } = await supabase
+          .from('stripe_products')
+          .upsert({
+            id: product.id,
+            name: product.name,
+            active: product.active,
+            description: product.description,
+            updated_at: new Date().toISOString(),
+          });
 
+        if (error) {
+          console.error(`Product sync error (${event.type}):`, error.message);
+          throw new Error(`Failed to sync product: ${error.message}`);
+        }
+        console.log(`Product ${event.type}:`, product.id);
+        break;
+      }
+      case 'price.created':
+      case 'price.updated': {
+        const price = event.data.object as Stripe.Price;
+        const { error } = await supabase
+          .from('stripe_prices')
+          .upsert({
+            id: price.id,
+            product_id: price.product as string,
+            active: price.active,
+            currency: price.currency,
+            unit_amount: price.unit_amount,
+            type: price.type,
+            recurring_interval: price.recurring?.interval || null,
+            updated_at: new Date().toISOString(),
+          });
+
+        if (error) {
+          console.error(`Price sync error (${event.type}):`, error.message);
+          throw new Error(`Failed to sync price: ${error.message}`);
+        }
+        console.log(`Price ${event.type}:`, price.id);
+        break;
+      }
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
 
-    return new Response(JSON.stringify({ received: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    return new Response(JSON.stringify({ message: 'Webhook processed successfully' }), {
       status: 200,
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    console.error('Error processing webhook:', err);
-    return new Response(
-      JSON.stringify({ error: err.message }), 
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: err.statusCode || 400,
-      }
-    );
+    console.error('Webhook handler error:', (err as Error).message);
+    return new Response(JSON.stringify({ error: (err as Error).message }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
-});
+};
+
+Deno.serve(handler);
