@@ -8,24 +8,65 @@ import { useToast } from "@/components/ui/use-toast";
 import DesktopNavigation from "./navigation/DesktopNavigation";
 import MobileNavigation from "./navigation/MobileNavigation";
 
+/**
+ * @fileoverview Main navigation component that provides site-wide navigation functionality
+ * This component:
+ * - Renders the main navigation bar at the top of the application
+ * - Handles responsive mobile/desktop navigation
+ * - Manages user authentication state
+ * - Provides access to key application features
+ *
+ * @component Navigation
+ * @example
+ * ```tsx
+ * <Navigation />
+ * ```
+ */
+
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [scrollDirection, setScrollDirection] = useState("up");
+  const [lastScrollY, setLastScrollY] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
   const { session } = useAuth();
   const { toast } = useToast();
 
+  const isAuthenticatedRoute = ["/dashboard", "/billing", "/automation"].includes(location.pathname);
+
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      const currentScrollY = window.scrollY;
+      setScrolled(currentScrollY > 20);
+
+      if (currentScrollY > lastScrollY) {
+        setScrollDirection("down");
+      } else {
+        setScrollDirection("up");
+      }
+
+      setLastScrollY(currentScrollY);
     };
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
   const handleGetStarted = () => {
-    navigate("/auth");
+    if (location.pathname === '/auth') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const searchParams = new URLSearchParams(window.location.search);
+      searchParams.set('isLogin', 'true');
+      window.history.replaceState(null, '', `${window.location.pathname}?${searchParams}`);
+    } else {
+      navigate('/auth');
+      // Update auth state after navigation
+      window.history.replaceState(null, '', '/auth');
+      const searchParams = new URLSearchParams(window.location.search);
+      searchParams.set('isLogin', 'true');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     setIsOpen(false);
   };
 
@@ -90,14 +131,17 @@ const Navigation = () => {
   };
 
   return (
-    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-      scrolled ? "bg-black/90 backdrop-blur-lg" : "bg-transparent"
-    }`}>
+    <nav 
+      className={`fixed top-0 w-full z-50 transition-all duration-300 nav-blur ${isAuthenticatedRoute ? 'bg-black/95 backdrop-blur-xl border-b border-white/10' : ''} ${scrollDirection === 'down' ? '-translate-y-full scale-95' : 'translate-y-0 scale-100'}`}
+      style={{
+        transform: `translateY(${scrollDirection === 'down' ? '-100%' : '0'}) scale(${scrollDirection === 'down' ? 0.95 : 1})`
+      }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16">
           <button
             onClick={handleLogoClick}
-            className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent"
+            className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent"
           >
             1clickseo.io
           </button>
@@ -109,7 +153,6 @@ const Navigation = () => {
             scrollToSection={scrollToSection}
           />
 
-          {/* Mobile menu button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="md:hidden p-2 rounded-lg text-gray-400 hover:text-white"
