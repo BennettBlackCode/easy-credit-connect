@@ -1,5 +1,4 @@
-
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
+import { createClient } from '@supabase/supabase-js';
 
 // CORS headers
 const corsHeaders = {
@@ -12,7 +11,7 @@ const corsHeaders = {
 const createCheckoutSession = async (params: Record<string, string>) => {
   const url = 'https://api.stripe.com/v1/checkout/sessions';
   const headers = {
-    'Authorization': `Bearer ${Deno.env.get('STRIPE_SECRET_KEY')}`,
+    'Authorization': `Bearer ${process.env.STRIPE_SECRET_KEY}`,
     'Content-Type': 'application/x-www-form-urlencoded',
   };
   const body = new URLSearchParams(params).toString();
@@ -59,8 +58,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Initialize Supabase client
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
     // Get product details from Supabase
