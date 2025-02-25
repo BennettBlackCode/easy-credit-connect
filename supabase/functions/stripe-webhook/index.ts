@@ -47,7 +47,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('STRIPE_WEBHOOK_SECRET not configured');
     }
 
-    // Parse signature header (assuming single signature for simplicity)
+    // Parse signature header
     const [tsPart, sigPart] = sigHeader.split(',');
     const timestamp = tsPart.replace('t=', '');
     const signature = sigPart.replace('v1=', '');
@@ -68,25 +68,35 @@ const handler = async (req: Request): Promise<Response> => {
         const session = event.data.object;
         const userId = session.metadata?.user_id;
         const productId = session.metadata?.product_id;
+
         if (!userId || !productId) {
           console.error('Missing metadata:', { userId, productId });
           throw new Error('Missing user_id or product_id in session metadata');
         }
 
+        // Fetch product details including credits_included
         const { data: product, error: productError } = await supabase
           .from('stripe_products')
-          .select('name')
+          .select('name, credits_included')
           .eq('id', productId)
           .single();
 
-        if (productError || !product) {
+        if (productError || !product || product.credits_included === null) {
           console.error('Product fetch error:', productError?.message);
-          throw new Error(`Product not found: ${productError?.message || 'No data'}`);
+          throw new Error(`Product not found or no credits defined: ${productError?.message || 'No data'}`);
         }
 
-        const creditsToAdd = product.name === 'Growth Pack' ? 100 : product.name === 'Starter Pack' ? 50 : 0;
-        console.log('Processing checkout.session.completed:', { userId, productId, creditsToAdd });
+        const creditsToAdd = product.credits_included;
+        const subscriptionType = product.name.toLowerCase(); // e.g., "starter pack" -> "starter pack"
 
+        console.log('Processing checkout.session.completed:', {
+          userId,
+          productId,
+          creditsToAdd,
+          subscriptionType,
+        });
+
+        // Insert credit transaction
         const { error: txError } = await supabase
           .from('credit_transactions')
           .insert({
@@ -95,6 +105,7 @@ const handler = async (req: Request): Promise<Response> => {
             transaction_type: 'purchase',
             description: `Bought ${product.name}`,
             created_at: new Date().toISOString(),
+            stripe_session_id: session.id, // Log the session ID for reference
           });
 
         if (txError) {
@@ -102,9 +113,10 @@ const handler = async (req: Request): Promise<Response> => {
           throw new Error(`Failed to add credits: ${txError.message}`);
         }
 
+        // Update user's subscription_type
         const { error: updateError } = await supabase
           .from('users')
-          .update({ subscription_type: product.name.toLowerCase() })
+          .update({ subscription_type: subscriptionType })
           .eq('id', userId);
 
         if (updateError) {
@@ -112,9 +124,26 @@ const handler = async (req: Request): Promise<Response> => {
           throw new Error(`Failed to update subscription: ${updateError.message}`);
         }
 
+        // Optionally update or insert into subscriptions table
+        const { error: subError } = await supabase
+          .from('subscriptions')
+          .upsert({
+            user_id: userId,
+            type: subscriptionType,
+            is_active: true,
+            start_date: new Date().toISOString(),
+            stripe_subscription_id: session.subscription || null,
+          }, { onConflict: 'user_id' });
+
+        if (subError) {
+          console.error('Subscription upsert error:', subError.message);
+          throw new Error(`Failed to update subscription record: ${subError.message}`);
+        }
+
         console.log('Checkout session completed successfully for user:', userId);
         break;
       }
+      // Optional product/price syncing
       case 'product.created':
       case 'product.updated': {
         const product = event.data.object;
