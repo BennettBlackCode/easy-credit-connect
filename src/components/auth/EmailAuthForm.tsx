@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -77,11 +76,11 @@ export function EmailAuthForm({ isLogin, isLoading, onSubmit }: EmailAuthFormPro
 
         <Button 
           type="submit" 
-          className="w-full bg-primary hover:bg-primary/90 text-black shadow-[0_0_20px_rgba(46,213,115,0.3)]"
+          className="w-full bg-primary hover:bg-primary/90 text-white shadow-[0_0_20px_rgba(46,213,115,0.3)]"
           disabled={isLoading}
         >
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isLogin ? "Sign In" : "Sign Up"}
+          {isLogin ? "Log In" : "Sign Up"}
         </Button>
       </form>
     </Form>
