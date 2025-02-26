@@ -90,7 +90,7 @@ const checkRateLimit = (ip: string): boolean => {
 const processCheckoutSession = async (supabase: any, session: any) => {
   const userId = session.metadata?.user_id;
   const productId = session.metadata?.product_id;
-  const stripeSubscriptionId = session.subscription || session.id; // Fallback to session ID if no subscription ID
+  const stripeSubscriptionId = session.subscription || session.id;
 
   if (!userId || !productId) {
     throw new Error(`Missing required metadata: user_id=${userId}, product_id=${productId}`);
@@ -111,7 +111,15 @@ const processCheckoutSession = async (supabase: any, session: any) => {
     throw new Error(`Unknown product ID: ${productId}`);
   }
 
-  const { credits, subscriptionType } = productConfig;
+  let { credits, subscriptionType } = productConfig;
+
+  // Override subscriptionType if metadata provides an invalid value
+  const metadataSubscriptionType = session.metadata?.subscription_type;
+  if (metadataSubscriptionType && ['free', 'starter', 'growth', 'unlimited', 'owner'].includes(metadataSubscriptionType)) {
+    subscriptionType = metadataSubscriptionType; // Use valid metadata value if provided
+  } else if (metadataSubscriptionType) {
+    console.warn(`Invalid subscription_type in metadata: ${metadataSubscriptionType}, using default: ${subscriptionType}`);
+  }
 
   const { error: txError } = await supabase.rpc('handle_stripe_purchase', {
     p_user_id: userId,
