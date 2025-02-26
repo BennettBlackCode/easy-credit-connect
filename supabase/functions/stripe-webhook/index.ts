@@ -17,7 +17,7 @@ type ProductMapping = {
   };
 };
 
-// Valid subscription types from your enum (no 'free' or 'owner')
+// Valid subscription types from your enum
 const VALID_SUBSCRIPTION_TYPES = ['starter', 'growth', 'unlimited'];
 
 // Configuration constants
@@ -59,7 +59,7 @@ const verifyWebhookSignature = (payload: string, signature: string, secret: stri
   return result === 0;
 };
 
-// Map subscription type to valid enum values (throws error for unrecognized types)
+// Map subscription type to valid enum values
 const mapSubscriptionType = (type: string): string => {
   if (!type) {
     console.error('No subscription type provided');
@@ -88,7 +88,7 @@ const mapSubscriptionType = (type: string): string => {
     return cleanedType;
   }
   
-  console.error(`Subscription type "${cleanedType}" not in VALID_SUBSCRIPTION_TYPES`);
+  console.error(`Invalid subscription type "${type}" not in VALID_SUBSCRIPTION_TYPES`);
   throw new Error(`Invalid subscription type: "${type}"`);
 };
 
@@ -145,6 +145,12 @@ const processCheckoutSession = async (supabase: any, session: any) => {
   console.info(`Raw metadata subscription_type: "${metadataSubscriptionType}"`);
   console.info(`Fallback productConfig.subscriptionType: "${productConfig.subscriptionType}"`);
   const subscriptionType = mapSubscriptionType(metadataSubscriptionType || productConfig.subscriptionType);
+  
+  // Extra validation before RPC
+  if (!VALID_SUBSCRIPTION_TYPES.includes(subscriptionType)) {
+    console.error(`Mapped subscriptionType "${subscriptionType}" is not valid`);
+    throw new Error(`Invalid mapped subscription type: "${subscriptionType}"`);
+  }
   console.info(`Final subscriptionType after mapping: "${subscriptionType}"`);
 
   const rpcParams = {
@@ -196,16 +202,25 @@ const processInvoicePaid = async (supabase: any, invoice: any) => {
   const credits = productConfig.credits;
   const metadataSubscriptionType = subscription.metadata?.subscription_type;
   const subscriptionType = mapSubscriptionType(metadataSubscriptionType || productConfig.subscriptionType);
-  console.log(`Processing renewal with subscriptionType: "${subscriptionType}"`);
+  
+  // Extra validation before RPC
+  if (!VALID_SUBSCRIPTION_TYPES.includes(subscriptionType)) {
+    console.error(`Mapped subscriptionType "${subscriptionType}" is not valid`);
+    throw new Error(`Invalid mapped subscription type: "${subscriptionType}"`);
+  }
+  console.info(`Final subscriptionType after mapping: "${subscriptionType}"`);
 
-  const { error: txError } = await supabase.rpc('handle_stripe_purchase', {
+  const rpcParams = {
     p_user_id: userId,
     p_credit_amount: credits,
     p_transaction_type: 'subscription_renewal',
     p_description: subscriptionId,
     p_subscription_type: subscriptionType,
     p_stripe_subscription_id: subscriptionId
-  });
+  };
+  console.info(`Calling handle_stripe_purchase with params: ${JSON.stringify(rpcParams)}`);
+
+  const { error: txError } = await supabase.rpc('handle_stripe_purchase', rpcParams);
 
   if (txError) {
     throw new Error(`Renewal transaction failed: ${txError.message}`);
