@@ -31,7 +31,7 @@ const MAX_REQUESTS_PER_WINDOW = 30;
 const ipRequestCounts = new Map<string, { count: number; resetTime: number }>();
 
 // Supabase client factory
-let supabaseClient: any = null;
+let supabaseClient = null;
 const getSupabaseClient = () => {
   if (!supabaseClient) {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -45,7 +45,7 @@ const getSupabaseClient = () => {
 };
 
 // Verify webhook signature
-const verifyWebhookSignature = (payload: string, signature: string, secret: string, timestamp: string) => {
+const verifyWebhookSignature = (payload, signature, secret, timestamp) => {
   const signedPayload = `${timestamp}.${payload}`;
   const expectedSig = createHmac('sha256', secret).update(signedPayload).digest('hex');
   let result = 0;
@@ -56,7 +56,7 @@ const verifyWebhookSignature = (payload: string, signature: string, secret: stri
 };
 
 // Rate limiting
-const checkRateLimit = (ip: string): boolean => {
+const checkRateLimit = (ip) => {
   const now = Date.now();
   const record = ipRequestCounts.get(ip);
   if (!record) {
@@ -75,8 +75,8 @@ const checkRateLimit = (ip: string): boolean => {
   return true;
 };
 
-// Process checkout session with debug logging
-const processCheckoutSession = async (supabase: any, session: any) => {
+// Process checkout session
+const processCheckoutSession = async (supabase, session) => {
   console.info('Entering processCheckoutSession');
   const userId = session.metadata?.user_id;
   const productId = session.metadata?.product_id;
@@ -103,14 +103,11 @@ const processCheckoutSession = async (supabase: any, session: any) => {
   }
 
   const credits = productConfig.credits;
-  const rpcParams = {
-    p_user_id: userId,
-    p_credit_amount: credits
-  };
+  const rpcParams = { p_user_id: userId, p_credit_amount: credits };
 
-  console.log(`Before RPC call to handle_stripe_purchase: ${JSON.stringify(rpcParams)}`);
-  const { error: txError } = await supabase.rpc('handle_stripe_purchase', rpcParams);
-  console.log(`After RPC call: ${txError ? `Error: ${txError.message}` : 'Success'}`);
+  console.log(`Calling handle_stripe_purchase_new with: ${JSON.stringify(rpcParams)}`);
+  const { error: txError } = await supabase.rpc('handle_stripe_purchase_new', rpcParams);
+  console.log(`Result: ${txError ? `Error: ${txError.message}` : 'Success'}`);
 
   if (txError) {
     console.error(`RPC error: ${txError.message}`);
@@ -120,8 +117,8 @@ const processCheckoutSession = async (supabase: any, session: any) => {
   return { userId, productId, credits };
 };
 
-// Process invoice.paid for renewals with debug logging
-const processInvoicePaid = async (supabase: any, invoice: any) => {
+// Process invoice.paid for renewals
+const processInvoicePaid = async (supabase, invoice) => {
   const subscriptionId = invoice.subscription;
   const subscription = await stripeClient.subscriptions.retrieve(subscriptionId);
   const userId = subscription.metadata.user_id;
@@ -130,7 +127,7 @@ const processInvoicePaid = async (supabase: any, invoice: any) => {
   console.info(`Processing invoice.paid for subscriptionId="${subscriptionId}"`);
 
   if (!userId || !productId) {
-    throw new Error(`Missing metadata in subscription: user_id=${userId}, product_id=${productId}`);
+    throw new Error(`Missing metadata: user_id=${userId}, product_id=${productId}`);
   }
 
   const { data: userData, error: userError } = await supabase
@@ -149,14 +146,11 @@ const processInvoicePaid = async (supabase: any, invoice: any) => {
   }
 
   const credits = productConfig.credits;
-  const rpcParams = {
-    p_user_id: userId,
-    p_credit_amount: credits
-  };
+  const rpcParams = { p_user_id: userId, p_credit_amount: credits };
 
-  console.log(`Before RPC call to handle_stripe_purchase: ${JSON.stringify(rpcParams)}`);
-  const { error: txError } = await supabase.rpc('handle_stripe_purchase', rpcParams);
-  console.log(`After RPC call: ${txError ? `Error: ${txError.message}` : 'Success'}`);
+  console.log(`Calling handle_stripe_purchase_new with: ${JSON.stringify(rpcParams)}`);
+  const { error: txError } = await supabase.rpc('handle_stripe_purchase_new', rpcParams);
+  console.log(`Result: ${txError ? `Error: ${txError.message}` : 'Success'}`);
 
   if (txError) {
     throw new Error(`Renewal transaction failed: ${txError.message}`);
@@ -166,7 +160,7 @@ const processInvoicePaid = async (supabase: any, invoice: any) => {
 };
 
 // Main handler
-const handler = async (req: Request): Promise<Response> => {
+const handler = async (req) => {
   const requestId = crypto.randomUUID();
   const startTime = Date.now();
   const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
@@ -220,7 +214,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Invalid signature');
     }
     
-    let event: StripeEvent;
+    let event;
     try {
       event = JSON.parse(body);
       if (!event.type || !event.data || !event.data.object) {
@@ -298,7 +292,7 @@ const handler = async (req: Request): Promise<Response> => {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    const errorMessage = (err as Error).message;
+    const errorMessage = err.message;
     const processingTime = Date.now() - startTime;
     console.error(`[${requestId}] Error (${processingTime}ms): ${errorMessage}`);
     const publicErrorMessage = errorMessage.includes('Invalid signature') || 
