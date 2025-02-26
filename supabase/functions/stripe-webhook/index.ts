@@ -106,13 +106,14 @@ const checkRateLimit = (ip: string): boolean => {
 };
 
 // Process checkout session
+// Replace your processCheckoutSession
 const processCheckoutSession = async (supabase: any, session: any) => {
-  console.log('Entering processCheckoutSession');
+  console.info('Entering processCheckoutSession');
   const userId = session.metadata?.user_id;
   const productId = session.metadata?.product_id;
   const stripeSubscriptionId = session.subscription || session.id;
 
-  console.log(`Metadata: user_id="${userId}", product_id="${productId}", subscription_type="${session.metadata?.subscription_type}"`);
+  console.info(`Metadata: user_id="${userId}", product_id="${productId}", subscription_type="${session.metadata?.subscription_type}"`);
 
   if (!userId || !productId) {
     throw new Error(`Missing required metadata: user_id=${userId}, product_id=${productId}`);
@@ -135,10 +136,10 @@ const processCheckoutSession = async (supabase: any, session: any) => {
 
   const credits = productConfig.credits;
   const metadataSubscriptionType = session.metadata?.subscription_type;
-  console.log(`Raw metadata subscription_type: "${metadataSubscriptionType}"`);
-  console.log(`Fallback productConfig.subscriptionType: "${productConfig.subscriptionType}"`);
+  console.info(`Raw metadata subscription_type: "${metadataSubscriptionType}"`);
+  console.info(`Fallback productConfig.subscriptionType: "${productConfig.subscriptionType}"`);
   const subscriptionType = mapSubscriptionType(metadataSubscriptionType || productConfig.subscriptionType);
-  console.log(`Final subscriptionType after mapping: "${subscriptionType}"`);
+  console.info(`Final subscriptionType after mapping: "${subscriptionType}"`);
 
   const rpcParams = {
     p_user_id: userId,
@@ -148,7 +149,7 @@ const processCheckoutSession = async (supabase: any, session: any) => {
     p_subscription_type: subscriptionType,
     p_stripe_subscription_id: stripeSubscriptionId
   };
-  console.log(`Calling handle_stripe_purchase with params: ${JSON.stringify(rpcParams)}`);
+  console.info(`Calling handle_stripe_purchase with params: ${JSON.stringify(rpcParams)}`);
 
   const { error: txError } = await supabase.rpc('handle_stripe_purchase', rpcParams);
 
@@ -158,6 +159,16 @@ const processCheckoutSession = async (supabase: any, session: any) => {
   }
 
   return { userId, productId, credits, subscriptionType };
+};
+
+// Update the handler start
+const handler = async (req: Request): Promise<Response> => {
+  console.info('DEPLOYMENT_MARKER: Running updated code v2025-02-26-01');
+  const requestId = crypto.randomUUID();
+  const startTime = Date.now();
+  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
+  console.info(`[${requestId}] Request received from ${clientIp}`);
+  // ... rest of the handler unchanged
 };
 
 // Process invoice.paid for renewals
