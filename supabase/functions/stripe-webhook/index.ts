@@ -17,13 +17,13 @@ type ProductMapping = {
   };
 };
 
-// Valid subscription types from your enum
-const VALID_SUBSCRIPTION_TYPES = ['starter', 'growth', 'unlimited'];
+// Valid subscription types (only starter pack, growth pack, unlimited pack)
+const VALID_SUBSCRIPTION_TYPES = ['starter pack', 'growth pack', 'unlimited pack'];
 
 // Configuration constants
 const PRODUCT_MAPPING: ProductMapping = {
-  '3f400036-bc93-4ca3-81ac-3d195f97e7c6': { credits: 3, subscriptionType: 'starter' },
-  'd1864f1e-3871-4b74-9b3b-b85f042d4c19': { credits: 5, subscriptionType: 'growth' },
+  '3f400036-bc93-4ca3-81ac-3d195f97e7c6': { credits: 3, subscriptionType: 'starter pack' },
+  'd1864f1e-3871-4b74-9b3b-b85f042d4c19': { credits: 5, subscriptionType: 'growth pack' },
   // Add more product IDs as needed
 };
 
@@ -59,33 +59,19 @@ const verifyWebhookSignature = (payload: string, signature: string, secret: stri
   return result === 0;
 };
 
-// Map subscription type to valid enum values
-const mapSubscriptionType = (type: string): string => {
+// Validate subscription type
+const validateSubscriptionType = (type: string): string => {
   if (!type) {
     console.error('No subscription type provided');
     throw new Error('Subscription type is required');
   }
   
-  const cleanedType = type.replace(/\s*pack\s*$/i, '').trim().toLowerCase();
-  console.log(`Cleaned subscription type: "${cleanedType}" from original: "${type}"`);
+  const normalizedType = type.trim().toLowerCase();
+  console.log(`Normalized subscription type: "${normalizedType}" from original: "${type}"`);
   
-  // Explicitly handle "starter pack", "growth pack", and "unlimited pack"
-  if (cleanedType === 'starter' || type.toLowerCase() === 'starter pack') {
-    console.log(`Mapped "${type}" to "starter"`);
-    return 'starter';
-  }
-  if (cleanedType === 'growth' || type.toLowerCase() === 'growth pack') {
-    console.log(`Mapped "${type}" to "growth"`);
-    return 'growth';
-  }
-  if (cleanedType === 'unlimited' || type.toLowerCase() === 'unlimited pack') {
-    console.log(`Mapped "${type}" to "unlimited"`);
-    return 'unlimited';
-  }
-  
-  if (VALID_SUBSCRIPTION_TYPES.includes(cleanedType)) {
-    console.log(`Valid subscription type found: "${cleanedType}"`);
-    return cleanedType;
+  if (VALID_SUBSCRIPTION_TYPES.includes(normalizedType)) {
+    console.log(`Valid subscription type found: "${normalizedType}"`);
+    return normalizedType;
   }
   
   console.error(`Invalid subscription type "${type}" not in VALID_SUBSCRIPTION_TYPES`);
@@ -144,14 +130,8 @@ const processCheckoutSession = async (supabase: any, session: any) => {
   const metadataSubscriptionType = session.metadata?.subscription_type;
   console.info(`Raw metadata subscription_type: "${metadataSubscriptionType}"`);
   console.info(`Fallback productConfig.subscriptionType: "${productConfig.subscriptionType}"`);
-  const subscriptionType = mapSubscriptionType(metadataSubscriptionType || productConfig.subscriptionType);
-  
-  // Extra validation before RPC
-  if (!VALID_SUBSCRIPTION_TYPES.includes(subscriptionType)) {
-    console.error(`Mapped subscriptionType "${subscriptionType}" is not valid`);
-    throw new Error(`Invalid mapped subscription type: "${subscriptionType}"`);
-  }
-  console.info(`Final subscriptionType after mapping: "${subscriptionType}"`);
+  const subscriptionType = validateSubscriptionType(metadataSubscriptionType || productConfig.subscriptionType);
+  console.info(`Final subscriptionType after validation: "${subscriptionType}"`);
 
   const rpcParams = {
     p_user_id: userId,
@@ -201,14 +181,8 @@ const processInvoicePaid = async (supabase: any, invoice: any) => {
 
   const credits = productConfig.credits;
   const metadataSubscriptionType = subscription.metadata?.subscription_type;
-  const subscriptionType = mapSubscriptionType(metadataSubscriptionType || productConfig.subscriptionType);
-  
-  // Extra validation before RPC
-  if (!VALID_SUBSCRIPTION_TYPES.includes(subscriptionType)) {
-    console.error(`Mapped subscriptionType "${subscriptionType}" is not valid`);
-    throw new Error(`Invalid mapped subscription type: "${subscriptionType}"`);
-  }
-  console.info(`Final subscriptionType after mapping: "${subscriptionType}"`);
+  const subscriptionType = validateSubscriptionType(metadataSubscriptionType || productConfig.subscriptionType);
+  console.info(`Final subscriptionType after validation: "${subscriptionType}"`);
 
   const rpcParams = {
     p_user_id: userId,
