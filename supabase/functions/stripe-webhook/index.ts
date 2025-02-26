@@ -75,7 +75,7 @@ const checkRateLimit = (ip: string): boolean => {
   return true;
 };
 
-// Process checkout session
+// Process checkout session with debug logging
 const processCheckoutSession = async (supabase: any, session: any) => {
   console.info('Entering processCheckoutSession');
   const userId = session.metadata?.user_id;
@@ -103,14 +103,14 @@ const processCheckoutSession = async (supabase: any, session: any) => {
   }
 
   const credits = productConfig.credits;
-
   const rpcParams = {
     p_user_id: userId,
     p_credit_amount: credits
   };
-  console.info(`Calling handle_stripe_purchase with params: ${JSON.stringify(rpcParams)}`);
 
+  console.log(`Before RPC call to handle_stripe_purchase: ${JSON.stringify(rpcParams)}`);
   const { error: txError } = await supabase.rpc('handle_stripe_purchase', rpcParams);
+  console.log(`After RPC call: ${txError ? `Error: ${txError.message}` : 'Success'}`);
 
   if (txError) {
     console.error(`RPC error: ${txError.message}`);
@@ -120,12 +120,14 @@ const processCheckoutSession = async (supabase: any, session: any) => {
   return { userId, productId, credits };
 };
 
-// Process invoice.paid for renewals
+// Process invoice.paid for renewals with debug logging
 const processInvoicePaid = async (supabase: any, invoice: any) => {
   const subscriptionId = invoice.subscription;
   const subscription = await stripeClient.subscriptions.retrieve(subscriptionId);
   const userId = subscription.metadata.user_id;
   const productId = subscription.metadata.product_id;
+
+  console.info(`Processing invoice.paid for subscriptionId="${subscriptionId}"`);
 
   if (!userId || !productId) {
     throw new Error(`Missing metadata in subscription: user_id=${userId}, product_id=${productId}`);
@@ -147,14 +149,14 @@ const processInvoicePaid = async (supabase: any, invoice: any) => {
   }
 
   const credits = productConfig.credits;
-
   const rpcParams = {
     p_user_id: userId,
     p_credit_amount: credits
   };
-  console.info(`Calling handle_stripe_purchase with params: ${JSON.stringify(rpcParams)}`);
 
+  console.log(`Before RPC call to handle_stripe_purchase: ${JSON.stringify(rpcParams)}`);
   const { error: txError } = await supabase.rpc('handle_stripe_purchase', rpcParams);
+  console.log(`After RPC call: ${txError ? `Error: ${txError.message}` : 'Success'}`);
 
   if (txError) {
     throw new Error(`Renewal transaction failed: ${txError.message}`);
