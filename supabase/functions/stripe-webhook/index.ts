@@ -17,8 +17,8 @@ type ProductMapping = {
   };
 };
 
-// Valid subscription types from your enum
-const VALID_SUBSCRIPTION_TYPES = ['free', 'starter', 'growth', 'unlimited', 'owner'];
+// Valid subscription types from your enum (no 'free' or 'owner')
+const VALID_SUBSCRIPTION_TYPES = ['starter', 'growth', 'unlimited'];
 
 // Configuration constants
 const PRODUCT_MAPPING: ProductMapping = {
@@ -59,30 +59,37 @@ const verifyWebhookSignature = (payload: string, signature: string, secret: stri
   return result === 0;
 };
 
-// Map subscription type to valid enum values
+// Map subscription type to valid enum values (throws error for unrecognized types)
 const mapSubscriptionType = (type: string): string => {
   if (!type) {
-    console.log('No subscription type provided, defaulting to "free"');
-    return 'free';
+    console.error('No subscription type provided');
+    throw new Error('Subscription type is required');
   }
   
   const cleanedType = type.replace(/\s*pack\s*$/i, '').trim().toLowerCase();
   console.log(`Cleaned subscription type: "${cleanedType}" from original: "${type}"`);
+  
+  // Explicitly handle "starter pack", "growth pack", and "unlimited pack"
+  if (cleanedType === 'starter' || type.toLowerCase() === 'starter pack') {
+    console.log(`Mapped "${type}" to "starter"`);
+    return 'starter';
+  }
+  if (cleanedType === 'growth' || type.toLowerCase() === 'growth pack') {
+    console.log(`Mapped "${type}" to "growth"`);
+    return 'growth';
+  }
+  if (cleanedType === 'unlimited' || type.toLowerCase() === 'unlimited pack') {
+    console.log(`Mapped "${type}" to "unlimited"`);
+    return 'unlimited';
+  }
   
   if (VALID_SUBSCRIPTION_TYPES.includes(cleanedType)) {
     console.log(`Valid subscription type found: "${cleanedType}"`);
     return cleanedType;
   }
   
-  console.log(`Subscription type "${cleanedType}" not in VALID_SUBSCRIPTION_TYPES, mapping manually`);
-  switch (cleanedType) {
-    case 'starter': return 'starter';
-    case 'growth': return 'growth';
-    case 'unlimited': return 'unlimited';
-    default:
-      console.log(`Defaulting to "free" for unrecognized type: "${cleanedType}"`);
-      return 'free';
-  }
+  console.error(`Subscription type "${cleanedType}" not in VALID_SUBSCRIPTION_TYPES`);
+  throw new Error(`Invalid subscription type: "${type}"`);
 };
 
 // Rate limiting
@@ -106,7 +113,6 @@ const checkRateLimit = (ip: string): boolean => {
 };
 
 // Process checkout session
-// Replace your processCheckoutSession
 const processCheckoutSession = async (supabase: any, session: any) => {
   console.info('Entering processCheckoutSession');
   const userId = session.metadata?.user_id;
@@ -159,16 +165,6 @@ const processCheckoutSession = async (supabase: any, session: any) => {
   }
 
   return { userId, productId, credits, subscriptionType };
-};
-
-// Update the handler start
-const handler = async (req: Request): Promise<Response> => {
-  console.info('DEPLOYMENT_MARKER: Running updated code v2025-02-26-01');
-  const requestId = crypto.randomUUID();
-  const startTime = Date.now();
-  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
-  console.info(`[${requestId}] Request received from ${clientIp}`);
-  // ... rest of the handler unchanged
 };
 
 // Process invoice.paid for renewals
