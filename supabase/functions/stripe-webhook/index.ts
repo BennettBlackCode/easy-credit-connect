@@ -17,11 +17,13 @@ type ProductMapping = {
   };
 };
 
+// Valid subscription types from your enum
+const VALID_SUBSCRIPTION_TYPES = ['free', 'starter', 'growth', 'unlimited', 'owner'];
+
 // Configuration constants
 const PRODUCT_MAPPING: ProductMapping = {
-  '3f400036-bc93-4ca3-81ac-3d195f97e7c6': { credits: 3, subscriptionType: 'starter' }, // Adjusted to match enum
-  // Add more product IDs from your Stripe setup as needed, e.g.:
-  // 'another-uuid-from-supabase': { credits: 15, subscriptionType: 'growth' },
+  '3f400036-bc93-4ca3-81ac-3d195f97e7c6': { credits: 3, subscriptionType: 'starter' },
+  // Add more product IDs as needed
 };
 
 const stripeClient = stripe.Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
@@ -31,62 +33,52 @@ const RATE_LIMIT_WINDOW = 60000; // 1 minute in milliseconds
 const MAX_REQUESTS_PER_WINDOW = 30;
 const ipRequestCounts = new Map<string, { count: number; resetTime: number }>();
 
-// Supabase client factory with connection pooling
+// Supabase client factory
 let supabaseClient: any = null;
 const getSupabaseClient = () => {
   if (!supabaseClient) {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error('Missing Supabase credentials in environment variables');
     }
-    
     supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
   }
   return supabaseClient;
 };
 
-// Function to verify webhook signature with constant-time comparison
+// Verify webhook signature
 const verifyWebhookSignature = (payload: string, signature: string, secret: string, timestamp: string) => {
   const signedPayload = `${timestamp}.${payload}`;
-  const expectedSig = createHmac('sha256', secret)
-    .update(signedPayload)
-    .digest('hex');
-    
+  const expectedSig = createHmac('sha256', secret).update(signedPayload).digest('hex');
   let result = 0;
   for (let i = 0; i < expectedSig.length; i++) {
     result |= expectedSig.charCodeAt(i) ^ signature.charCodeAt(i);
   }
-  
   return result === 0;
 };
 
-// Apply rate limiting
+// Rate limiting
 const checkRateLimit = (ip: string): boolean => {
   const now = Date.now();
   const record = ipRequestCounts.get(ip);
-  
   if (!record) {
     ipRequestCounts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
     return true;
   }
-  
   if (now > record.resetTime) {
     record.count = 1;
     record.resetTime = now + RATE_LIMIT_WINDOW;
     return true;
   }
-  
   if (record.count >= MAX_REQUESTS_PER_WINDOW) {
     return false;
   }
-  
   record.count += 1;
   return true;
 };
 
-// Process checkout session for new subscriptions
+// Process checkout session
 const processCheckoutSession = async (supabase: any, session: any) => {
   const userId = session.metadata?.user_id;
   const productId = session.metadata?.product_id;
@@ -112,11 +104,9 @@ const processCheckoutSession = async (supabase: any, session: any) => {
   }
 
   let { credits, subscriptionType } = productConfig;
-
-  // Override subscriptionType if metadata provides an invalid value
   const metadataSubscriptionType = session.metadata?.subscription_type;
-  if (metadataSubscriptionType && ['free', 'starter', 'growth', 'unlimited', 'owner'].includes(metadataSubscriptionType)) {
-    subscriptionType = metadataSubscriptionType; // Use valid metadata value if provided
+  if (metadataSubscriptionType && VALID_SUBSCRIPTION_TYPES.includes(metadataSubscriptionType)) {
+    subscriptionType = metadataSubscriptionType; // Use valid metadata value
   } else if (metadataSubscriptionType) {
     console.warn(`Invalid subscription_type in metadata: ${metadataSubscriptionType}, using default: ${subscriptionType}`);
   }
@@ -137,10 +127,9 @@ const processCheckoutSession = async (supabase: any, session: any) => {
   return { userId, productId, credits, subscriptionType };
 };
 
-// Process invoice.paid for subscription renewals
+// Process invoice.paid for renewals
 const processInvoicePaid = async (supabase: any, invoice: any) => {
   const subscriptionId = invoice.subscription;
-
   const subscription = await stripeClient.subscriptions.retrieve(subscriptionId);
   const userId = subscription.metadata.user_id;
   const productId = subscription.metadata.product_id;
@@ -164,7 +153,13 @@ const processInvoicePaid = async (supabase: any, invoice: any) => {
     throw new Error(`Unknown product ID: ${productId}`);
   }
 
-  const { credits, subscriptionType } = productConfig;
+  let { credits, subscriptionType } = productConfig;
+  const metadataSubscriptionType = subscription.metadata?.subscription_type;
+  if (metadataSubscriptionType && VALID_SUBSCRIPTION_TYPES.includes(metadataSubscriptionType)) {
+    subscriptionType = metadataSubscriptionType;
+  } else if (metadataSubscriptionType) {
+    console.warn(`Invalid subscription_type in metadata: ${metadataSubscriptionType}, using default: ${subscriptionType}`);
+  }
 
   const { error: txError } = await supabase.rpc('handle_stripe_purchase', {
     p_user_id: userId,
@@ -182,7 +177,7 @@ const processInvoicePaid = async (supabase: any, invoice: any) => {
   return { userId, productId, credits, subscriptionType };
 };
 
-// Main handler function
+// Main handler
 const handler = async (req: Request): Promise<Response> => {
   const requestId = crypto.randomUUID();
   const startTime = Date.now();
@@ -195,10 +190,7 @@ const handler = async (req: Request): Promise<Response> => {
       console.warn(`[${requestId}] Rate limit exceeded for IP: ${clientIp}`);
       return new Response(JSON.stringify({ error: 'Too many requests' }), {
         status: 429,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Retry-After': '60'
-        },
+        headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
       });
     }
     
@@ -271,7 +263,6 @@ const handler = async (req: Request): Promise<Response> => {
       case 'product.updated': {
         const product = event.data.object;
         console.log(`[${requestId}] Product ${event.type}: ${product.id} (${product.name})`);
-        
         const { error } = await supabase
           .from('stripe_products')
           .upsert({
@@ -281,10 +272,7 @@ const handler = async (req: Request): Promise<Response> => {
             description: product.description,
             updated_at: new Date().toISOString(),
           }, { onConflict: 'id' });
-          
-        if (error) {
-          throw new Error(`Failed to sync product: ${error.message}`);
-        }
+        if (error) throw new Error(`Failed to sync product: ${error.message}`);
         break;
       }
       case 'price.created':
@@ -302,10 +290,7 @@ const handler = async (req: Request): Promise<Response> => {
             recurring_interval: price.recurring?.interval || null,
             updated_at: new Date().toISOString(),
           }, { onConflict: 'id' });
-          
-        if (error) {
-          throw new Error(`Failed to sync price: ${error.message}`);
-        }
+        if (error) throw new Error(`Failed to sync price: ${error.message}`);
         console.log(`[${requestId}] Price ${event.type}: ${price.id}`);
         break;
       }
@@ -327,13 +312,10 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (err) {
     const errorMessage = (err as Error).message;
     const processingTime = Date.now() - startTime;
-    
     console.error(`[${requestId}] Error (${processingTime}ms): ${errorMessage}`);
-    
     const publicErrorMessage = errorMessage.includes('Invalid signature') || 
                                errorMessage.includes('Missing stripe-signature') ?
                                errorMessage : 'An error occurred processing the webhook';
-    
     return new Response(JSON.stringify({ 
       error: publicErrorMessage,
       requestId 
