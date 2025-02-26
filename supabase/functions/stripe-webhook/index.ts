@@ -59,6 +59,27 @@ const verifyWebhookSignature = (payload: string, signature: string, secret: stri
   return result === 0;
 };
 
+// Map subscription type to valid enum values
+const mapSubscriptionType = (type: string): string => {
+  if (!type) return 'free';
+  
+  // Remove " pack" suffix and trim any whitespace
+  const cleanedType = type.replace(/\s*pack$/i, '').trim().toLowerCase();
+  
+  // Check if the cleaned type is valid
+  if (VALID_SUBSCRIPTION_TYPES.includes(cleanedType)) {
+    return cleanedType;
+  }
+  
+  // Handle specific mappings
+  switch (cleanedType) {
+    case 'starter': return 'starter';
+    case 'growth': return 'growth';
+    case 'unlimited': return 'unlimited';
+    default: return 'free';
+  }
+};
+
 // Rate limiting
 const checkRateLimit = (ip: string): boolean => {
   const now = Date.now();
@@ -104,20 +125,18 @@ const processCheckoutSession = async (supabase: any, session: any) => {
     throw new Error(`Unknown product ID: ${productId}`);
   }
 
-  let { credits, subscriptionType } = productConfig;
+  let { credits } = productConfig;
   const metadataSubscriptionType = session.metadata?.subscription_type;
   
-  // Map variations of subscription types to their base types
-  if (metadataSubscriptionType === "starter pack") {
-    subscriptionType = "starter";
-  } else if (metadataSubscriptionType === "growth pack") {
-    subscriptionType = "growth";
-  } else if (metadataSubscriptionType === "unlimited pack") {
-    subscriptionType = "unlimited";
-  } else if (metadataSubscriptionType && VALID_SUBSCRIPTION_TYPES.includes(metadataSubscriptionType)) {
-    subscriptionType = metadataSubscriptionType;
-  } else if (metadataSubscriptionType) {
-    console.warn(`Invalid subscription_type in metadata: ${metadataSubscriptionType}, using default: ${subscriptionType}`);
+  // Convert the subscription type to a valid enum value
+  let subscriptionType = productConfig.subscriptionType;
+  if (metadataSubscriptionType) {
+    // Log for debugging
+    console.log(`Original subscription_type from metadata: "${metadataSubscriptionType}"`);
+    
+    // Map to valid enum value
+    subscriptionType = mapSubscriptionType(metadataSubscriptionType);
+    console.log(`Mapped to: "${subscriptionType}"`);
   }
 
   const { error: txError } = await supabase.rpc('handle_stripe_purchase', {
@@ -162,20 +181,18 @@ const processInvoicePaid = async (supabase: any, invoice: any) => {
     throw new Error(`Unknown product ID: ${productId}`);
   }
 
-  let { credits, subscriptionType } = productConfig;
+  let { credits } = productConfig;
   const metadataSubscriptionType = subscription.metadata?.subscription_type;
   
-  // Map variations of subscription types to their base types
-  if (metadataSubscriptionType === "starter pack") {
-    subscriptionType = "starter";
-  } else if (metadataSubscriptionType === "growth pack") {
-    subscriptionType = "growth";
-  } else if (metadataSubscriptionType === "unlimited pack") {
-    subscriptionType = "unlimited";
-  } else if (metadataSubscriptionType && VALID_SUBSCRIPTION_TYPES.includes(metadataSubscriptionType)) {
-    subscriptionType = metadataSubscriptionType;
-  } else if (metadataSubscriptionType) {
-    console.warn(`Invalid subscription_type in metadata: ${metadataSubscriptionType}, using default: ${subscriptionType}`);
+  // Convert the subscription type to a valid enum value
+  let subscriptionType = productConfig.subscriptionType;
+  if (metadataSubscriptionType) {
+    // Log for debugging
+    console.log(`Original subscription_type from metadata: "${metadataSubscriptionType}"`);
+    
+    // Map to valid enum value
+    subscriptionType = mapSubscriptionType(metadataSubscriptionType);
+    console.log(`Mapped to: "${subscriptionType}"`);
   }
 
   const { error: txError } = await supabase.rpc('handle_stripe_purchase', {
