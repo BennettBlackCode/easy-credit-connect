@@ -61,22 +61,27 @@ const verifyWebhookSignature = (payload: string, signature: string, secret: stri
 
 // Map subscription type to valid enum values
 const mapSubscriptionType = (type: string): string => {
-  if (!type) return 'free';
+  if (!type) {
+    console.log('No subscription type provided, defaulting to "free"');
+    return 'free';
+  }
   
-  // Remove " pack" suffix and trim any whitespace
-  const cleanedType = type.replace(/\s*pack$/i, '').trim().toLowerCase();
+  const cleanedType = type.replace(/\s*pack\s*$/i, '').trim().toLowerCase();
+  console.log(`Cleaned subscription type: "${cleanedType}" from original: "${type}"`);
   
-  // Check if the cleaned type is valid
   if (VALID_SUBSCRIPTION_TYPES.includes(cleanedType)) {
+    console.log(`Valid subscription type found: "${cleanedType}"`);
     return cleanedType;
   }
   
-  // Handle specific mappings
+  console.log(`Subscription type "${cleanedType}" not in VALID_SUBSCRIPTION_TYPES, mapping manually`);
   switch (cleanedType) {
     case 'starter': return 'starter';
     case 'growth': return 'growth';
     case 'unlimited': return 'unlimited';
-    default: return 'free';
+    default:
+      console.log(`Defaulting to "free" for unrecognized type: "${cleanedType}"`);
+      return 'free';
   }
 };
 
@@ -125,19 +130,10 @@ const processCheckoutSession = async (supabase: any, session: any) => {
     throw new Error(`Unknown product ID: ${productId}`);
   }
 
-  let { credits } = productConfig;
+  const credits = productConfig.credits;
   const metadataSubscriptionType = session.metadata?.subscription_type;
-  
-  // Convert the subscription type to a valid enum value
-  let subscriptionType = productConfig.subscriptionType;
-  if (metadataSubscriptionType) {
-    // Log for debugging
-    console.log(`Original subscription_type from metadata: "${metadataSubscriptionType}"`);
-    
-    // Map to valid enum value
-    subscriptionType = mapSubscriptionType(metadataSubscriptionType);
-    console.log(`Mapped to: "${subscriptionType}"`);
-  }
+  const subscriptionType = mapSubscriptionType(metadataSubscriptionType || productConfig.subscriptionType);
+  console.log(`Processing checkout with subscriptionType: "${subscriptionType}"`);
 
   const { error: txError } = await supabase.rpc('handle_stripe_purchase', {
     p_user_id: userId,
@@ -181,19 +177,10 @@ const processInvoicePaid = async (supabase: any, invoice: any) => {
     throw new Error(`Unknown product ID: ${productId}`);
   }
 
-  let { credits } = productConfig;
+  const credits = productConfig.credits;
   const metadataSubscriptionType = subscription.metadata?.subscription_type;
-  
-  // Convert the subscription type to a valid enum value
-  let subscriptionType = productConfig.subscriptionType;
-  if (metadataSubscriptionType) {
-    // Log for debugging
-    console.log(`Original subscription_type from metadata: "${metadataSubscriptionType}"`);
-    
-    // Map to valid enum value
-    subscriptionType = mapSubscriptionType(metadataSubscriptionType);
-    console.log(`Mapped to: "${subscriptionType}"`);
-  }
+  const subscriptionType = mapSubscriptionType(metadataSubscriptionType || productConfig.subscriptionType);
+  console.log(`Processing renewal with subscriptionType: "${subscriptionType}"`);
 
   const { error: txError } = await supabase.rpc('handle_stripe_purchase', {
     p_user_id: userId,
