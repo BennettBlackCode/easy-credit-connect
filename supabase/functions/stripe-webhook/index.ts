@@ -23,6 +23,7 @@ const VALID_SUBSCRIPTION_TYPES = ['free', 'starter', 'growth', 'unlimited', 'own
 // Configuration constants
 const PRODUCT_MAPPING: ProductMapping = {
   '3f400036-bc93-4ca3-81ac-3d195f97e7c6': { credits: 3, subscriptionType: 'starter' },
+  'd1864f1e-3871-4b74-9b3b-b85f042d4c19': { credits: 5, subscriptionType: 'growth' },
   // Add more product IDs as needed
 };
 
@@ -105,8 +106,16 @@ const processCheckoutSession = async (supabase: any, session: any) => {
 
   let { credits, subscriptionType } = productConfig;
   const metadataSubscriptionType = session.metadata?.subscription_type;
-  if (metadataSubscriptionType && VALID_SUBSCRIPTION_TYPES.includes(metadataSubscriptionType)) {
-    subscriptionType = metadataSubscriptionType; // Use valid metadata value
+  
+  // Map variations of subscription types to their base types
+  if (metadataSubscriptionType === "starter pack") {
+    subscriptionType = "starter";
+  } else if (metadataSubscriptionType === "growth pack") {
+    subscriptionType = "growth";
+  } else if (metadataSubscriptionType === "unlimited pack") {
+    subscriptionType = "unlimited";
+  } else if (metadataSubscriptionType && VALID_SUBSCRIPTION_TYPES.includes(metadataSubscriptionType)) {
+    subscriptionType = metadataSubscriptionType;
   } else if (metadataSubscriptionType) {
     console.warn(`Invalid subscription_type in metadata: ${metadataSubscriptionType}, using default: ${subscriptionType}`);
   }
@@ -155,7 +164,15 @@ const processInvoicePaid = async (supabase: any, invoice: any) => {
 
   let { credits, subscriptionType } = productConfig;
   const metadataSubscriptionType = subscription.metadata?.subscription_type;
-  if (metadataSubscriptionType && VALID_SUBSCRIPTION_TYPES.includes(metadataSubscriptionType)) {
+  
+  // Map variations of subscription types to their base types
+  if (metadataSubscriptionType === "starter pack") {
+    subscriptionType = "starter";
+  } else if (metadataSubscriptionType === "growth pack") {
+    subscriptionType = "growth";
+  } else if (metadataSubscriptionType === "unlimited pack") {
+    subscriptionType = "unlimited";
+  } else if (metadataSubscriptionType && VALID_SUBSCRIPTION_TYPES.includes(metadataSubscriptionType)) {
     subscriptionType = metadataSubscriptionType;
   } else if (metadataSubscriptionType) {
     console.warn(`Invalid subscription_type in metadata: ${metadataSubscriptionType}, using default: ${subscriptionType}`);
