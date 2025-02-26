@@ -107,9 +107,12 @@ const checkRateLimit = (ip: string): boolean => {
 
 // Process checkout session
 const processCheckoutSession = async (supabase: any, session: any) => {
+  console.log('Entering processCheckoutSession');
   const userId = session.metadata?.user_id;
   const productId = session.metadata?.product_id;
   const stripeSubscriptionId = session.subscription || session.id;
+
+  console.log(`Metadata: user_id="${userId}", product_id="${productId}", subscription_type="${session.metadata?.subscription_type}"`);
 
   if (!userId || !productId) {
     throw new Error(`Missing required metadata: user_id=${userId}, product_id=${productId}`);
@@ -132,19 +135,25 @@ const processCheckoutSession = async (supabase: any, session: any) => {
 
   const credits = productConfig.credits;
   const metadataSubscriptionType = session.metadata?.subscription_type;
+  console.log(`Raw metadata subscription_type: "${metadataSubscriptionType}"`);
+  console.log(`Fallback productConfig.subscriptionType: "${productConfig.subscriptionType}"`);
   const subscriptionType = mapSubscriptionType(metadataSubscriptionType || productConfig.subscriptionType);
-  console.log(`Processing checkout with subscriptionType: "${subscriptionType}"`);
+  console.log(`Final subscriptionType after mapping: "${subscriptionType}"`);
 
-  const { error: txError } = await supabase.rpc('handle_stripe_purchase', {
+  const rpcParams = {
     p_user_id: userId,
     p_credit_amount: credits,
     p_transaction_type: 'purchase',
     p_description: session.id,
     p_subscription_type: subscriptionType,
     p_stripe_subscription_id: stripeSubscriptionId
-  });
+  };
+  console.log(`Calling handle_stripe_purchase with params: ${JSON.stringify(rpcParams)}`);
+
+  const { error: txError } = await supabase.rpc('handle_stripe_purchase', rpcParams);
 
   if (txError) {
+    console.error(`RPC error: ${txError.message}`);
     throw new Error(`Transaction failed: ${txError.message}`);
   }
 
