@@ -17,7 +17,7 @@ type ProductMapping = {
   };
 };
 
-// Valid subscription types (only starter pack, growth pack, unlimited pack)
+// Valid subscription types updated to match modified enum
 const VALID_SUBSCRIPTION_TYPES = ['starter pack', 'growth pack', 'unlimited pack'];
 
 // Configuration constants
@@ -59,7 +59,7 @@ const verifyWebhookSignature = (payload: string, signature: string, secret: stri
   return result === 0;
 };
 
-// Validate subscription type
+// Validate subscription type (no mapping needed, just validation)
 const validateSubscriptionType = (type: string): string => {
   if (!type) {
     console.error('No subscription type provided');
