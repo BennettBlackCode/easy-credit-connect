@@ -13,17 +13,13 @@ type StripeEvent = {
 type ProductMapping = {
   [productId: string]: {
     credits: number;
-    subscriptionType: string;
   };
 };
 
-// Valid subscription types (only starter pack, growth pack, unlimited pack in code)
-const VALID_SUBSCRIPTION_TYPES = ['starter pack', 'growth pack', 'unlimited pack'];
-
 // Configuration constants
 const PRODUCT_MAPPING: ProductMapping = {
-  '3f400036-bc93-4ca3-81ac-3d195f97e7c6': { credits: 3, subscriptionType: 'starter pack' },
-  'd1864f1e-3871-4b74-9b3b-b85f042d4c19': { credits: 5, subscriptionType: 'growth pack' },
+  '3f400036-bc93-4ca3-81ac-3d195f97e7c6': { credits: 3 }, // Starter pack
+  'd1864f1e-3871-4b74-9b3b-b85f042d4c19': { credits: 5 }, // Growth pack
   // Add more product IDs as needed
 };
 
@@ -59,25 +55,6 @@ const verifyWebhookSignature = (payload: string, signature: string, secret: stri
   return result === 0;
 };
 
-// Map subscription type to valid enum values
-const mapSubscriptionType = (type: string): string => {
-  if (!type) {
-    console.log('No subscription type provided, defaulting to "starter pack"');
-    return 'starter pack'; // Default to starter pack instead of free
-  }
-  
-  const normalizedType = type.trim().toLowerCase();
-  console.log(`Normalized subscription type: "${normalizedType}" from original: "${type}"`);
-  
-  if (VALID_SUBSCRIPTION_TYPES.includes(normalizedType)) {
-    console.log(`Valid subscription type found: "${normalizedType}"`);
-    return normalizedType;
-  }
-  
-  console.log(`Subscription type "${normalizedType}" not in VALID_SUBSCRIPTION_TYPES, defaulting to "starter pack"`);
-  return 'starter pack'; // Default to starter pack instead of free
-};
-
 // Rate limiting
 const checkRateLimit = (ip: string): boolean => {
   const now = Date.now();
@@ -103,9 +80,8 @@ const processCheckoutSession = async (supabase: any, session: any) => {
   console.info('Entering processCheckoutSession');
   const userId = session.metadata?.user_id;
   const productId = session.metadata?.product_id;
-  const stripeSubscriptionId = session.subscription || session.id;
 
-  console.info(`Metadata: user_id="${userId}", product_id="${productId}", subscription_type="${session.metadata?.subscription_type}"`);
+  console.info(`Metadata: user_id="${userId}", product_id="${productId}"`);
 
   if (!userId || !productId) {
     throw new Error(`Missing required metadata: user_id=${userId}, product_id=${productId}`);
@@ -127,19 +103,10 @@ const processCheckoutSession = async (supabase: any, session: any) => {
   }
 
   const credits = productConfig.credits;
-  const metadataSubscriptionType = session.metadata?.subscription_type;
-  console.info(`Raw metadata subscription_type: "${metadataSubscriptionType}"`);
-  console.info(`Fallback productConfig.subscriptionType: "${productConfig.subscriptionType}"`);
-  const subscriptionType = mapSubscriptionType(metadataSubscriptionType || productConfig.subscriptionType);
-  console.info(`Final subscriptionType after mapping: "${subscriptionType}"`);
 
   const rpcParams = {
     p_user_id: userId,
-    p_credit_amount: credits,
-    p_transaction_type: 'purchase',
-    p_description: session.id,
-    p_subscription_type: subscriptionType,
-    p_stripe_subscription_id: stripeSubscriptionId
+    p_credit_amount: credits
   };
   console.info(`Calling handle_stripe_purchase with params: ${JSON.stringify(rpcParams)}`);
 
@@ -150,7 +117,7 @@ const processCheckoutSession = async (supabase: any, session: any) => {
     throw new Error(`Transaction failed: ${txError.message}`);
   }
 
-  return { userId, productId, credits, subscriptionType };
+  return { userId, productId, credits };
 };
 
 // Process invoice.paid for renewals
@@ -180,24 +147,20 @@ const processInvoicePaid = async (supabase: any, invoice: any) => {
   }
 
   const credits = productConfig.credits;
-  const metadataSubscriptionType = subscription.metadata?.subscription_type;
-  const subscriptionType = mapSubscriptionType(metadataSubscriptionType || productConfig.subscriptionType);
-  console.log(`Processing renewal with subscriptionType: "${subscriptionType}"`);
 
-  const { error: txError } = await supabase.rpc('handle_stripe_purchase', {
+  const rpcParams = {
     p_user_id: userId,
-    p_credit_amount: credits,
-    p_transaction_type: 'subscription_renewal',
-    p_description: subscriptionId,
-    p_subscription_type: subscriptionType,
-    p_stripe_subscription_id: subscriptionId
-  });
+    p_credit_amount: credits
+  };
+  console.info(`Calling handle_stripe_purchase with params: ${JSON.stringify(rpcParams)}`);
+
+  const { error: txError } = await supabase.rpc('handle_stripe_purchase', rpcParams);
 
   if (txError) {
     throw new Error(`Renewal transaction failed: ${txError.message}`);
   }
 
-  return { userId, productId, credits, subscriptionType };
+  return { userId, productId, credits };
 };
 
 // Main handler
